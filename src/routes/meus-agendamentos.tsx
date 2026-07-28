@@ -3,7 +3,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { BrandLogo } from "@/components/brand-logo";
 import { X, ArrowLeft, CalendarClock } from "lucide-react";
+
 
 export const Route = createFileRoute("/meus-agendamentos")({
   head: () => ({ meta: [{ title: "Meus agendamentos — Agendaí" }, { name: "description", content: "Consulte e cancele seus agendamentos usando telefone ou email." }] }),
