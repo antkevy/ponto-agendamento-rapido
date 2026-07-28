@@ -9,38 +9,193 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as MeusAgendamentosRouteImport } from './routes/meus-agendamentos'
+import { Route as EntrarRouteImport } from './routes/entrar'
+import { Route as CadastrarRouteImport } from './routes/cadastrar'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as PSlugRouteImport } from './routes/p.$slug'
+import { Route as AppServicosRouteImport } from './routes/app.servicos'
+import { Route as AppHorariosRouteImport } from './routes/app.horarios'
+import { Route as AppConfiguracoesRouteImport } from './routes/app.configuracoes'
+import { Route as AppBloqueiosRouteImport } from './routes/app.bloqueios'
+import { Route as AppAgendamentosRouteImport } from './routes/app.agendamentos'
 
+const MeusAgendamentosRoute = MeusAgendamentosRouteImport.update({
+  id: '/meus-agendamentos',
+  path: '/meus-agendamentos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EntrarRoute = EntrarRouteImport.update({
+  id: '/entrar',
+  path: '/entrar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CadastrarRoute = CadastrarRouteImport.update({
+  id: '/cadastrar',
+  path: '/cadastrar',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppIndexRoute = AppIndexRouteImport.update({
+  id: '/app/',
+  path: '/app/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PSlugRoute = PSlugRouteImport.update({
+  id: '/p/$slug',
+  path: '/p/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppServicosRoute = AppServicosRouteImport.update({
+  id: '/app/servicos',
+  path: '/app/servicos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppHorariosRoute = AppHorariosRouteImport.update({
+  id: '/app/horarios',
+  path: '/app/horarios',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppConfiguracoesRoute = AppConfiguracoesRouteImport.update({
+  id: '/app/configuracoes',
+  path: '/app/configuracoes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppBloqueiosRoute = AppBloqueiosRouteImport.update({
+  id: '/app/bloqueios',
+  path: '/app/bloqueios',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppAgendamentosRoute = AppAgendamentosRouteImport.update({
+  id: '/app/agendamentos',
+  path: '/app/agendamentos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/cadastrar': typeof CadastrarRoute
+  '/entrar': typeof EntrarRoute
+  '/meus-agendamentos': typeof MeusAgendamentosRoute
+  '/app/agendamentos': typeof AppAgendamentosRoute
+  '/app/bloqueios': typeof AppBloqueiosRoute
+  '/app/configuracoes': typeof AppConfiguracoesRoute
+  '/app/horarios': typeof AppHorariosRoute
+  '/app/servicos': typeof AppServicosRoute
+  '/p/$slug': typeof PSlugRoute
+  '/app/': typeof AppIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/cadastrar': typeof CadastrarRoute
+  '/entrar': typeof EntrarRoute
+  '/meus-agendamentos': typeof MeusAgendamentosRoute
+  '/app/agendamentos': typeof AppAgendamentosRoute
+  '/app/bloqueios': typeof AppBloqueiosRoute
+  '/app/configuracoes': typeof AppConfiguracoesRoute
+  '/app/horarios': typeof AppHorariosRoute
+  '/app/servicos': typeof AppServicosRoute
+  '/p/$slug': typeof PSlugRoute
+  '/app': typeof AppIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/cadastrar': typeof CadastrarRoute
+  '/entrar': typeof EntrarRoute
+  '/meus-agendamentos': typeof MeusAgendamentosRoute
+  '/app/agendamentos': typeof AppAgendamentosRoute
+  '/app/bloqueios': typeof AppBloqueiosRoute
+  '/app/configuracoes': typeof AppConfiguracoesRoute
+  '/app/horarios': typeof AppHorariosRoute
+  '/app/servicos': typeof AppServicosRoute
+  '/p/$slug': typeof PSlugRoute
+  '/app/': typeof AppIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/cadastrar'
+    | '/entrar'
+    | '/meus-agendamentos'
+    | '/app/agendamentos'
+    | '/app/bloqueios'
+    | '/app/configuracoes'
+    | '/app/horarios'
+    | '/app/servicos'
+    | '/p/$slug'
+    | '/app/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/cadastrar'
+    | '/entrar'
+    | '/meus-agendamentos'
+    | '/app/agendamentos'
+    | '/app/bloqueios'
+    | '/app/configuracoes'
+    | '/app/horarios'
+    | '/app/servicos'
+    | '/p/$slug'
+    | '/app'
+  id:
+    | '__root__'
+    | '/'
+    | '/cadastrar'
+    | '/entrar'
+    | '/meus-agendamentos'
+    | '/app/agendamentos'
+    | '/app/bloqueios'
+    | '/app/configuracoes'
+    | '/app/horarios'
+    | '/app/servicos'
+    | '/p/$slug'
+    | '/app/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CadastrarRoute: typeof CadastrarRoute
+  EntrarRoute: typeof EntrarRoute
+  MeusAgendamentosRoute: typeof MeusAgendamentosRoute
+  AppAgendamentosRoute: typeof AppAgendamentosRoute
+  AppBloqueiosRoute: typeof AppBloqueiosRoute
+  AppConfiguracoesRoute: typeof AppConfiguracoesRoute
+  AppHorariosRoute: typeof AppHorariosRoute
+  AppServicosRoute: typeof AppServicosRoute
+  PSlugRoute: typeof PSlugRoute
+  AppIndexRoute: typeof AppIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/meus-agendamentos': {
+      id: '/meus-agendamentos'
+      path: '/meus-agendamentos'
+      fullPath: '/meus-agendamentos'
+      preLoaderRoute: typeof MeusAgendamentosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/entrar': {
+      id: '/entrar'
+      path: '/entrar'
+      fullPath: '/entrar'
+      preLoaderRoute: typeof EntrarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cadastrar': {
+      id: '/cadastrar'
+      path: '/cadastrar'
+      fullPath: '/cadastrar'
+      preLoaderRoute: typeof CadastrarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +203,71 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app/': {
+      id: '/app/'
+      path: '/app'
+      fullPath: '/app/'
+      preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/p/$slug': {
+      id: '/p/$slug'
+      path: '/p/$slug'
+      fullPath: '/p/$slug'
+      preLoaderRoute: typeof PSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/servicos': {
+      id: '/app/servicos'
+      path: '/app/servicos'
+      fullPath: '/app/servicos'
+      preLoaderRoute: typeof AppServicosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/horarios': {
+      id: '/app/horarios'
+      path: '/app/horarios'
+      fullPath: '/app/horarios'
+      preLoaderRoute: typeof AppHorariosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/configuracoes': {
+      id: '/app/configuracoes'
+      path: '/app/configuracoes'
+      fullPath: '/app/configuracoes'
+      preLoaderRoute: typeof AppConfiguracoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/bloqueios': {
+      id: '/app/bloqueios'
+      path: '/app/bloqueios'
+      fullPath: '/app/bloqueios'
+      preLoaderRoute: typeof AppBloqueiosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/agendamentos': {
+      id: '/app/agendamentos'
+      path: '/app/agendamentos'
+      fullPath: '/app/agendamentos'
+      preLoaderRoute: typeof AppAgendamentosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CadastrarRoute: CadastrarRoute,
+  EntrarRoute: EntrarRoute,
+  MeusAgendamentosRoute: MeusAgendamentosRoute,
+  AppAgendamentosRoute: AppAgendamentosRoute,
+  AppBloqueiosRoute: AppBloqueiosRoute,
+  AppConfiguracoesRoute: AppConfiguracoesRoute,
+  AppHorariosRoute: AppHorariosRoute,
+  AppServicosRoute: AppServicosRoute,
+  PSlugRoute: PSlugRoute,
+  AppIndexRoute: AppIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
