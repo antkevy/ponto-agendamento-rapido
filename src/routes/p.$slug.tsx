@@ -52,6 +52,7 @@ function BookingPage() {
 
   const [step, setStep] = useState<Step>("service");
   const [service, setService] = useState<Service | null>(null);
+  const [serviceView, setServiceView] = useState<ViewMode>("list");
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [when, setWhen] = useState<Date | null>(null);
   const [confirmedId, setConfirmedId] = useState<string | null>(null);
