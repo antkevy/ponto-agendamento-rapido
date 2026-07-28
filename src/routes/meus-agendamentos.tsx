@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { BrandLogo } from "@/components/brand-logo";
 import { X, ArrowLeft, CalendarClock } from "lucide-react";
+import { PhoneInput } from "@/components/phone-input";
+import { isValidPhoneBR } from "@/lib/phone";
 
 
 export const Route = createFileRoute("/meus-agendamentos")({
