@@ -118,21 +118,29 @@ function BookingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-surface" style={{ ["--brand" as string]: brand } as React.CSSProperties}>
-      <header className="bg-background border-b border-border">
-        <div className="max-w-2xl mx-auto px-4 py-6 sm:py-8 flex items-start gap-4">
+    <div
+      className="min-h-screen"
+      style={{
+        ["--brand" as string]: brand,
+        backgroundImage:
+          "linear-gradient(180deg, oklch(0.97 0.02 250) 0%, oklch(0.99 0.008 250) 55%, #ffffff 100%)",
+      } as React.CSSProperties}
+    >
+      <header className="bg-transparent">
+        <div className="max-w-2xl mx-auto px-4 py-8 sm:py-10 flex items-start gap-4">
           {pro.logo_url ? (
-            <img src={pro.logo_url} alt="" className="h-14 w-14 sm:h-16 sm:w-16 rounded-xl object-cover border border-border shrink-0" />
+            <img src={pro.logo_url} alt="" className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl object-cover border border-border shrink-0" />
           ) : (
-            <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-xl grid place-items-center font-display text-2xl text-white shrink-0" style={{ backgroundColor: brand }}>{pro.business_name.charAt(0).toUpperCase()}</div>
+            <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl grid place-items-center text-2xl font-bold text-white shrink-0 shadow-md" style={{ backgroundColor: brand }}>{pro.business_name.charAt(0).toUpperCase()}</div>
           )}
           <div className="min-w-0">
-            <h1 className="text-2xl sm:text-3xl font-display font-semibold text-primary truncate">{pro.business_name}</h1>
-            {pro.description && <p className="text-sm text-muted-foreground mt-1">{pro.description}</p>}
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground truncate leading-[1.1]">{pro.business_name}</h1>
+            {pro.description && <p className="text-sm text-muted-foreground mt-1.5">{pro.description}</p>}
             {pro.address && <p className="text-xs text-muted-foreground mt-1 inline-flex items-center gap-1"><MapPin className="h-3 w-3" /> {pro.address}</p>}
           </div>
         </div>
       </header>
+
 
       <main className="max-w-2xl mx-auto px-4 py-6 sm:py-8">
         {step !== "service" && step !== "done" && (
