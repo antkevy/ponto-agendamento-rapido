@@ -125,8 +125,10 @@ function Page() {
                   <div className="min-w-0">
                     <p className="font-semibold truncate">{r.professional_business_name}</p>
                     <p className="text-sm text-muted-foreground truncate">{r.service_name}</p>
-                    <p className="text-sm inline-flex items-center gap-1 mt-1"><CalendarClock className="h-3 w-3" /> {new Date(r.starts_at).toLocaleString("pt-BR", { dateStyle: "medium", timeStyle: "short" })}</p>
-                    <StatusPill status={r.status} />
+                    <div className="flex flex-wrap items-center gap-2 mt-1 text-sm">
+                      <span className="inline-flex items-center gap-1"><CalendarClock className="h-3 w-3" /> {new Date(r.starts_at).toLocaleString("pt-BR", { dateStyle: "medium", timeStyle: "short" })}</span>
+                      <StatusPill status={r.status} />
+                    </div>
                   </div>
                   {r.status === "confirmed" && new Date(r.starts_at) > new Date() && (
                     <button onClick={() => { if (confirm("Cancelar este agendamento?")) cancel.mutate(r.id); }} className="btn-outline-brand inline-flex items-center gap-1 !py-2 text-sm text-destructive shrink-0"><X className="h-4 w-4" /> Cancelar</button>
