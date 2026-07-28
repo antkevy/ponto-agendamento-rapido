@@ -161,15 +161,13 @@ function whatsAppUrl(phone: string) {
 }
 
 function whatsAppMsg(a: Appt, businessName: string, status: Appt["status"]) {
+  if (status === "completed") return "";
   const date = new Date(a.starts_at).toLocaleDateString("pt-BR", { dateStyle: "full" });
   const time = new Date(a.starts_at).toLocaleTimeString("pt-BR", { timeStyle: "short" });
   if (status === "confirmed") {
-    return `Olá ${a.client_name}! Seu agendamento na ${businessName} está confirmado! 🎉\n\n📅 Data: ${date}\n⏰ Horário: ${time}\n💇 Serviço: ${a.service_snapshot_name}\n💰 Valor: ${formatBRL(a.service_snapshot_price_cents)}\n\nQualquer dúvida, estamos à disposição!`;
+    return `Ola ${a.client_name}! Seu agendamento na ${businessName} esta confirmado!\n\nData: ${date}\nHorario: ${time}\nServico: ${a.service_snapshot_name}\nValor: ${formatBRL(a.service_snapshot_price_cents)}\n\nQualquer duvida, estamos a disposicao!`;
   }
-  if (status === "cancelled") {
-    return `Olá ${a.client_name}! Notamos que você cancelou seu agendamento na ${businessName}. 😕\n\nSe precisar de ajuda ou quiser remarcar, é só nos chamar! Estamos aqui para o que precisar.`;
-  }
-  return `Olá ${a.client_name}! Obrigado por agendar com a ${businessName}! 😊\n\nSe precisar agendar um novo horário, é só nos procurar.`;
+  return `Ola ${a.client_name}! Notamos que voce cancelou seu agendamento na ${businessName}.\n\nSe precisar de ajuda ou quiser remarcar, e so nos chamar! Estamos aqui para o que precisar.`;
 }
 
 function ApptRow({ a, businessName, onUpdate }: { a: Appt; businessName: string; onUpdate: (s: Appt["status"]) => void }) {
@@ -186,7 +184,7 @@ function ApptRow({ a, businessName, onUpdate }: { a: Appt; businessName: string;
           <p className="text-xs text-muted-foreground mt-1">{displayPhoneBR(a.client_phone)}{a.client_email ? ` · ${a.client_email}` : ""}</p>
         </div>
         <div className="flex gap-2 shrink-0">
-          <button onClick={() => window.open(`${whatsAppUrl(a.client_phone)}?text=${encodeURIComponent(whatsAppMsg(a, businessName, a.status))}`, "_blank")} className="btn-outline-brand inline-flex items-center gap-1 !py-2 text-sm" title="Enviar WhatsApp"><MessageSquare className="h-4 w-4" /> WhatsApp</button>
+          <button onClick={() => { const msg = whatsAppMsg(a, businessName, a.status); window.open(`${whatsAppUrl(a.client_phone)}${msg ? `?text=${encodeURIComponent(msg)}` : ""}`, "_blank"); }} className="btn-outline-brand inline-flex items-center gap-1 !py-2 text-sm" title="Enviar mensagem"><MessageSquare className="h-4 w-4" /> Enviar mensagem</button>
           {a.status === "confirmed" && <Actions onUpdate={onUpdate} />}
         </div>
       </div>
@@ -197,17 +195,17 @@ function ApptRow({ a, businessName, onUpdate }: { a: Appt; businessName: string;
 function ApptCard({ a, businessName, onUpdate }: { a: Appt; businessName: string; onUpdate: (s: Appt["status"]) => void }) {
   return (
     <div className="card-elevated p-4 flex flex-col gap-2">
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex items-start justify-between gap-2">
         <p className="font-semibold truncate">{a.client_name}</p>
         <StatusBadge status={a.status} />
       </div>
       <p className="text-sm text-muted-foreground truncate">{a.service_snapshot_name}</p>
       <p className="text-sm font-medium">{formatBRL(a.service_snapshot_price_cents)}</p>
-      <p className="text-sm inline-flex items-center gap-1.5"><CalendarClock className="h-3.5 w-3.5 text-muted-foreground" /> {new Date(a.starts_at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}</p>
-      <p className="text-xs text-muted-foreground inline-flex items-center gap-1.5 truncate"><Phone className="h-3 w-3" /> {displayPhoneBR(a.client_phone)}</p>
-      {a.client_email && <p className="text-xs text-muted-foreground inline-flex items-center gap-1.5 truncate"><Mail className="h-3 w-3" /> {a.client_email}</p>}
-      <div className="flex gap-2 mt-auto pt-2">
-        <button onClick={() => window.open(`${whatsAppUrl(a.client_phone)}?text=${encodeURIComponent(whatsAppMsg(a, businessName, a.status))}`, "_blank")} className="btn-outline-brand inline-flex items-center gap-1 !py-2 text-sm flex-1 justify-center" title="Enviar WhatsApp"><MessageSquare className="h-4 w-4" /> WhatsApp</button>
+      <p className="text-xs text-muted-foreground inline-flex items-center gap-1"><CalendarClock className="h-3.5 w-3.5" /> {new Date(a.starts_at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}</p>
+      <p className="text-xs text-muted-foreground inline-flex items-center gap-1 truncate"><Phone className="h-3 w-3" /> {displayPhoneBR(a.client_phone)}</p>
+      {a.client_email && <p className="text-xs text-muted-foreground inline-flex items-center gap-1 truncate"><Mail className="h-3 w-3" /> {a.client_email}</p>}
+      <div className="flex gap-2 mt-auto pt-3">
+        <button onClick={() => { const msg = whatsAppMsg(a, businessName, a.status); window.open(`${whatsAppUrl(a.client_phone)}${msg ? `?text=${encodeURIComponent(msg)}` : ""}`, "_blank"); }} className="btn-outline-brand inline-flex items-center gap-1 !py-2 text-sm flex-1 justify-center" title="Enviar mensagem"><MessageSquare className="h-4 w-4" /> Enviar mensagem</button>
         {a.status === "confirmed" && <Actions onUpdate={onUpdate} />}
       </div>
     </div>
