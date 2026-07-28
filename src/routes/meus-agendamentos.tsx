@@ -144,7 +144,7 @@ function Page() {
 }
 
 function StatusPill({ status }: { status: Row["status"] }) {
-  const map = { confirmed: ["Confirmado", "text-accent"], cancelled: ["Cancelado", "text-destructive"], completed: ["Concluído", "text-success"] } as const;
+  const map = { confirmed: ["Confirmado", "bg-accent/10 text-accent border-accent/20"], cancelled: ["Cancelado", "bg-destructive/10 text-destructive border-destructive/20"], completed: ["Concluído", "bg-success/10 text-success border-success/20"] } as const;
   const [label, cls] = map[status];
-  return <span className={`inline-block text-xs font-semibold mt-2 ${cls}`}>{label}</span>;
+  return <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${cls}`}>{label}</span>;
 }
