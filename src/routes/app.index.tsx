@@ -45,15 +45,18 @@ function Dashboard() {
         <OnboardingCard />
       ) : (
         <>
-          <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 rounded-xl bg-primary text-primary-foreground">
-            <div>
+          <div
+            className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-5 rounded-2xl text-white shadow-[0_20px_60px_-30px_oklch(0.55_0.18_250_/_0.4)]"
+            style={{ backgroundImage: "linear-gradient(135deg, oklch(0.55 0.18 250) 0%, oklch(0.45 0.14 245) 100%)" }}
+          >
+            <div className="min-w-0">
               <p className="text-xs opacity-80">Sua página pública</p>
               <p className="font-mono text-sm break-all">/p/{pro.slug}</p>
             </div>
             <a
               href={`/p/${pro.slug}`}
               target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-background text-primary font-semibold rounded-lg px-4 py-2 min-h-[44px] hover:bg-secondary transition"
+              className="inline-flex items-center gap-2 bg-white text-foreground font-semibold rounded-full px-5 py-2.5 min-h-[44px] hover:bg-white/90 transition shrink-0"
             >
               <ExternalLink className="h-4 w-4" /> Ver página
             </a>
@@ -66,7 +69,7 @@ function Dashboard() {
           </div>
 
           <section className="mt-8 card-elevated p-5">
-            <h2 className="text-xl font-semibold text-primary mb-4">Agendamentos de hoje</h2>
+            <h2 className="text-xl font-black tracking-tight text-foreground mb-4">Agendamentos de hoje</h2>
             {(stats?.today.length ?? 0) === 0 ? (
               <p className="text-muted-foreground text-sm">Nenhum agendamento hoje.</p>
             ) : (
@@ -85,7 +88,7 @@ function Dashboard() {
           </section>
 
           <section className="mt-6 card-elevated p-5">
-            <h2 className="text-xl font-semibold text-primary mb-4">Próximos agendamentos</h2>
+            <h2 className="text-xl font-black tracking-tight text-foreground mb-4">Próximos agendamentos</h2>
             {(stats?.upcoming.length ?? 0) === 0 ? (
               <p className="text-muted-foreground text-sm">Nada agendado ainda. <Link to="/app/agendamentos" className="text-accent hover:underline">Ver todos</Link></p>
             ) : (
@@ -115,7 +118,7 @@ function StatCard({ icon: Icon, label, value, hint }: { icon: typeof Calendar; l
         <span className="text-sm font-medium text-muted-foreground">{label}</span>
         <Icon className="h-4 w-4 text-accent" />
       </div>
-      <p className="mt-2 text-3xl font-semibold text-primary">{value}</p>
+      <p className="mt-2 text-3xl font-black tracking-tight text-foreground">{value}</p>
       <p className="text-xs text-muted-foreground mt-1">{hint}</p>
     </div>
   );

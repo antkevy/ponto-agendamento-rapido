@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { BrandLogo } from "@/components/brand-logo";
 import { X, ArrowLeft, CalendarClock } from "lucide-react";
+import { PhoneInput } from "@/components/phone-input";
+import { isValidPhoneBR } from "@/lib/phone";
 
 
 export const Route = createFileRoute("/meus-agendamentos")({
@@ -14,14 +16,16 @@ export const Route = createFileRoute("/meus-agendamentos")({
 
 type Row = { id: string; professional_business_name: string; professional_slug: string; service_name: string; starts_at: string; ends_at: string; status: "confirmed" | "cancelled" | "completed"; client_name: string };
 
-function normalizeContact(raw: string): string {
+type Mode = "phone" | "email";
+
+function normalizeContact(raw: string, mode: Mode): string {
   const s = raw.trim();
-  if (s.includes("@")) return s.toLowerCase();
-  const digits = s.replace(/\D+/g, "");
-  return digits || s;
+  if (mode === "email") return s.toLowerCase();
+  return s.replace(/\D+/g, "");
 }
 
 function Page() {
+  const [mode, setMode] = useState<Mode>("phone");
   const [contact, setContact] = useState("");
   const [submitted, setSubmitted] = useState<string | null>(null);
   const qc = useQueryClient();
@@ -65,12 +69,50 @@ function Page() {
         <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-foreground leading-[1.05]">
           Meus <span style={{ color: "oklch(0.55 0.18 250)" }}>agendamentos.</span>
         </h1>
-        <p className="text-muted-foreground mt-3 mb-6">Digite o email ou telefone que você usou ao agendar.</p>
+        <p className="text-muted-foreground mt-3 mb-6">Escolha como você quer buscar seus agendamentos.</p>
 
-        <form onSubmit={(e) => { e.preventDefault(); setSubmitted(normalizeContact(contact)); }} className="bg-white border border-border rounded-2xl p-4 flex flex-col sm:flex-row gap-3 shadow-[0_20px_60px_-30px_oklch(0.55_0.18_250_/_0.25)]">
-          <input required value={contact} onChange={(e) => setContact(e.target.value)} placeholder="seu@email.com ou (11) 91234-5678" className="flex-1 min-h-[48px] px-4 py-3 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-ring" />
+        <div className="flex gap-2 mb-3">
+          <button type="button" onClick={() => { setMode("phone"); setContact(""); }} data-selected={mode === "phone"} className="chip !min-h-[40px] !py-1.5 text-sm">WhatsApp</button>
+          <button type="button" onClick={() => { setMode("email"); setContact(""); }} data-selected={mode === "email"} className="chip !min-h-[40px] !py-1.5 text-sm">Email</button>
+        </div>
+
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (mode === "phone" && !isValidPhoneBR(contact)) {
+              toast.error("Informe um WhatsApp válido no formato (XX) XXXXX-XXXX.");
+              return;
+            }
+            if (mode === "email" && !contact.includes("@")) {
+              toast.error("Informe um email válido.");
+              return;
+            }
+            setSubmitted(normalizeContact(contact, mode));
+          }}
+          className="bg-white border border-border rounded-2xl p-4 flex flex-col sm:flex-row gap-3 shadow-[0_20px_60px_-30px_oklch(0.55_0.18_250_/_0.25)]"
+        >
+          {mode === "phone" ? (
+            <PhoneInput
+              value={contact}
+              onChange={setContact}
+              placeholder="(11) 91234-5678"
+              className="flex-1 min-h-[48px] px-4 py-3 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-ring"
+              required
+            />
+          ) : (
+            <input
+              required
+              type="email"
+              inputMode="email"
+              value={contact}
+              onChange={(e) => setContact(e.target.value)}
+              placeholder="seu@email.com"
+              className="flex-1 min-h-[48px] px-4 py-3 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          )}
           <button className="btn-gradient inline-flex items-center justify-center">Consultar</button>
         </form>
+
 
 
         {submitted && (
