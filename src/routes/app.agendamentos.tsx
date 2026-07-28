@@ -1,14 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { OnboardingCard } from "@/components/onboarding-card";
 import { useMyProfessional } from "@/hooks/use-my-professional";
 import { supabase } from "@/integrations/supabase/client";
 import { formatBRL } from "@/lib/booking";
-import { X, CheckCheck } from "lucide-react";
+import { X, CheckCheck, Search, CalendarClock, Phone, Mail } from "lucide-react";
 import { displayPhoneBR } from "@/lib/phone";
+import { ViewToggle, type ViewMode } from "@/components/view-toggle";
 
 export const Route = createFileRoute("/app/agendamentos")({
   head: () => ({ meta: [{ title: "Agendamentos — Agendaí" }] }),
@@ -31,10 +32,25 @@ type Appt = {
   notes: string | null;
 };
 
+const RANGES: { key: Filter; label: string }[] = [
+  { key: "today", label: "Hoje" },
+  { key: "week", label: "7 dias" },
+  { key: "month", label: "30 dias" },
+  { key: "all", label: "Todos" },
+];
+const STATUSES: { key: StatusFilter; label: string; dotCls: string }[] = [
+  { key: "all", label: "Todos", dotCls: "bg-muted-foreground" },
+  { key: "confirmed", label: "Confirmados", dotCls: "bg-accent" },
+  { key: "completed", label: "Concluídos", dotCls: "bg-success" },
+  { key: "cancelled", label: "Cancelados", dotCls: "bg-destructive" },
+];
+
 function Page() {
   const { data: pro, isLoading } = useMyProfessional();
   const [range, setRange] = useState<Filter>("week");
   const [status, setStatus] = useState<StatusFilter>("all");
+  const [search, setSearch] = useState("");
+  const [view, setView] = useState<ViewMode>("list");
   const qc = useQueryClient();
 
   const { data: appts } = useQuery({
@@ -57,6 +73,18 @@ function Page() {
     },
   });
 
+  const filtered = useMemo(() => {
+    const list = appts ?? [];
+    const q = search.trim().toLowerCase();
+    if (!q) return list;
+    return list.filter((a) =>
+      a.client_name.toLowerCase().includes(q) ||
+      a.service_snapshot_name.toLowerCase().includes(q) ||
+      (a.client_phone ?? "").includes(q) ||
+      (a.client_email ?? "").toLowerCase().includes(q)
+    );
+  }, [appts, search]);
+
   const update = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: Appt["status"] }) => {
       const { error } = await supabase.from("appointments").update({ status }).eq("id", id);
@@ -70,48 +98,104 @@ function Page() {
     <AppShell title="Agendamentos">
       {isLoading ? <div className="skeleton h-32" /> : !pro ? <OnboardingCard /> : (
         <>
-          <div className="flex flex-wrap gap-2 mb-3">
-            {(["today","week","month","all"] as Filter[]).map((r) => (
-              <button key={r} onClick={() => setRange(r)} data-selected={range === r} className="chip !min-h-[38px] !py-1.5 text-sm">
-                {r === "today" ? "Hoje" : r === "week" ? "7 dias" : r === "month" ? "30 dias" : "Todos"}
-              </button>
-            ))}
-          </div>
-          <div className="flex flex-wrap gap-2 mb-6">
-            {(["all","confirmed","completed","cancelled"] as StatusFilter[]).map((s) => (
-              <button key={s} onClick={() => setStatus(s)} data-selected={status === s} className="chip !min-h-[38px] !py-1.5 text-sm">
-                {s === "all" ? "Todos" : s === "confirmed" ? "Confirmados" : s === "completed" ? "Concluídos" : "Cancelados"}
-              </button>
-            ))}
+          <div className="card-elevated p-4 mb-5 space-y-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Período</p>
+              <div className="flex flex-wrap gap-2">
+                {RANGES.map((r) => (
+                  <button key={r.key} onClick={() => setRange(r.key)} data-selected={range === r.key || undefined} className="chip !min-h-[36px] !py-1.5 text-sm">
+                    {r.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Status</p>
+              <div className="flex flex-wrap gap-2">
+                {STATUSES.map((s) => (
+                  <button key={s.key} onClick={() => setStatus(s.key)} data-selected={status === s.key || undefined} className="chip !min-h-[36px] !py-1.5 text-sm inline-flex items-center gap-1.5">
+                    <span className={`h-2 w-2 rounded-full ${s.dotCls}`} />
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+              <div className="relative flex-1">
+                <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Buscar por cliente, serviço, telefone ou email..."
+                  className="w-full min-h-[40px] pl-9 pr-3 py-2 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-ring text-sm"
+                />
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-xs text-muted-foreground">{filtered.length} resultado(s)</span>
+                <ViewToggle value={view} onChange={setView} />
+              </div>
+            </div>
           </div>
 
-          <div className="space-y-3">
-            {(appts ?? []).length === 0 && <p className="text-muted-foreground text-sm">Nenhum agendamento neste período.</p>}
-            {(appts ?? []).map((a) => (
-              <div key={a.id} className="card-elevated p-4">
-                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-semibold truncate">{a.client_name}</p>
-                      <StatusBadge status={a.status} />
-                    </div>
-                    <p className="text-sm text-muted-foreground">{a.service_snapshot_name} · {formatBRL(a.service_snapshot_price_cents)}</p>
-                    <p className="text-sm mt-1">{new Date(a.starts_at).toLocaleString("pt-BR", { dateStyle: "medium", timeStyle: "short" })}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{displayPhoneBR(a.client_phone)}{a.client_email ? ` · ${a.client_email}` : ""}</p>
-                  </div>
-                  {a.status === "confirmed" && (
-                    <div className="flex gap-2 shrink-0">
-                      <button onClick={() => update.mutate({ id: a.id, status: "completed" })} className="btn-outline-brand inline-flex items-center gap-1 !py-2 text-sm"><CheckCheck className="h-4 w-4" /> Concluir</button>
-                      <button onClick={() => { if (confirm("Cancelar este agendamento?")) update.mutate({ id: a.id, status: "cancelled" }); }} className="btn-outline-brand inline-flex items-center gap-1 !py-2 text-sm text-destructive"><X className="h-4 w-4" /> Cancelar</button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
+          {filtered.length === 0 ? (
+            <p className="text-muted-foreground text-sm">Nenhum agendamento encontrado.</p>
+          ) : view === "list" ? (
+            <div className="space-y-3">
+              {filtered.map((a) => <ApptRow key={a.id} a={a} onUpdate={(s) => update.mutate({ id: a.id, status: s })} />)}
+            </div>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {filtered.map((a) => <ApptCard key={a.id} a={a} onUpdate={(s) => update.mutate({ id: a.id, status: s })} />)}
+            </div>
+          )}
         </>
       )}
     </AppShell>
+  );
+}
+
+function ApptRow({ a, onUpdate }: { a: Appt; onUpdate: (s: Appt["status"]) => void }) {
+  return (
+    <div className="card-elevated p-4">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="font-semibold truncate">{a.client_name}</p>
+            <StatusBadge status={a.status} />
+          </div>
+          <p className="text-sm text-muted-foreground">{a.service_snapshot_name} · {formatBRL(a.service_snapshot_price_cents)}</p>
+          <p className="text-sm mt-1">{new Date(a.starts_at).toLocaleString("pt-BR", { dateStyle: "medium", timeStyle: "short" })}</p>
+          <p className="text-xs text-muted-foreground mt-1">{displayPhoneBR(a.client_phone)}{a.client_email ? ` · ${a.client_email}` : ""}</p>
+        </div>
+        {a.status === "confirmed" && <Actions onUpdate={onUpdate} />}
+      </div>
+    </div>
+  );
+}
+
+function ApptCard({ a, onUpdate }: { a: Appt; onUpdate: (s: Appt["status"]) => void }) {
+  return (
+    <div className="card-elevated p-4 flex flex-col gap-2">
+      <div className="flex items-center justify-between gap-2">
+        <p className="font-semibold truncate">{a.client_name}</p>
+        <StatusBadge status={a.status} />
+      </div>
+      <p className="text-sm text-muted-foreground truncate">{a.service_snapshot_name}</p>
+      <p className="text-sm font-medium">{formatBRL(a.service_snapshot_price_cents)}</p>
+      <p className="text-sm inline-flex items-center gap-1.5"><CalendarClock className="h-3.5 w-3.5 text-muted-foreground" /> {new Date(a.starts_at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}</p>
+      <p className="text-xs text-muted-foreground inline-flex items-center gap-1.5 truncate"><Phone className="h-3 w-3" /> {displayPhoneBR(a.client_phone)}</p>
+      {a.client_email && <p className="text-xs text-muted-foreground inline-flex items-center gap-1.5 truncate"><Mail className="h-3 w-3" /> {a.client_email}</p>}
+      {a.status === "confirmed" && <div className="mt-2"><Actions onUpdate={onUpdate} /></div>}
+    </div>
+  );
+}
+
+function Actions({ onUpdate }: { onUpdate: (s: Appt["status"]) => void }) {
+  return (
+    <div className="flex gap-2 shrink-0">
+      <button onClick={() => onUpdate("completed")} className="btn-outline-brand inline-flex items-center gap-1 !py-2 text-sm"><CheckCheck className="h-4 w-4" /> Concluir</button>
+      <button onClick={() => { if (confirm("Cancelar este agendamento?")) onUpdate("cancelled"); }} className="btn-outline-brand inline-flex items-center gap-1 !py-2 text-sm text-destructive"><X className="h-4 w-4" /> Cancelar</button>
+    </div>
   );
 }
 
