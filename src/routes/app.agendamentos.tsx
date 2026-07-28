@@ -132,7 +132,7 @@ function Page() {
               </div>
               <div className="flex items-center justify-between gap-3">
                 <span className="text-xs text-muted-foreground">{filtered.length} resultado(s)</span>
-                <ViewToggle value={view} onChange={setView} />
+                <span className="max-sm:hidden"><ViewToggle value={view} onChange={setView} /></span>
               </div>
             </div>
           </div>
