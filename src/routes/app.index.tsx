@@ -88,7 +88,7 @@ function Dashboard() {
           </section>
 
           <section className="mt-6 card-elevated p-5">
-            <h2 className="text-xl font-semibold text-primary mb-4">Próximos agendamentos</h2>
+            <h2 className="text-xl font-black tracking-tight text-foreground mb-4">Próximos agendamentos</h2>
             {(stats?.upcoming.length ?? 0) === 0 ? (
               <p className="text-muted-foreground text-sm">Nada agendado ainda. <Link to="/app/agendamentos" className="text-accent hover:underline">Ver todos</Link></p>
             ) : (
