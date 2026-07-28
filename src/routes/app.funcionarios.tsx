@@ -166,7 +166,7 @@ function NewEmployeeForm({ onSubmit, saving }: { onSubmit: (v: { name: string; p
     <form onSubmit={(e) => { e.preventDefault(); onSubmit({ name: name.trim(), photo_url: photo.trim() || null }); }} className="space-y-4">
       <h2 className="text-2xl font-black tracking-tight text-foreground">Novo funcionário</h2>
       <label className="block"><span className="text-sm font-medium">Nome</span>
-        <input required value={name} onChange={(e) => setName(e.target.value)} className={inputCls} /></label>
+        <input required value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome do funcionário" className={inputCls} /></label>
       <ImageUpload value={photo} onChange={setPhoto} label="Foto (opcional)" shape="circle" folder="employees" />
       <button disabled={saving} className="btn-brand w-full disabled:opacity-60">{saving ? "Salvando..." : "Adicionar"}</button>
     </form>
@@ -219,7 +219,7 @@ function DataTab({ employee, onSaved }: { employee: Employee; onSaved: () => voi
   return (
     <form onSubmit={(e) => { e.preventDefault(); save.mutate(); }} className="space-y-4">
       <label className="block"><span className="text-sm font-medium">Nome</span>
-        <input required value={name} onChange={(e) => setName(e.target.value)} className={inputCls} /></label>
+        <input required value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome do funcionário" className={inputCls} /></label>
       <ImageUpload value={photo} onChange={setPhoto} label="Foto" shape="circle" folder="employees" />
 
       <button disabled={save.isPending} className="btn-brand w-full disabled:opacity-60">{save.isPending ? "Salvando..." : "Salvar"}</button>
@@ -405,11 +405,11 @@ function BlocksTab({ employee }: { employee: Employee }) {
     <div className="space-y-3 max-h-[60vh] overflow-y-auto">
       <form onSubmit={(e) => { e.preventDefault(); add.mutate(); }} className="grid grid-cols-2 gap-2 p-3 border border-border rounded-lg">
         <label className="block col-span-1"><span className="text-xs font-medium">Início</span>
-          <input type="datetime-local" value={start} onChange={(e) => setStart(e.target.value)} className={inputCls + " !min-h-[38px] text-sm"} /></label>
+          <input type="datetime-local" value={start} onChange={(e) => setStart(e.target.value)} placeholder="Data e hora de início" className={inputCls + " !min-h-[38px] text-sm"} /></label>
         <label className="block col-span-1"><span className="text-xs font-medium">Fim</span>
-          <input type="datetime-local" value={end} onChange={(e) => setEnd(e.target.value)} className={inputCls + " !min-h-[38px] text-sm"} /></label>
+          <input type="datetime-local" value={end} onChange={(e) => setEnd(e.target.value)} placeholder="Data e hora de fim" className={inputCls + " !min-h-[38px] text-sm"} /></label>
         <label className="block col-span-2"><span className="text-xs font-medium">Motivo (opcional)</span>
-          <input value={reason} onChange={(e) => setReason(e.target.value)} className={inputCls + " !min-h-[38px] text-sm"} /></label>
+          <input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Férias, feriado..." className={inputCls + " !min-h-[38px] text-sm"} /></label>
         <button disabled={add.isPending} className="btn-brand col-span-2 text-sm">{add.isPending ? "..." : "Adicionar bloqueio"}</button>
       </form>
       <ul className="space-y-2">

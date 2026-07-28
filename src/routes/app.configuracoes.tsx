@@ -55,16 +55,16 @@ function Page() {
       {isLoading ? <div className="skeleton h-32" /> : !pro ? <OnboardingCard /> : (
         <form onSubmit={(e) => { e.preventDefault(); save.mutate(); }} className="card-elevated p-6 space-y-5 max-w-2xl">
           <F label="Nome do negócio">
-            <input required value={form.business_name} onChange={(e) => setForm({ ...form, business_name: e.target.value })} className={cls} />
+            <input required value={form.business_name} onChange={(e) => setForm({ ...form, business_name: e.target.value })} placeholder="Ex.: Barbearia do João" className={cls} />
           </F>
           <F label="Endereço público" hint={`agendai.com.br/p/${form.slug || "seu-negocio"}`}>
-            <input required value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} className={cls} />
+            <input required value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} placeholder="meu-negocio" className={cls} />
           </F>
           <F label="Descrição">
             <textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className={cls} placeholder="Fale um pouco sobre seu negócio..." />
           </F>
           <div className="grid sm:grid-cols-2 gap-4">
-            <F label="Endereço físico"><input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className={cls} /></F>
+            <F label="Endereço físico"><input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="Rua, número, bairro..." className={cls} /></F>
             <F label="Telefone de contato"><PhoneInput value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} className={cls} /></F>
           </div>
           <ImageUpload

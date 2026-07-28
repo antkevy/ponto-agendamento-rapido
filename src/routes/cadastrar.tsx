@@ -75,13 +75,13 @@ function SignUp() {
           <input required value={businessName} onChange={(e) => setBusinessName(e.target.value)} placeholder="Ex.: Barbearia do João" className={inputCls} />
         </Field>
         <Field label="Seu nome">
-          <input required value={ownerName} onChange={(e) => setOwnerName(e.target.value)} className={inputCls} />
+          <input required value={ownerName} onChange={(e) => setOwnerName(e.target.value)} placeholder="Seu nome completo" className={inputCls} />
         </Field>
         <Field label="Email">
-          <input type="email" required inputMode="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} />
+          <input type="email" required inputMode="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" className={inputCls} />
         </Field>
         <Field label="Senha (mínimo 6 caracteres)">
-          <input type="password" required minLength={6} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} className={inputCls} />
+          <input type="password" required minLength={6} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Mínimo 6 caracteres" className={inputCls} />
         </Field>
         <button type="submit" disabled={loading} className="btn-gradient w-full inline-flex items-center justify-center gap-2 disabled:opacity-60">
           {loading ? "Criando..." : "Criar minha conta"}

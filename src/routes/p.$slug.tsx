@@ -41,7 +41,7 @@ export const Route = createFileRoute("/p/$slug")({
   component: BookingPage,
 });
 
-type Service = { id: string; name: string; duration_minutes: number; price_cents: number; description: string | null; is_active: boolean };
+type Service = { id: string; name: string; duration_minutes: number; price_cents: number; description: string | null; image_url: string | null; is_active: boolean };
 type Employee = { id: string; name: string; photo_url: string | null; is_active: boolean };
 
 type Step = "service" | "employee" | "when" | "form" | "done";
@@ -168,10 +168,13 @@ function BookingPage() {
                       className="w-full text-left card-elevated p-4 hover:border-accent transition-all hover:-translate-y-0.5"
                     >
                       <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="font-semibold">{s.name}</p>
-                          {s.description && <p className="text-sm text-muted-foreground mt-1">{s.description}</p>}
-                          <p className="text-sm mt-2 inline-flex items-center gap-1 text-muted-foreground"><Clock className="h-3 w-3" /> {s.duration_minutes} minutos</p>
+                        <div className="flex items-center gap-4 min-w-0">
+                          {s.image_url && <img src={s.image_url} alt={s.name} className="h-14 w-14 rounded-lg object-cover shrink-0" />}
+                          <div className="min-w-0">
+                            <p className="font-semibold">{s.name}</p>
+                            {s.description && <p className="text-sm text-muted-foreground mt-1">{s.description}</p>}
+                            <p className="text-sm mt-2 inline-flex items-center gap-1 text-muted-foreground"><Clock className="h-3 w-3" /> {s.duration_minutes} minutos</p>
+                          </div>
                         </div>
                         <span className="font-semibold text-primary shrink-0">{formatBRL(s.price_cents)}</span>
                       </div>
@@ -187,6 +190,7 @@ function BookingPage() {
                       onClick={() => handleServicePick(s)}
                       className="w-full h-full text-left card-elevated p-4 hover:border-accent transition-all hover:-translate-y-0.5 flex flex-col gap-2"
                     >
+                      {s.image_url && <img src={s.image_url} alt={s.name} className="w-full h-28 rounded-lg object-cover" />}
                       <p className="font-semibold truncate">{s.name}</p>
                       <p className="text-xs text-muted-foreground inline-flex items-center gap-1"><Clock className="h-3 w-3" /> {s.duration_minutes} min</p>
                       <p className="text-lg font-black tracking-tight text-primary mt-auto">{formatBRL(s.price_cents)}</p>
@@ -496,10 +500,10 @@ function FormStep({ pro, service, employee, when, onDone, brand }: { pro: { id: 
         {employee && <p className="text-muted-foreground mt-1">com {employee.name}</p>}
       </div>
       <form onSubmit={(e) => { e.preventDefault(); create.mutate(); }} className="space-y-3">
-        <F label="Nome completo"><input required value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" className={cls} /></F>
+        <F label="Nome completo"><input required value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" placeholder="Seu nome completo" className={cls} /></F>
         <F label="WhatsApp"><PhoneInput value={phone} onChange={setPhone} className={cls} /></F>
-        <F label="Email (opcional)"><input type="email" inputMode="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className={cls} /></F>
-        <F label="Observação (opcional)"><textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} className={cls} /></F>
+        <F label="Email (opcional)"><input type="email" inputMode="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" className={cls} /></F>
+        <F label="Observação (opcional)"><textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Alguma observação?" className={cls} /></F>
         <button disabled={create.isPending} className="btn-gradient w-full inline-flex items-center justify-center disabled:opacity-60">
           {create.isPending ? "Confirmando..." : "Confirmar agendamento"}
         </button>

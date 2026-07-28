@@ -76,9 +76,9 @@ function BlockForm({ onSubmit, saving }: { onSubmit: (v: { starts_at: string; en
   return (
     <form onSubmit={(e) => { e.preventDefault(); if (!start || !end) return; onSubmit({ starts_at: new Date(start).toISOString(), ends_at: new Date(end).toISOString(), reason: reason || null }); }} className="card-elevated p-4 grid gap-3 sm:grid-cols-2">
       <label className="block"><span className="text-sm font-medium">Início</span>
-        <input required type="datetime-local" value={start} onChange={(e) => setStart(e.target.value)} className={inputCls} /></label>
+        <input required type="datetime-local" value={start} onChange={(e) => setStart(e.target.value)} placeholder="Data e hora de início" className={inputCls} /></label>
       <label className="block"><span className="text-sm font-medium">Fim</span>
-        <input required type="datetime-local" value={end} onChange={(e) => setEnd(e.target.value)} className={inputCls} /></label>
+        <input required type="datetime-local" value={end} onChange={(e) => setEnd(e.target.value)} placeholder="Data e hora de fim" className={inputCls} /></label>
       <label className="block sm:col-span-2"><span className="text-sm font-medium">Motivo (opcional)</span>
         <input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Férias, feriado..." className={inputCls} /></label>
       <button disabled={saving} className="btn-brand sm:col-span-2 disabled:opacity-60">{saving ? "Salvando..." : "Adicionar bloqueio"}</button>

@@ -170,19 +170,20 @@ function ServiceForm({ initial, onSubmit, saving }: { initial: Partial<Service>;
             <Upload className="h-4 w-4" /> Escolher foto
           </button>
         )}
+        <p className="text-xs text-muted-foreground mt-1">Recomendado: 600×400 px (3:2)</p>
         <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
       </div>
 
       <label className="block"><span className="text-sm font-medium">Nome</span>
-        <input required value={name} onChange={(e) => setName(e.target.value)} className={inputCls} /></label>
+        <input required value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex.: Corte de cabelo" className={inputCls} /></label>
       <div className="grid grid-cols-2 gap-3">
         <label className="block"><span className="text-sm font-medium">Duração (min)</span>
-          <input required type="number" inputMode="numeric" min={5} step={5} value={duration} onChange={(e) => setDuration(Number(e.target.value))} className={inputCls} /></label>
+          <input required type="number" inputMode="numeric" min={5} step={5} value={duration} onChange={(e) => setDuration(Number(e.target.value))} placeholder="30" className={inputCls} /></label>
         <label className="block"><span className="text-sm font-medium">Preço (R$)</span>
-          <input inputMode="decimal" value={priceReais} onChange={(e) => setPriceReais(e.target.value)} className={inputCls} /></label>
+          <input inputMode="decimal" value={priceReais} onChange={(e) => setPriceReais(e.target.value)} placeholder="0,00" className={inputCls} /></label>
       </div>
       <label className="block"><span className="text-sm font-medium">Descrição (opcional)</span>
-        <textarea rows={3} value={description ?? ""} onChange={(e) => setDescription(e.target.value)} className={inputCls} /></label>
+        <textarea rows={3} value={description ?? ""} onChange={(e) => setDescription(e.target.value)} placeholder="Descreva o serviço..." className={inputCls} /></label>
       <button disabled={saving} className="btn-brand w-full disabled:opacity-60">{saving ? "Salvando..." : "Salvar"}</button>
     </form>
   );

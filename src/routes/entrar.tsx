@@ -35,10 +35,10 @@ function SignIn() {
     >
       <form onSubmit={onSubmit} className="space-y-4">
         <Field label="Email">
-          <input type="email" required inputMode="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} />
+          <input type="email" required inputMode="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" className={inputCls} />
         </Field>
         <Field label="Senha">
-          <input type="password" required autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} className={inputCls} />
+          <input type="password" required autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Sua senha" className={inputCls} />
         </Field>
         <button type="submit" disabled={loading} className="btn-gradient w-full inline-flex items-center justify-center gap-2 disabled:opacity-60">
           {loading ? "Entrando..." : (<>Entrar <ArrowRight className="h-5 w-5" /></>)}
