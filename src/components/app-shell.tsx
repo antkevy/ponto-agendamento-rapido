@@ -43,7 +43,7 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
     <div className="min-h-screen bg-surface">
       {/* Mobile top bar */}
       <header className="lg:hidden sticky top-0 z-30 bg-background border-b border-border flex items-center justify-between px-4 h-14">
-        <Link to="/app" className="font-display text-xl text-primary">Agendaí</Link>
+        <BrandLogo to="/app" size="sm" />
         <button onClick={() => setOpen(!open)} aria-label="Menu" className="p-2 min-h-[44px] min-w-[44px] grid place-items-center rounded-md hover:bg-muted">
           <Menu className="h-5 w-5" />
         </button>
