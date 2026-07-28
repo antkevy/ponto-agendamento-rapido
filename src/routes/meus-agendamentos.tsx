@@ -12,6 +12,13 @@ export const Route = createFileRoute("/meus-agendamentos")({
 
 type Row = { id: string; professional_business_name: string; professional_slug: string; service_name: string; starts_at: string; ends_at: string; status: "confirmed" | "cancelled" | "completed"; client_name: string };
 
+function normalizeContact(raw: string): string {
+  const s = raw.trim();
+  if (s.includes("@")) return s.toLowerCase();
+  const digits = s.replace(/\D+/g, "");
+  return digits || s;
+}
+
 function Page() {
   const [contact, setContact] = useState("");
   const [submitted, setSubmitted] = useState<string | null>(null);
@@ -50,7 +57,7 @@ function Page() {
         <h1 className="text-3xl font-display text-primary">Meus agendamentos</h1>
         <p className="text-muted-foreground mt-1 mb-6">Digite o email ou telefone que você usou ao agendar.</p>
 
-        <form onSubmit={(e) => { e.preventDefault(); setSubmitted(contact.trim()); }} className="card-elevated p-4 flex flex-col sm:flex-row gap-3">
+        <form onSubmit={(e) => { e.preventDefault(); setSubmitted(normalizeContact(contact)); }} className="card-elevated p-4 flex flex-col sm:flex-row gap-3">
           <input required value={contact} onChange={(e) => setContact(e.target.value)} placeholder="seu@email.com ou (11) 91234-5678" className="flex-1 min-h-[48px] px-3 py-2 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-ring" />
           <button className="btn-brand">Consultar</button>
         </form>
