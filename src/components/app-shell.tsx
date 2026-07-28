@@ -84,7 +84,7 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
 
         <main className="flex-1 min-w-0">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-10 py-6 lg:py-10">
-            {title && <h1 className="text-3xl lg:text-4xl text-primary mb-6 animate-fade-in-up">{title}</h1>}
+            {title && <h1 className="text-3xl lg:text-4xl font-black tracking-tight text-foreground mb-6 animate-fade-in-up">{title}</h1>}
             {children}
           </div>
         </main>
