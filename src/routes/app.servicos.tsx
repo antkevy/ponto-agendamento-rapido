@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { OnboardingCard } from "@/components/onboarding-card";
@@ -8,7 +8,7 @@ import { useMyProfessional } from "@/hooks/use-my-professional";
 import { supabase } from "@/integrations/supabase/client";
 import { formatBRL } from "@/lib/booking";
 import { ViewToggle, type ViewMode } from "@/components/view-toggle";
-import { Pencil, Trash2, Plus, Clock } from "lucide-react";
+import { Pencil, Trash2, Plus, Clock, Upload, X } from "lucide-react";
 
 
 export const Route = createFileRoute("/app/servicos")({
@@ -16,7 +16,7 @@ export const Route = createFileRoute("/app/servicos")({
   component: Page,
 });
 
-type Service = { id: string; name: string; duration_minutes: number; price_cents: number; description: string | null; is_active: boolean };
+type Service = { id: string; name: string; duration_minutes: number; price_cents: number; description: string | null; image_url: string | null; is_active: boolean };
 
 function Page() {
   const { data: pro, isLoading } = useMyProfessional();
@@ -36,13 +36,22 @@ function Page() {
   });
 
   const save = useMutation({
-    mutationFn: async (s: Partial<Service>) => {
+    mutationFn: async ({ image, ...s }: Partial<Service> & { image?: File }) => {
       if (!pro) throw new Error();
+      let image_url = s.image_url ?? null;
+      if (image) {
+        const ext = image.name.split(".").pop();
+        const path = `${pro.user_id}/services/${crypto.randomUUID()}.${ext}`;
+        const { error: uploadError } = await supabase.storage.from("brand-assets").upload(path, image);
+        if (uploadError) throw uploadError;
+        const { data: urlData } = supabase.storage.from("brand-assets").getPublicUrl(path);
+        image_url = urlData.publicUrl;
+      }
       if (s.id) {
-        const { error } = await supabase.from("services").update({ name: s.name!, duration_minutes: s.duration_minutes!, price_cents: s.price_cents ?? 0, description: s.description ?? null, is_active: s.is_active ?? true }).eq("id", s.id);
+        const { error } = await supabase.from("services").update({ name: s.name!, duration_minutes: s.duration_minutes!, price_cents: s.price_cents ?? 0, description: s.description ?? null, image_url, is_active: s.is_active ?? true }).eq("id", s.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("services").insert({ professional_id: pro.id, name: s.name!, duration_minutes: s.duration_minutes!, price_cents: s.price_cents ?? 0, description: s.description ?? null });
+        const { error } = await supabase.from("services").insert({ professional_id: pro.id, name: s.name!, duration_minutes: s.duration_minutes!, price_cents: s.price_cents ?? 0, description: s.description ?? null, image_url });
         if (error) throw error;
       }
     },
@@ -71,28 +80,32 @@ function Page() {
             <div className="grid gap-3">
               {(services ?? []).map((s) => (
                 <div key={s.id} className="card-elevated p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="font-semibold truncate">{s.name}</p>
-                    <p className="text-sm text-muted-foreground">{s.duration_minutes} min · {formatBRL(s.price_cents)}</p>
-                    {s.description && <p className="text-sm mt-1 text-muted-foreground line-clamp-2">{s.description}</p>}
+                  <div className="flex items-center gap-4 min-w-0">
+                    {s.image_url && <img src={s.image_url} alt={s.name} className="h-14 w-14 rounded-lg object-cover shrink-0" />}
+                    <div className="min-w-0">
+                      <p className="font-semibold truncate">{s.name}</p>
+                      <p className="text-sm text-muted-foreground">{s.duration_minutes} min · {formatBRL(s.price_cents)}</p>
+                      {s.description && <p className="text-sm mt-1 text-muted-foreground line-clamp-2">{s.description}</p>}
+                    </div>
                   </div>
                   <div className="flex gap-2 shrink-0">
-                    <button onClick={() => setEditing(s)} className="btn-outline-brand inline-flex items-center gap-1 text-sm !py-2"><Pencil className="h-4 w-4" /> Editar</button>
+                    <button onClick={() => setEditing(s)} className="btn-outline-brand inline-flex items-center gap-1 text-sm !py-2"><Pencil className="h-4 w-4" /></button>
                     <button onClick={() => { if (confirm("Excluir este serviço?")) remove.mutate(s.id); }} className="btn-outline-brand inline-flex items-center gap-1 text-sm !py-2 text-destructive"><Trash2 className="h-4 w-4" /></button>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="grid gap-4 grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
               {(services ?? []).map((s) => (
                 <div key={s.id} className="card-elevated p-4 flex flex-col gap-2">
+                  {s.image_url && <img src={s.image_url} alt={s.name} className="w-full h-32 rounded-lg object-cover" />}
                   <p className="font-semibold truncate">{s.name}</p>
                   <p className="text-sm text-muted-foreground inline-flex items-center gap-1.5"><Clock className="h-3.5 w-3.5" /> {s.duration_minutes} min</p>
                   <p className="text-lg font-black tracking-tight">{formatBRL(s.price_cents)}</p>
                   {s.description && <p className="text-sm text-muted-foreground line-clamp-3">{s.description}</p>}
                   <div className="flex gap-2 mt-auto pt-2">
-                    <button onClick={() => setEditing(s)} className="btn-outline-brand inline-flex items-center gap-1 text-sm !py-2 flex-1 justify-center"><Pencil className="h-4 w-4" /> Editar</button>
+                    <button onClick={() => setEditing(s)} className="btn-outline-brand inline-flex items-center gap-1 text-sm !py-2 flex-1 justify-center"><Pencil className="h-4 w-4" /></button>
                     <button onClick={() => { if (confirm("Excluir este serviço?")) remove.mutate(s.id); }} className="btn-outline-brand inline-flex items-center gap-1 text-sm !py-2 text-destructive"><Trash2 className="h-4 w-4" /></button>
                   </div>
                 </div>
@@ -112,15 +125,47 @@ function Page() {
   );
 }
 
-function ServiceForm({ initial, onSubmit, saving }: { initial: Partial<Service>; onSubmit: (s: Partial<Service>) => void; saving: boolean }) {
+function ServiceForm({ initial, onSubmit, saving }: { initial: Partial<Service>; onSubmit: (s: Partial<Service> & { image?: File }) => void; saving: boolean }) {
   const [name, setName] = useState(initial.name ?? "");
   const [duration, setDuration] = useState(initial.duration_minutes ?? 30);
   const [priceReais, setPriceReais] = useState(((initial.price_cents ?? 0) / 100).toString().replace(".", ","));
   const [description, setDescription] = useState(initial.description ?? "");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState(initial.image_url ?? "");
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageFile(file);
+    setPreview(URL.createObjectURL(file));
+  }
+
+  function clearImage() {
+    setImageFile(null);
+    setPreview("");
+    if (fileRef.current) fileRef.current.value = "";
+  }
 
   return (
-    <form onSubmit={(e) => { e.preventDefault(); const cents = Math.round(parseFloat(priceReais.replace(",", ".") || "0") * 100); onSubmit({ id: initial.id, name, duration_minutes: duration, price_cents: cents, description }); }} className="space-y-4">
+    <form onSubmit={(e) => { e.preventDefault(); const cents = Math.round(parseFloat(priceReais.replace(",", ".") || "0") * 100); onSubmit({ id: initial.id, name, duration_minutes: duration, price_cents: cents, description: description || null, image_url: initial.image_url, image: imageFile ?? undefined }); }} className="space-y-4">
       <h2 className="text-2xl font-black tracking-tight text-foreground">{initial.id ? "Editar" : "Novo"} serviço</h2>
+
+      <div>
+        <span className="text-sm font-medium">Foto (opcional)</span>
+        {preview ? (
+          <div className="relative mt-1 w-full h-36 rounded-lg overflow-hidden border border-border">
+            <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+            <button type="button" onClick={clearImage} className="absolute top-2 right-2 bg-background/80 rounded-full p-1"><X className="h-4 w-4" /></button>
+          </div>
+        ) : (
+          <button type="button" onClick={() => fileRef.current?.click()} className="w-full mt-1 min-h-[44px] rounded-lg border-2 border-dashed border-border flex items-center justify-center gap-2 text-sm text-muted-foreground hover:bg-muted transition-colors">
+            <Upload className="h-4 w-4" /> Escolher foto
+          </button>
+        )}
+        <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
+      </div>
+
       <label className="block"><span className="text-sm font-medium">Nome</span>
         <input required value={name} onChange={(e) => setName(e.target.value)} className={inputCls} /></label>
       <div className="grid grid-cols-2 gap-3">
