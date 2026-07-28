@@ -7,7 +7,9 @@ import { OnboardingCard } from "@/components/onboarding-card";
 import { useMyProfessional } from "@/hooks/use-my-professional";
 import { supabase } from "@/integrations/supabase/client";
 import { formatBRL } from "@/lib/booking";
-import { Pencil, Trash2, Plus } from "lucide-react";
+import { ViewToggle, type ViewMode } from "@/components/view-toggle";
+import { Pencil, Trash2, Plus, Clock } from "lucide-react";
+
 
 export const Route = createFileRoute("/app/servicos")({
   head: () => ({ meta: [{ title: "Serviços — Agendaí" }] }),
