@@ -180,9 +180,7 @@ function Landing() {
       </section>
 
       {/* How it works */}
-      <section id="como-funciona" className="py-20 sm:py-28" style={{
-        backgroundImage: "linear-gradient(180deg, #ffffff 0%, oklch(0.98 0.015 250) 100%)",
-      }}>
+      <section id="como-funciona" className="py-20 sm:py-28 bg-section-soft">
         <div className="max-w-5xl mx-auto px-5 sm:px-8 text-center">
           <p className="text-sm font-semibold uppercase tracking-widest" style={{ color: "oklch(0.55 0.18 250)" }}>Como funciona</p>
           <h2 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-foreground">
@@ -232,9 +230,7 @@ function Landing() {
       </section>
 
       {/* FAQ */}
-      <section id="faq" className="py-20 sm:py-28" style={{
-        backgroundImage: "linear-gradient(180deg, oklch(0.98 0.015 250) 0%, #ffffff 100%)",
-      }}>
+      <section id="faq" className="py-20 sm:py-28 bg-section-soft-reverse">
         <div className="max-w-3xl mx-auto px-5 sm:px-8">
           <div className="text-center">
             <p className="text-sm font-semibold uppercase tracking-widest" style={{ color: "oklch(0.55 0.18 250)" }}>Perguntas frequentes</p>
