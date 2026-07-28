@@ -65,7 +65,11 @@ function SignUp() {
   }
 
   return (
-    <AuthLayout title="Criar conta" subtitle="Grátis. Sem cartão de crédito.">
+    <AuthLayout
+      title="Comece grátis."
+      accent="Em 2 minutos."
+      subtitle="Crie sua conta e receba agendamentos online sem precisar responder mensagem por mensagem."
+    >
       <form onSubmit={onSubmit} className="space-y-4">
         <Field label="Nome do seu negócio">
           <input required value={businessName} onChange={(e) => setBusinessName(e.target.value)} placeholder="Ex.: Barbearia do João" className={inputCls} />
@@ -79,14 +83,15 @@ function SignUp() {
         <Field label="Senha (mínimo 6 caracteres)">
           <input type="password" required minLength={6} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} className={inputCls} />
         </Field>
-        <button type="submit" disabled={loading} className="btn-brand w-full disabled:opacity-60">
+        <button type="submit" disabled={loading} className="btn-gradient w-full inline-flex items-center justify-center gap-2 disabled:opacity-60">
           {loading ? "Criando..." : "Criar minha conta"}
         </button>
       </form>
       <p className="mt-6 text-sm text-muted-foreground text-center">
         Já tem conta?{" "}
-        <Link to="/entrar" className="text-accent font-semibold hover:underline">Entrar</Link>
+        <Link to="/entrar" className="font-semibold hover:underline" style={{ color: "oklch(0.55 0.18 250)" }}>Entrar</Link>
       </p>
     </AuthLayout>
   );
 }
+
