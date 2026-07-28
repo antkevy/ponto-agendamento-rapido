@@ -197,17 +197,15 @@ function BookingPage() {
                       className="w-full h-full text-left card-elevated p-4 hover:border-accent transition-all hover:-translate-y-0.5 flex flex-col gap-2"
                     >
                       {s.image_url && <img src={s.image_url} alt={s.name} className="w-full h-28 rounded-lg object-cover" />}
-                      <div className="flex items-start justify-between gap-1">
-                        <p className="font-semibold truncate flex-1">{s.name}</p>
-                        <button
-                          type="button"
-                          onClick={(e) => { e.stopPropagation(); setDetailService(s); }}
-                          className="text-xs text-accent hover:underline shrink-0"
-                        >Ver mais</button>
-                      </div>
+                      <p className="font-semibold truncate">{s.name}</p>
                       <p className="text-xs text-muted-foreground inline-flex items-center gap-1"><Clock className="h-3 w-3" /> {s.duration_minutes} min</p>
-                      <p className="text-lg font-black tracking-tight text-primary mt-auto">{formatBRL(s.price_cents)}</p>
+                      <p className="text-lg font-black tracking-tight text-primary">{formatBRL(s.price_cents)}</p>
                       {s.description && <p className="text-xs text-muted-foreground line-clamp-2">{s.description}</p>}
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); setDetailService(s); }}
+                        className="btn-outline-brand !py-1.5 !px-3 text-xs w-full mt-auto"
+                      >Ver mais</button>
                     </button>
                   </li>
                 ))}
