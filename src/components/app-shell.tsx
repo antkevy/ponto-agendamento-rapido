@@ -58,7 +58,7 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
             {links.map((l) => (
               <Link
                 key={l.to}
-                to={l.to}
+                to={l.to as string}
                 onClick={() => setOpen(false)}
                 activeOptions={{ exact: l.exact }}
                 activeProps={{ className: "bg-accent text-accent-foreground" }}
