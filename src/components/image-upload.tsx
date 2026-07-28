@@ -60,8 +60,9 @@ export function ImageUpload({
 
   return (
     <div className="space-y-2">
-      <span className="text-sm font-medium">{label}</span>
-      <div className="flex items-start gap-3">
+      <span className="text-sm font-medium block">{label}</span>
+      <div className="flex items-start gap-3 pt-3">
+
         {preview ? (
           <div className="relative shrink-0">
             <img src={preview} alt="" className={previewCls} />
