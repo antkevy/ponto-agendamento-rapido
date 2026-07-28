@@ -64,7 +64,7 @@ function Page() {
             <textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className={cls} placeholder="Fale um pouco sobre seu negócio..." />
           </F>
           <div className="grid sm:grid-cols-2 gap-4">
-            <F label="Endereço físico"><input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="Rua, número, bairro..." className={cls} /></F>
+            <F label="Endereço físico" hint="Aparece na página de agendamento com link para o Google Maps"><input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="Rua, número, bairro..." className={cls} /></F>
             <F label="Telefone de contato"><PhoneInput value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} className={cls} /></F>
           </div>
           <ImageUpload

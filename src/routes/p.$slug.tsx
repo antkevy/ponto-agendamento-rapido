@@ -136,7 +136,7 @@ function BookingPage() {
           <div className="min-w-0 flex-1">
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground truncate leading-[1.1]">{pro.business_name}</h1>
             {pro.description && <p className="text-sm text-muted-foreground mt-1.5">{pro.description}</p>}
-            {pro.address && <p className="text-xs text-muted-foreground mt-1 inline-flex items-center gap-1"><MapPin className="h-3 w-3" /> {pro.address}</p>}
+            {pro.address && <a href={`https://www.google.com/maps/search/${encodeURIComponent(pro.address)}`} target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground mt-1 inline-flex items-center gap-1 hover:text-accent transition-colors"><MapPin className="h-3 w-3" /> {pro.address}</a>}
           </div>
           <ThemeToggle className="shrink-0" />
         </div>
