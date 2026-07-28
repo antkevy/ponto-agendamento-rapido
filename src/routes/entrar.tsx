@@ -53,7 +53,7 @@ function SignIn() {
 }
 
 const inputCls =
-  "w-full min-h-[48px] px-4 py-3 rounded-xl border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition";
+  "w-full min-h-[48px] px-4 py-3 rounded-xl border border-border bg-white text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition";
 
 export function AuthLayout({
   title,
@@ -91,7 +91,7 @@ export function AuthLayout({
           </h1>
           <p className="mt-3 text-base text-muted-foreground">{subtitle}</p>
 
-          <div className="mt-8 bg-white border border-border rounded-2xl p-6 sm:p-8 shadow-[0_20px_60px_-30px_oklch(0.55_0.18_250_/_0.25)]">
+          <div className="mt-8 bg-card dark:bg-slate-800 border border-border rounded-2xl p-6 sm:p-8 shadow-[0_20px_60px_-30px_oklch(0.55_0.18_250_/_0.25)]">
             {children}
           </div>
 
@@ -112,7 +112,7 @@ export function AuthLayout({
 export function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="block text-sm font-semibold text-foreground mb-1.5">{label}</span>
+      <span className="block text-sm font-semibold text-foreground dark:text-slate-100 mb-1.5">{label}</span>
       {children}
     </label>
   );

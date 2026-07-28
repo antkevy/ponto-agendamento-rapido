@@ -125,8 +125,10 @@ function Page() {
                   <div className="min-w-0">
                     <p className="font-semibold truncate">{r.professional_business_name}</p>
                     <p className="text-sm text-muted-foreground truncate">{r.service_name}</p>
-                    <p className="text-sm inline-flex items-center gap-1 mt-1"><CalendarClock className="h-3 w-3" /> {new Date(r.starts_at).toLocaleString("pt-BR", { dateStyle: "medium", timeStyle: "short" })}</p>
-                    <StatusPill status={r.status} />
+                    <div className="flex flex-wrap items-center gap-2 mt-1 text-sm">
+                      <span className="inline-flex items-center gap-1"><CalendarClock className="h-3 w-3" /> {new Date(r.starts_at).toLocaleString("pt-BR", { dateStyle: "medium", timeStyle: "short" })}</span>
+                      <StatusPill status={r.status} />
+                    </div>
                   </div>
                   {r.status === "confirmed" && new Date(r.starts_at) > new Date() && (
                     <button onClick={() => { if (confirm("Cancelar este agendamento?")) cancel.mutate(r.id); }} className="btn-outline-brand inline-flex items-center gap-1 !py-2 text-sm text-destructive shrink-0"><X className="h-4 w-4" /> Cancelar</button>
@@ -142,7 +144,7 @@ function Page() {
 }
 
 function StatusPill({ status }: { status: Row["status"] }) {
-  const map = { confirmed: ["Confirmado", "text-accent"], cancelled: ["Cancelado", "text-destructive"], completed: ["Concluído", "text-success"] } as const;
+  const map = { confirmed: ["Confirmado", "bg-accent/10 text-accent border-accent/20"], cancelled: ["Cancelado", "bg-destructive/10 text-destructive border-destructive/20"], completed: ["Concluído", "bg-success/10 text-success border-success/20"] } as const;
   const [label, cls] = map[status];
-  return <span className={`inline-block text-xs font-semibold mt-2 ${cls}`}>{label}</span>;
+  return <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${cls}`}>{label}</span>;
 }

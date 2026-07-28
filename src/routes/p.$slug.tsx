@@ -395,8 +395,7 @@ function WhenStep({ pro, service, employee, onPick, brand }: { pro: { id: string
                 disabled={!canSelect}
                 onClick={() => setSelectedDay(d)}
                 data-selected={selected || undefined}
-                className="aspect-square rounded-lg text-sm font-medium min-h-[44px] disabled:opacity-30 disabled:cursor-not-allowed hover:bg-muted transition-colors data-[selected]:text-white"
-                style={selected ? { backgroundColor: brand } : undefined}
+                className="aspect-square rounded-lg text-sm font-medium min-h-[44px] disabled:opacity-30 disabled:cursor-not-allowed hover:bg-muted transition-colors data-[selected]:bg-accent data-[selected]:text-accent-foreground"
               >{d.getDate()}</button>
             );
           })}
