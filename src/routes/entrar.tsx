@@ -53,7 +53,7 @@ function SignIn() {
 }
 
 const inputCls =
-  "w-full min-h-[48px] px-4 py-3 rounded-xl border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition";
+  "w-full min-h-[48px] px-4 py-3 rounded-xl border border-border bg-white text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition";
 
 export function AuthLayout({
   title,
