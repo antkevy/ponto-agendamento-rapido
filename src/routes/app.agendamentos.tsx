@@ -186,7 +186,7 @@ function ApptRow({ a, businessName, onUpdate }: { a: Appt; businessName: string;
           <p className="text-xs text-muted-foreground mt-1">{displayPhoneBR(a.client_phone)}{a.client_email ? ` · ${a.client_email}` : ""}</p>
         </div>
         <div className="flex gap-2 shrink-0">
-          <a href={`${whatsAppUrl(a.client_phone)}?text=${encodeURIComponent(whatsAppMsg(a, businessName, a.status))}`} target="_blank" rel="noopener noreferrer" className="btn-outline-brand inline-flex items-center gap-1 !py-2 text-sm" title="Enviar WhatsApp"><MessageCircle className="h-4 w-4" /></a>
+          <button onClick={() => window.open(`${whatsAppUrl(a.client_phone)}?text=${encodeURIComponent(whatsAppMsg(a, businessName, a.status))}`, "_blank")} className="btn-outline-brand inline-flex items-center gap-1 !py-2 text-sm" title="Enviar WhatsApp"><MessageCircle className="h-4 w-4" /> WhatsApp</button>
           {a.status === "confirmed" && <Actions onUpdate={onUpdate} />}
         </div>
       </div>
@@ -207,7 +207,7 @@ function ApptCard({ a, businessName, onUpdate }: { a: Appt; businessName: string
       <p className="text-xs text-muted-foreground inline-flex items-center gap-1.5 truncate"><Phone className="h-3 w-3" /> {displayPhoneBR(a.client_phone)}</p>
       {a.client_email && <p className="text-xs text-muted-foreground inline-flex items-center gap-1.5 truncate"><Mail className="h-3 w-3" /> {a.client_email}</p>}
       <div className="flex gap-2 mt-auto pt-2">
-        <a href={`${whatsAppUrl(a.client_phone)}?text=${encodeURIComponent(whatsAppMsg(a, businessName, a.status))}`} target="_blank" rel="noopener noreferrer" className="btn-outline-brand inline-flex items-center gap-1 !py-2 text-sm flex-1 justify-center" title="Enviar WhatsApp"><MessageCircle className="h-4 w-4" /></a>
+        <button onClick={() => window.open(`${whatsAppUrl(a.client_phone)}?text=${encodeURIComponent(whatsAppMsg(a, businessName, a.status))}`, "_blank")} className="btn-outline-brand inline-flex items-center gap-1 !py-2 text-sm flex-1 justify-center" title="Enviar WhatsApp"><MessageCircle className="h-4 w-4" /> WhatsApp</button>
         {a.status === "confirmed" && <Actions onUpdate={onUpdate} />}
       </div>
     </div>
