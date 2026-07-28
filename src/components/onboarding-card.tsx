@@ -45,7 +45,7 @@ export function OnboardingCard() {
 
   return (
     <div className="card-elevated p-6 max-w-lg animate-fade-in-up">
-      <h2 className="text-2xl font-display text-primary">Vamos configurar seu negócio</h2>
+      <h2 className="text-2xl font-black tracking-tight text-foreground">Vamos configurar seu negócio</h2>
       <p className="text-sm text-muted-foreground mt-1">Como se chama seu negócio? Isso vai aparecer na sua página pública.</p>
       <form onSubmit={submit} className="mt-5 space-y-4">
         <input

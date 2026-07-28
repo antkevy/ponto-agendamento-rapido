@@ -129,7 +129,7 @@ function NewEmployeeForm({ onSubmit, saving }: { onSubmit: (v: { name: string; p
   const [photo, setPhoto] = useState("");
   return (
     <form onSubmit={(e) => { e.preventDefault(); onSubmit({ name: name.trim(), photo_url: photo.trim() || null }); }} className="space-y-4">
-      <h2 className="font-display text-2xl text-primary">Novo funcionário</h2>
+      <h2 className="text-2xl font-black tracking-tight text-foreground">Novo funcionário</h2>
       <label className="block"><span className="text-sm font-medium">Nome</span>
         <input required value={name} onChange={(e) => setName(e.target.value)} className={inputCls} /></label>
       <label className="block"><span className="text-sm font-medium">Foto (URL, opcional)</span>
@@ -143,7 +143,7 @@ function EmployeeEditor({ employee, onClose }: { employee: Employee; onClose: ()
   const [tab, setTab] = useState<"data" | "services" | "hours" | "blocks">("data");
   return (
     <div className="space-y-4">
-      <h2 className="font-display text-2xl text-primary">{employee.name}</h2>
+      <h2 className="text-2xl font-black tracking-tight text-foreground">{employee.name}</h2>
       <div className="flex gap-1 border-b border-border overflow-x-auto -mx-1 px-1">
         {[
           ["data", "Dados"],
