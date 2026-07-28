@@ -14,14 +14,16 @@ export const Route = createFileRoute("/meus-agendamentos")({
 
 type Row = { id: string; professional_business_name: string; professional_slug: string; service_name: string; starts_at: string; ends_at: string; status: "confirmed" | "cancelled" | "completed"; client_name: string };
 
-function normalizeContact(raw: string): string {
+type Mode = "phone" | "email";
+
+function normalizeContact(raw: string, mode: Mode): string {
   const s = raw.trim();
-  if (s.includes("@")) return s.toLowerCase();
-  const digits = s.replace(/\D+/g, "");
-  return digits || s;
+  if (mode === "email") return s.toLowerCase();
+  return s.replace(/\D+/g, "");
 }
 
 function Page() {
+  const [mode, setMode] = useState<Mode>("phone");
   const [contact, setContact] = useState("");
   const [submitted, setSubmitted] = useState<string | null>(null);
   const qc = useQueryClient();
