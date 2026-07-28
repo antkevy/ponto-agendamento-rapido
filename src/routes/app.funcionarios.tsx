@@ -220,8 +220,8 @@ function DataTab({ employee, onSaved }: { employee: Employee; onSaved: () => voi
     <form onSubmit={(e) => { e.preventDefault(); save.mutate(); }} className="space-y-4">
       <label className="block"><span className="text-sm font-medium">Nome</span>
         <input required value={name} onChange={(e) => setName(e.target.value)} className={inputCls} /></label>
-      <label className="block"><span className="text-sm font-medium">Foto (URL)</span>
-        <input value={photo} onChange={(e) => setPhoto(e.target.value)} placeholder="https://..." className={inputCls} /></label>
+      <ImageUpload value={photo} onChange={setPhoto} label="Foto" shape="circle" folder="employees" />
+
       <button disabled={save.isPending} className="btn-brand w-full disabled:opacity-60">{save.isPending ? "Salvando..." : "Salvar"}</button>
     </form>
   );
