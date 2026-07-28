@@ -84,7 +84,7 @@ function Page() {
               ))}
             </div>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 grid-cols-2 lg:grid-cols-3">
               {(services ?? []).map((s) => (
                 <div key={s.id} className="card-elevated p-4 flex flex-col gap-2">
                   <p className="font-semibold truncate">{s.name}</p>
