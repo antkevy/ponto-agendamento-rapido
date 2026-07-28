@@ -12,6 +12,12 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as EntrarRouteImport } from './routes/entrar'
 import { Route as CadastrarRouteImport } from './routes/cadastrar'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as AppServicosRouteImport } from './routes/app.servicos'
+import { Route as AppHorariosRouteImport } from './routes/app.horarios'
+import { Route as AppConfiguracoesRouteImport } from './routes/app.configuracoes'
+import { Route as AppBloqueiosRouteImport } from './routes/app.bloqueios'
+import { Route as AppAgendamentosRouteImport } from './routes/app.agendamentos'
 
 const EntrarRoute = EntrarRouteImport.update({
   id: '/entrar',
@@ -28,35 +34,117 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppIndexRoute = AppIndexRouteImport.update({
+  id: '/app/',
+  path: '/app/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppServicosRoute = AppServicosRouteImport.update({
+  id: '/app/servicos',
+  path: '/app/servicos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppHorariosRoute = AppHorariosRouteImport.update({
+  id: '/app/horarios',
+  path: '/app/horarios',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppConfiguracoesRoute = AppConfiguracoesRouteImport.update({
+  id: '/app/configuracoes',
+  path: '/app/configuracoes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppBloqueiosRoute = AppBloqueiosRouteImport.update({
+  id: '/app/bloqueios',
+  path: '/app/bloqueios',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppAgendamentosRoute = AppAgendamentosRouteImport.update({
+  id: '/app/agendamentos',
+  path: '/app/agendamentos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/cadastrar': typeof CadastrarRoute
   '/entrar': typeof EntrarRoute
+  '/app/agendamentos': typeof AppAgendamentosRoute
+  '/app/bloqueios': typeof AppBloqueiosRoute
+  '/app/configuracoes': typeof AppConfiguracoesRoute
+  '/app/horarios': typeof AppHorariosRoute
+  '/app/servicos': typeof AppServicosRoute
+  '/app/': typeof AppIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/cadastrar': typeof CadastrarRoute
   '/entrar': typeof EntrarRoute
+  '/app/agendamentos': typeof AppAgendamentosRoute
+  '/app/bloqueios': typeof AppBloqueiosRoute
+  '/app/configuracoes': typeof AppConfiguracoesRoute
+  '/app/horarios': typeof AppHorariosRoute
+  '/app/servicos': typeof AppServicosRoute
+  '/app': typeof AppIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/cadastrar': typeof CadastrarRoute
   '/entrar': typeof EntrarRoute
+  '/app/agendamentos': typeof AppAgendamentosRoute
+  '/app/bloqueios': typeof AppBloqueiosRoute
+  '/app/configuracoes': typeof AppConfiguracoesRoute
+  '/app/horarios': typeof AppHorariosRoute
+  '/app/servicos': typeof AppServicosRoute
+  '/app/': typeof AppIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/cadastrar' | '/entrar'
+  fullPaths:
+    | '/'
+    | '/cadastrar'
+    | '/entrar'
+    | '/app/agendamentos'
+    | '/app/bloqueios'
+    | '/app/configuracoes'
+    | '/app/horarios'
+    | '/app/servicos'
+    | '/app/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/cadastrar' | '/entrar'
-  id: '__root__' | '/' | '/cadastrar' | '/entrar'
+  to:
+    | '/'
+    | '/cadastrar'
+    | '/entrar'
+    | '/app/agendamentos'
+    | '/app/bloqueios'
+    | '/app/configuracoes'
+    | '/app/horarios'
+    | '/app/servicos'
+    | '/app'
+  id:
+    | '__root__'
+    | '/'
+    | '/cadastrar'
+    | '/entrar'
+    | '/app/agendamentos'
+    | '/app/bloqueios'
+    | '/app/configuracoes'
+    | '/app/horarios'
+    | '/app/servicos'
+    | '/app/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CadastrarRoute: typeof CadastrarRoute
   EntrarRoute: typeof EntrarRoute
+  AppAgendamentosRoute: typeof AppAgendamentosRoute
+  AppBloqueiosRoute: typeof AppBloqueiosRoute
+  AppConfiguracoesRoute: typeof AppConfiguracoesRoute
+  AppHorariosRoute: typeof AppHorariosRoute
+  AppServicosRoute: typeof AppServicosRoute
+  AppIndexRoute: typeof AppIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -82,6 +170,48 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app/': {
+      id: '/app/'
+      path: '/app'
+      fullPath: '/app/'
+      preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/servicos': {
+      id: '/app/servicos'
+      path: '/app/servicos'
+      fullPath: '/app/servicos'
+      preLoaderRoute: typeof AppServicosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/horarios': {
+      id: '/app/horarios'
+      path: '/app/horarios'
+      fullPath: '/app/horarios'
+      preLoaderRoute: typeof AppHorariosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/configuracoes': {
+      id: '/app/configuracoes'
+      path: '/app/configuracoes'
+      fullPath: '/app/configuracoes'
+      preLoaderRoute: typeof AppConfiguracoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/bloqueios': {
+      id: '/app/bloqueios'
+      path: '/app/bloqueios'
+      fullPath: '/app/bloqueios'
+      preLoaderRoute: typeof AppBloqueiosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/agendamentos': {
+      id: '/app/agendamentos'
+      path: '/app/agendamentos'
+      fullPath: '/app/agendamentos'
+      preLoaderRoute: typeof AppAgendamentosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -89,6 +219,12 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CadastrarRoute: CadastrarRoute,
   EntrarRoute: EntrarRoute,
+  AppAgendamentosRoute: AppAgendamentosRoute,
+  AppBloqueiosRoute: AppBloqueiosRoute,
+  AppConfiguracoesRoute: AppConfiguracoesRoute,
+  AppHorariosRoute: AppHorariosRoute,
+  AppServicosRoute: AppServicosRoute,
+  AppIndexRoute: AppIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
