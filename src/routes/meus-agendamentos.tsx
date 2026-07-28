@@ -21,7 +21,7 @@ function Page() {
     queryKey: ["client-appts", submitted],
     enabled: !!submitted,
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("lookup_client_appointments", { _contact: submitted });
+      const { data, error } = await supabase.rpc("lookup_client_appointments", { _contact: submitted! });
       if (error) throw error;
       return data as Row[];
     },
@@ -29,7 +29,7 @@ function Page() {
 
   const cancel = useMutation({
     mutationFn: async (id: string) => {
-      const { data, error } = await supabase.rpc("client_cancel_appointment", { _id: id, _contact: submitted });
+      const { data, error } = await supabase.rpc("client_cancel_appointment", { _id: id, _contact: submitted! });
       if (error) throw error;
       if (!data) throw new Error("Não foi possível cancelar.");
     },

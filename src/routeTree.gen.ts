@@ -9,16 +9,23 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as MeusAgendamentosRouteImport } from './routes/meus-agendamentos'
 import { Route as EntrarRouteImport } from './routes/entrar'
 import { Route as CadastrarRouteImport } from './routes/cadastrar'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as PSlugRouteImport } from './routes/p.$slug'
 import { Route as AppServicosRouteImport } from './routes/app.servicos'
 import { Route as AppHorariosRouteImport } from './routes/app.horarios'
 import { Route as AppConfiguracoesRouteImport } from './routes/app.configuracoes'
 import { Route as AppBloqueiosRouteImport } from './routes/app.bloqueios'
 import { Route as AppAgendamentosRouteImport } from './routes/app.agendamentos'
 
+const MeusAgendamentosRoute = MeusAgendamentosRouteImport.update({
+  id: '/meus-agendamentos',
+  path: '/meus-agendamentos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EntrarRoute = EntrarRouteImport.update({
   id: '/entrar',
   path: '/entrar',
@@ -37,6 +44,11 @@ const IndexRoute = IndexRouteImport.update({
 const AppIndexRoute = AppIndexRouteImport.update({
   id: '/app/',
   path: '/app/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PSlugRoute = PSlugRouteImport.update({
+  id: '/p/$slug',
+  path: '/p/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppServicosRoute = AppServicosRouteImport.update({
@@ -69,22 +81,26 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/cadastrar': typeof CadastrarRoute
   '/entrar': typeof EntrarRoute
+  '/meus-agendamentos': typeof MeusAgendamentosRoute
   '/app/agendamentos': typeof AppAgendamentosRoute
   '/app/bloqueios': typeof AppBloqueiosRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/horarios': typeof AppHorariosRoute
   '/app/servicos': typeof AppServicosRoute
+  '/p/$slug': typeof PSlugRoute
   '/app/': typeof AppIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/cadastrar': typeof CadastrarRoute
   '/entrar': typeof EntrarRoute
+  '/meus-agendamentos': typeof MeusAgendamentosRoute
   '/app/agendamentos': typeof AppAgendamentosRoute
   '/app/bloqueios': typeof AppBloqueiosRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/horarios': typeof AppHorariosRoute
   '/app/servicos': typeof AppServicosRoute
+  '/p/$slug': typeof PSlugRoute
   '/app': typeof AppIndexRoute
 }
 export interface FileRoutesById {
@@ -92,11 +108,13 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/cadastrar': typeof CadastrarRoute
   '/entrar': typeof EntrarRoute
+  '/meus-agendamentos': typeof MeusAgendamentosRoute
   '/app/agendamentos': typeof AppAgendamentosRoute
   '/app/bloqueios': typeof AppBloqueiosRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/horarios': typeof AppHorariosRoute
   '/app/servicos': typeof AppServicosRoute
+  '/p/$slug': typeof PSlugRoute
   '/app/': typeof AppIndexRoute
 }
 export interface FileRouteTypes {
@@ -105,33 +123,39 @@ export interface FileRouteTypes {
     | '/'
     | '/cadastrar'
     | '/entrar'
+    | '/meus-agendamentos'
     | '/app/agendamentos'
     | '/app/bloqueios'
     | '/app/configuracoes'
     | '/app/horarios'
     | '/app/servicos'
+    | '/p/$slug'
     | '/app/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/cadastrar'
     | '/entrar'
+    | '/meus-agendamentos'
     | '/app/agendamentos'
     | '/app/bloqueios'
     | '/app/configuracoes'
     | '/app/horarios'
     | '/app/servicos'
+    | '/p/$slug'
     | '/app'
   id:
     | '__root__'
     | '/'
     | '/cadastrar'
     | '/entrar'
+    | '/meus-agendamentos'
     | '/app/agendamentos'
     | '/app/bloqueios'
     | '/app/configuracoes'
     | '/app/horarios'
     | '/app/servicos'
+    | '/p/$slug'
     | '/app/'
   fileRoutesById: FileRoutesById
 }
@@ -139,16 +163,25 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CadastrarRoute: typeof CadastrarRoute
   EntrarRoute: typeof EntrarRoute
+  MeusAgendamentosRoute: typeof MeusAgendamentosRoute
   AppAgendamentosRoute: typeof AppAgendamentosRoute
   AppBloqueiosRoute: typeof AppBloqueiosRoute
   AppConfiguracoesRoute: typeof AppConfiguracoesRoute
   AppHorariosRoute: typeof AppHorariosRoute
   AppServicosRoute: typeof AppServicosRoute
+  PSlugRoute: typeof PSlugRoute
   AppIndexRoute: typeof AppIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/meus-agendamentos': {
+      id: '/meus-agendamentos'
+      path: '/meus-agendamentos'
+      fullPath: '/meus-agendamentos'
+      preLoaderRoute: typeof MeusAgendamentosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/entrar': {
       id: '/entrar'
       path: '/entrar'
@@ -175,6 +208,13 @@ declare module '@tanstack/react-router' {
       path: '/app'
       fullPath: '/app/'
       preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/p/$slug': {
+      id: '/p/$slug'
+      path: '/p/$slug'
+      fullPath: '/p/$slug'
+      preLoaderRoute: typeof PSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app/servicos': {
@@ -219,11 +259,13 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CadastrarRoute: CadastrarRoute,
   EntrarRoute: EntrarRoute,
+  MeusAgendamentosRoute: MeusAgendamentosRoute,
   AppAgendamentosRoute: AppAgendamentosRoute,
   AppBloqueiosRoute: AppBloqueiosRoute,
   AppConfiguracoesRoute: AppConfiguracoesRoute,
   AppHorariosRoute: AppHorariosRoute,
   AppServicosRoute: AppServicosRoute,
+  PSlugRoute: PSlugRoute,
   AppIndexRoute: AppIndexRoute,
 }
 export const routeTree = rootRouteImport
