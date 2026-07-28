@@ -15,7 +15,7 @@ import {
 } from "@/lib/booking";
 import { PhoneInput } from "@/components/phone-input";
 import { isValidPhoneBR } from "@/lib/phone";
-import { CheckCircle2, ChevronLeft, ChevronRight, MapPin, Clock, ArrowLeft, User } from "lucide-react";
+import { CheckCircle2, ChevronLeft, ChevronRight, MapPin, Clock, ArrowLeft, User, X } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ViewToggle, type ViewMode } from "@/components/view-toggle";
 
@@ -53,6 +53,7 @@ function BookingPage() {
   const [step, setStep] = useState<Step>("service");
   const [service, setService] = useState<Service | null>(null);
   const [serviceView, setServiceView] = useState<ViewMode>("list");
+  const [detailService, setDetailService] = useState<Service | null>(null);
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [when, setWhen] = useState<Date | null>(null);
   const [confirmedId, setConfirmedId] = useState<string | null>(null);
@@ -167,16 +168,21 @@ function BookingPage() {
                       onClick={() => handleServicePick(s)}
                       className="w-full text-left card-elevated p-4 hover:border-accent transition-all hover:-translate-y-0.5"
                     >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-center gap-4 min-w-0">
-                          {s.image_url && <img src={s.image_url} alt={s.name} className="h-14 w-14 rounded-lg object-cover shrink-0" />}
-                          <div className="min-w-0">
-                            <p className="font-semibold">{s.name}</p>
-                            {s.description && <p className="text-sm text-muted-foreground mt-1">{s.description}</p>}
-                            <p className="text-sm mt-2 inline-flex items-center gap-1 text-muted-foreground"><Clock className="h-3 w-3" /> {s.duration_minutes} minutos</p>
+                      <div className="flex items-start gap-3">
+                        {s.image_url && <img src={s.image_url} alt={s.name} className="h-16 w-16 rounded-lg object-cover shrink-0" />}
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold">{s.name}</p>
+                          {s.description && <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{s.description}</p>}
+                          <div className="flex items-center gap-3 mt-2">
+                            <span className="text-sm text-muted-foreground inline-flex items-center gap-1"><Clock className="h-3 w-3" /> {s.duration_minutes} min</span>
+                            <span className="font-semibold text-primary">{formatBRL(s.price_cents)}</span>
                           </div>
                         </div>
-                        <span className="font-semibold text-primary shrink-0">{formatBRL(s.price_cents)}</span>
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); setDetailService(s); }}
+                          className="btn-outline-brand !py-1 !px-2 text-xs shrink-0 mt-1"
+                        >Ver mais</button>
                       </div>
                     </button>
                   </li>
@@ -191,7 +197,14 @@ function BookingPage() {
                       className="w-full h-full text-left card-elevated p-4 hover:border-accent transition-all hover:-translate-y-0.5 flex flex-col gap-2"
                     >
                       {s.image_url && <img src={s.image_url} alt={s.name} className="w-full h-28 rounded-lg object-cover" />}
-                      <p className="font-semibold truncate">{s.name}</p>
+                      <div className="flex items-start justify-between gap-1">
+                        <p className="font-semibold truncate flex-1">{s.name}</p>
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); setDetailService(s); }}
+                          className="text-xs text-accent hover:underline shrink-0"
+                        >Ver mais</button>
+                      </div>
                       <p className="text-xs text-muted-foreground inline-flex items-center gap-1"><Clock className="h-3 w-3" /> {s.duration_minutes} min</p>
                       <p className="text-lg font-black tracking-tight text-primary mt-auto">{formatBRL(s.price_cents)}</p>
                       {s.description && <p className="text-xs text-muted-foreground line-clamp-2">{s.description}</p>}
@@ -262,6 +275,28 @@ function BookingPage() {
             when={when}
             onReset={() => { setService(null); setEmployee(null); setWhen(null); setConfirmedId(null); setStep("service"); }}
           />
+        )}
+
+        {detailService && (
+          <div className="fixed inset-0 z-50 bg-foreground/40 grid place-items-center p-4 animate-fade-in-up" onClick={() => setDetailService(null)}>
+            <div className="bg-background w-full max-w-sm rounded-2xl overflow-hidden shadow-2xl" onClick={(e) => e.stopPropagation()}>
+              {detailService.image_url && <img src={detailService.image_url} alt={detailService.name} className="w-full h-52 object-cover" />}
+              <div className="p-5 space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <h3 className="text-xl font-bold tracking-tight">{detailService.name}</h3>
+                  <button onClick={() => setDetailService(null)} className="p-1 rounded-md hover:bg-muted shrink-0"><X className="h-5 w-5" /></button>
+                </div>
+                <div className="flex items-center gap-4 text-sm">
+                  <span className="inline-flex items-center gap-1.5 text-muted-foreground"><Clock className="h-4 w-4" /> {detailService.duration_minutes} minutos</span>
+                  <span className="text-xl font-black text-primary">{formatBRL(detailService.price_cents)}</span>
+                </div>
+                {detailService.description && <p className="text-sm text-muted-foreground leading-relaxed">{detailService.description}</p>}
+                <button onClick={() => { setDetailService(null); handleServicePick(detailService); }} className="btn-gradient w-full">
+                  Agendar este serviço
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </main>
 
@@ -437,12 +472,23 @@ function WhenStep({ pro, service, employee, onPick, brand }: { pro: { id: string
           ) : slots.length === 0 ? (
             <p className="text-sm text-muted-foreground">Nenhum horário livre nesse dia. Tente outro.</p>
           ) : (
-            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-              {slots.map((s) => (
-                <button key={s.toISOString()} onClick={() => onPick(s)} className="chip">
-                  {formatTime(s)}
-                </button>
-              ))}
+            <div className="space-y-4">
+              {[{ label: "Manhã", from: 6, to: 12 }, { label: "Tarde", from: 12, to: 18 }, { label: "Noite", from: 18, to: 24 }].map(({ label, from, to }) => {
+                const periodSlots = slots.filter((s) => { const h = s.getHours(); return h >= from && h < to; });
+                if (periodSlots.length === 0) return null;
+                return (
+                  <div key={label}>
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">{label}</h4>
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                      {periodSlots.map((s) => (
+                        <button key={s.toISOString()} onClick={() => onPick(s)} className="chip">
+                          {formatTime(s)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
