@@ -17,6 +17,7 @@ import { PhoneInput } from "@/components/phone-input";
 import { isValidPhoneBR } from "@/lib/phone";
 import { CheckCircle2, ChevronLeft, ChevronRight, MapPin, Clock, ArrowLeft, User } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { ViewToggle, type ViewMode } from "@/components/view-toggle";
 
 export const Route = createFileRoute("/p/$slug")({
   loader: async ({ params }) => {
