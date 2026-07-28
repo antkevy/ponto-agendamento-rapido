@@ -19,7 +19,7 @@ export const Route = createFileRoute("/app/configuracoes")({
 function Page() {
   const { data: pro, isLoading } = useMyProfessional();
   const qc = useQueryClient();
-  const [form, setForm] = useState({ business_name: "", slug: "", description: "", address: "", phone: "", logo_url: "" });
+  const [form, setForm] = useState({ business_name: "", slug: "", description: "", address: "", phone: "", logo_url: "", lat: "", lng: "" });
 
   useEffect(() => {
     if (pro) setForm({
@@ -29,6 +29,8 @@ function Page() {
       address: pro.address ?? "",
       phone: onlyDigits(pro.phone ?? ""),
       logo_url: pro.logo_url ?? "",
+      lat: pro.lat?.toString() ?? "",
+      lng: pro.lng?.toString() ?? "",
     });
   }, [pro]);
 
@@ -36,6 +38,9 @@ function Page() {
     mutationFn: async () => {
       if (form.phone && !isValidPhoneBR(form.phone)) throw new Error("Telefone incompleto. Use (XX) XXXXX-XXXX.");
       const slug = slugify(form.slug) || slugify(form.business_name);
+      const lat = form.lat ? parseFloat(form.lat) : null;
+      const lng = form.lng ? parseFloat(form.lng) : null;
+      if ((lat && !lng) || (!lat && lng)) throw new Error("Preencha latitude e longitude, ou deixe ambos vazios.");
       const { error } = await supabase.from("professionals").update({
         business_name: form.business_name.trim(),
         slug,
@@ -43,6 +48,8 @@ function Page() {
         address: form.address || null,
         phone: form.phone || null,
         logo_url: form.logo_url || null,
+        lat,
+        lng,
       }).eq("id", pro!.id);
       if (error) throw error;
     },
@@ -66,6 +73,11 @@ function Page() {
           <div className="grid sm:grid-cols-2 gap-4">
             <F label="Endereço físico" hint="Aparece na página de agendamento com link para o Google Maps"><input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="Rua, número, bairro..." className={cls} /></F>
             <F label="Telefone de contato"><PhoneInput value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} className={cls} /></F>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <F label="Latitude"><input type="number" step="any" value={form.lat} onChange={(e) => setForm({ ...form, lat: e.target.value })} placeholder="-23.5505" className={cls} /></F>
+            <F label="Longitude"><input type="number" step="any" value={form.lng} onChange={(e) => setForm({ ...form, lng: e.target.value })} placeholder="-46.6333" className={cls} /></F>
+            <span className="text-xs text-muted-foreground sm:col-span-2 -mt-2">Para encontrar as coordenadas, pesquise seu endereço no <a href="https://www.google.com/maps" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">Google Maps</a>, clique com o botão direito no local e copie as coordenadas.</span>
           </div>
           <ImageUpload
             value={form.logo_url}
