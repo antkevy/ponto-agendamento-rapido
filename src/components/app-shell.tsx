@@ -5,14 +5,14 @@ import { useAuth } from "@/hooks/use-auth";
 import { Calendar, LayoutDashboard, Briefcase, Clock, Ban, Settings, LogOut, Menu } from "lucide-react";
 import { useState } from "react";
 
-const links = [
+const links: Array<{ to: string; label: string; icon: typeof Calendar; exact?: boolean }> = [
   { to: "/app", label: "Painel", icon: LayoutDashboard, exact: true },
   { to: "/app/agendamentos", label: "Agendamentos", icon: Calendar },
   { to: "/app/servicos", label: "Serviços", icon: Briefcase },
   { to: "/app/horarios", label: "Horários", icon: Clock },
   { to: "/app/bloqueios", label: "Bloqueios", icon: Ban },
   { to: "/app/configuracoes", label: "Configurações", icon: Settings },
-] as const;
+];
 
 export function AppShell({ children, title }: { children: ReactNode; title?: string }) {
   const { user, loading } = useAuth();
