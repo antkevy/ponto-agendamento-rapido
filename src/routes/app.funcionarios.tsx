@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { OnboardingCard } from "@/components/onboarding-card";
@@ -8,7 +8,10 @@ import { useMyProfessional } from "@/hooks/use-my-professional";
 import { supabase } from "@/integrations/supabase/client";
 import { WEEKDAYS_PT } from "@/lib/booking";
 import { Modal } from "@/routes/app.servicos";
+import { ImageUpload } from "@/components/image-upload";
+import { ViewToggle, type ViewMode } from "@/components/view-toggle";
 import { Plus, Pencil, Trash2, Power, User } from "lucide-react";
+
 
 export const Route = createFileRoute("/app/funcionarios")({
   head: () => ({ meta: [{ title: "Funcionários — Agendaí" }] }),
