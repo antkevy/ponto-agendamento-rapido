@@ -1,0 +1,1 @@
+GRANT SELECT ON public.professionals TO anon; GRANT SELECT ON public.services TO anon; GRANT SELECT ON public.employees TO anon; GRANT SELECT ON public.employee_services TO anon; GRANT SELECT ON public.availability TO anon; GRANT SELECT ON public.employee_availability TO anon; GRANT SELECT ON public.blocks TO anon; GRANT SELECT ON public.employee_blocks TO anon;
