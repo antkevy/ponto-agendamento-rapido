@@ -7,6 +7,8 @@ import { OnboardingCard } from "@/components/onboarding-card";
 import { useMyProfessional } from "@/hooks/use-my-professional";
 import { supabase } from "@/integrations/supabase/client";
 import { slugify } from "@/lib/booking";
+import { PhoneInput } from "@/components/phone-input";
+import { isValidPhoneBR, onlyDigits } from "@/lib/phone";
 
 export const Route = createFileRoute("/app/configuracoes")({
   head: () => ({ meta: [{ title: "Configurações — Agendaí" }] }),
@@ -24,7 +26,7 @@ function Page() {
       slug: pro.slug,
       description: pro.description ?? "",
       address: pro.address ?? "",
-      phone: pro.phone ?? "",
+      phone: onlyDigits(pro.phone ?? ""),
       brand_color: pro.brand_color ?? "#0284C7",
       logo_url: pro.logo_url ?? "",
     });
@@ -32,6 +34,7 @@ function Page() {
 
   const save = useMutation({
     mutationFn: async () => {
+      if (form.phone && !isValidPhoneBR(form.phone)) throw new Error("Telefone incompleto. Use (XX) XXXXX-XXXX.");
       const slug = slugify(form.slug) || slugify(form.business_name);
       const { error } = await supabase.from("professionals").update({
         business_name: form.business_name.trim(),
@@ -63,7 +66,7 @@ function Page() {
           </F>
           <div className="grid sm:grid-cols-2 gap-4">
             <F label="Endereço físico"><input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className={cls} /></F>
-            <F label="Telefone de contato"><input inputMode="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className={cls} /></F>
+            <F label="Telefone de contato"><PhoneInput value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} className={cls} /></F>
           </div>
           <div className="grid sm:grid-cols-2 gap-4">
             <F label="Cor de destaque">

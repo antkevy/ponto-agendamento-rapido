@@ -8,6 +8,7 @@ import { useMyProfessional } from "@/hooks/use-my-professional";
 import { supabase } from "@/integrations/supabase/client";
 import { formatBRL } from "@/lib/booking";
 import { X, CheckCheck } from "lucide-react";
+import { displayPhoneBR } from "@/lib/phone";
 
 export const Route = createFileRoute("/app/agendamentos")({
   head: () => ({ meta: [{ title: "Agendamentos — Agendaí" }] }),
@@ -96,7 +97,7 @@ function Page() {
                     </div>
                     <p className="text-sm text-muted-foreground">{a.service_snapshot_name} · {formatBRL(a.service_snapshot_price_cents)}</p>
                     <p className="text-sm mt-1">{new Date(a.starts_at).toLocaleString("pt-BR", { dateStyle: "medium", timeStyle: "short" })}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{a.client_phone} · {a.client_email}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{displayPhoneBR(a.client_phone)}{a.client_email ? ` · ${a.client_email}` : ""}</p>
                   </div>
                   {a.status === "confirmed" && (
                     <div className="flex gap-2 shrink-0">

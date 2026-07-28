@@ -17,6 +17,7 @@ import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as PSlugRouteImport } from './routes/p.$slug'
 import { Route as AppServicosRouteImport } from './routes/app.servicos'
 import { Route as AppHorariosRouteImport } from './routes/app.horarios'
+import { Route as AppFuncionariosRouteImport } from './routes/app.funcionarios'
 import { Route as AppConfiguracoesRouteImport } from './routes/app.configuracoes'
 import { Route as AppBloqueiosRouteImport } from './routes/app.bloqueios'
 import { Route as AppAgendamentosRouteImport } from './routes/app.agendamentos'
@@ -61,6 +62,11 @@ const AppHorariosRoute = AppHorariosRouteImport.update({
   path: '/app/horarios',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppFuncionariosRoute = AppFuncionariosRouteImport.update({
+  id: '/app/funcionarios',
+  path: '/app/funcionarios',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppConfiguracoesRoute = AppConfiguracoesRouteImport.update({
   id: '/app/configuracoes',
   path: '/app/configuracoes',
@@ -85,6 +91,7 @@ export interface FileRoutesByFullPath {
   '/app/agendamentos': typeof AppAgendamentosRoute
   '/app/bloqueios': typeof AppBloqueiosRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
+  '/app/funcionarios': typeof AppFuncionariosRoute
   '/app/horarios': typeof AppHorariosRoute
   '/app/servicos': typeof AppServicosRoute
   '/p/$slug': typeof PSlugRoute
@@ -98,6 +105,7 @@ export interface FileRoutesByTo {
   '/app/agendamentos': typeof AppAgendamentosRoute
   '/app/bloqueios': typeof AppBloqueiosRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
+  '/app/funcionarios': typeof AppFuncionariosRoute
   '/app/horarios': typeof AppHorariosRoute
   '/app/servicos': typeof AppServicosRoute
   '/p/$slug': typeof PSlugRoute
@@ -112,6 +120,7 @@ export interface FileRoutesById {
   '/app/agendamentos': typeof AppAgendamentosRoute
   '/app/bloqueios': typeof AppBloqueiosRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
+  '/app/funcionarios': typeof AppFuncionariosRoute
   '/app/horarios': typeof AppHorariosRoute
   '/app/servicos': typeof AppServicosRoute
   '/p/$slug': typeof PSlugRoute
@@ -127,6 +136,7 @@ export interface FileRouteTypes {
     | '/app/agendamentos'
     | '/app/bloqueios'
     | '/app/configuracoes'
+    | '/app/funcionarios'
     | '/app/horarios'
     | '/app/servicos'
     | '/p/$slug'
@@ -140,6 +150,7 @@ export interface FileRouteTypes {
     | '/app/agendamentos'
     | '/app/bloqueios'
     | '/app/configuracoes'
+    | '/app/funcionarios'
     | '/app/horarios'
     | '/app/servicos'
     | '/p/$slug'
@@ -153,6 +164,7 @@ export interface FileRouteTypes {
     | '/app/agendamentos'
     | '/app/bloqueios'
     | '/app/configuracoes'
+    | '/app/funcionarios'
     | '/app/horarios'
     | '/app/servicos'
     | '/p/$slug'
@@ -167,6 +179,7 @@ export interface RootRouteChildren {
   AppAgendamentosRoute: typeof AppAgendamentosRoute
   AppBloqueiosRoute: typeof AppBloqueiosRoute
   AppConfiguracoesRoute: typeof AppConfiguracoesRoute
+  AppFuncionariosRoute: typeof AppFuncionariosRoute
   AppHorariosRoute: typeof AppHorariosRoute
   AppServicosRoute: typeof AppServicosRoute
   PSlugRoute: typeof PSlugRoute
@@ -231,6 +244,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppHorariosRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app/funcionarios': {
+      id: '/app/funcionarios'
+      path: '/app/funcionarios'
+      fullPath: '/app/funcionarios'
+      preLoaderRoute: typeof AppFuncionariosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/app/configuracoes': {
       id: '/app/configuracoes'
       path: '/app/configuracoes'
@@ -263,6 +283,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppAgendamentosRoute: AppAgendamentosRoute,
   AppBloqueiosRoute: AppBloqueiosRoute,
   AppConfiguracoesRoute: AppConfiguracoesRoute,
+  AppFuncionariosRoute: AppFuncionariosRoute,
   AppHorariosRoute: AppHorariosRoute,
   AppServicosRoute: AppServicosRoute,
   PSlugRoute: PSlugRoute,
