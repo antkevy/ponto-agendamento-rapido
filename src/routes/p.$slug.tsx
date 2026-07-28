@@ -151,12 +151,15 @@ function BookingPage() {
 
         {step === "service" && (
           <section className="animate-fade-in-up">
-            <h2 className="text-xl font-bold tracking-tight text-foreground mb-4">1. Escolha o serviço</h2>
+            <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+              <h2 className="text-xl font-bold tracking-tight text-foreground">1. Escolha o serviço</h2>
+              {(services ?? []).length > 0 && <ViewToggle value={serviceView} onChange={setServiceView} />}
+            </div>
             {loadingServices ? (
               <div className="space-y-3">{[0, 1, 2].map((i) => <div key={i} className="skeleton h-20" />)}</div>
             ) : (services ?? []).length === 0 ? (
               <p className="text-sm text-muted-foreground">Este profissional ainda não cadastrou serviços.</p>
-            ) : (
+            ) : serviceView === "list" ? (
               <ul className="space-y-3">
                 {services!.map((s) => (
                   <li key={s.id}>
@@ -172,6 +175,22 @@ function BookingPage() {
                         </div>
                         <span className="font-semibold text-primary shrink-0">{formatBRL(s.price_cents)}</span>
                       </div>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <ul className="grid gap-3 grid-cols-2 lg:grid-cols-3">
+                {services!.map((s) => (
+                  <li key={s.id}>
+                    <button
+                      onClick={() => handleServicePick(s)}
+                      className="w-full h-full text-left card-elevated p-4 hover:border-accent transition-all hover:-translate-y-0.5 flex flex-col gap-2"
+                    >
+                      <p className="font-semibold truncate">{s.name}</p>
+                      <p className="text-xs text-muted-foreground inline-flex items-center gap-1"><Clock className="h-3 w-3" /> {s.duration_minutes} min</p>
+                      <p className="text-lg font-black tracking-tight text-primary mt-auto">{formatBRL(s.price_cents)}</p>
+                      {s.description && <p className="text-xs text-muted-foreground line-clamp-2">{s.description}</p>}
                     </button>
                   </li>
                 ))}
