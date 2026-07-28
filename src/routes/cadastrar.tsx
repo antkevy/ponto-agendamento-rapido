@@ -11,7 +11,8 @@ export const Route = createFileRoute("/cadastrar")({
 });
 
 const inputCls =
-  "w-full min-h-[44px] px-3 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-accent transition";
+  "w-full min-h-[48px] px-4 py-3 rounded-xl border border-border bg-white text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition";
+
 
 function SignUp() {
   const router = useRouter();
