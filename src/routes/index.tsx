@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { ThemeToggle } from "@/components/theme-toggle";
 import {
   ArrowRight,
   Check,
@@ -85,6 +86,7 @@ function Landing() {
             <Link to="/entrar" className="hidden sm:inline-flex text-sm text-muted-foreground hover:text-foreground px-3 py-2">
               Entrar
             </Link>
+            <ThemeToggle />
             <Link to="/cadastrar" className="btn-pill-solid inline-flex items-center text-sm sm:text-base">
               Começar grátis
             </Link>
@@ -93,13 +95,7 @@ function Landing() {
       </header>
 
       {/* Hero with soft gradient */}
-      <section
-        className="relative"
-        style={{
-          backgroundImage:
-            "linear-gradient(180deg, oklch(0.97 0.02 250) 0%, oklch(0.99 0.008 250) 55%, #ffffff 100%)",
-        }}
-      >
+      <section className="relative bg-page-gradient">
         <div className="max-w-3xl mx-auto px-5 sm:px-8 pt-14 pb-24 sm:pt-20 sm:pb-28 text-center">
           <div className="animate-fade-in-up inline-flex">
             <span className="badge-pill">
