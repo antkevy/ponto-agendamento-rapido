@@ -201,7 +201,7 @@
   .btn-gradient:active { transform: scale(0.98); }
 
   .btn-pill-outline {
-    background: #fff;
+    background: var(--color-card);
     color: var(--color-foreground);
     border: 1px solid var(--color-border);
     font-weight: 600;
@@ -209,9 +209,9 @@
     padding: 0.9rem 1.6rem;
     min-height: 52px;
     box-shadow: 0 1px 2px oklch(0 0 0 / 0.04);
-    transition: background-color 150ms ease, border-color 150ms ease;
+    transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
   }
-  .btn-pill-outline:hover { background: var(--color-surface); border-color: oklch(0.85 0.02 250); }
+  .btn-pill-outline:hover { background: var(--color-muted); border-color: var(--color-accent); color: var(--color-foreground); }
 
   .btn-pill-solid {
     background-image: linear-gradient(180deg, oklch(0.62 0.17 250) 0%, oklch(0.55 0.18 250) 100%);
@@ -223,7 +223,7 @@
     box-shadow: 0 6px 16px -8px oklch(0.55 0.18 250 / 0.55);
     transition: filter 150ms ease, transform 150ms ease;
   }
-  .btn-pill-solid:hover { filter: brightness(1.05); }
+  .btn-pill-solid:hover { filter: brightness(1.05); color: #fff; }
   .btn-pill-solid:active { transform: scale(0.98); }
 
   .badge-pill {
@@ -232,7 +232,7 @@
     gap: 0.5rem;
     padding: 0.55rem 1rem;
     border-radius: 9999px;
-    background: #fff;
+    background: var(--color-card);
     border: 1px solid var(--color-border);
     box-shadow: 0 6px 20px -12px oklch(0.55 0.18 250 / 0.25);
     font-size: 0.875rem;
@@ -248,14 +248,35 @@
     border-radius: var(--radius-lg);
     border: 1px solid var(--color-border);
     background: var(--color-card);
+    color: var(--color-foreground);
     font-weight: 500;
     font-size: 0.9rem;
     cursor: pointer;
     transition: all 150ms ease;
   }
-  .chip:hover:not(:disabled) { border-color: var(--color-accent); color: var(--color-accent); }
+  .chip:hover:not(:disabled):not([data-selected="true"]) { border-color: var(--color-accent); color: var(--color-accent); }
   .chip[data-selected="true"] { background: var(--color-accent); color: var(--color-accent-foreground); border-color: var(--color-accent); }
+  .chip[data-selected="true"]:hover { background: var(--color-accent); color: var(--color-accent-foreground); filter: brightness(1.05); }
   .chip:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .bg-page-gradient {
+    background-image: linear-gradient(180deg, oklch(0.97 0.02 250) 0%, oklch(0.99 0.008 250) 55%, #ffffff 100%);
+  }
+  .dark .bg-page-gradient {
+    background-image: linear-gradient(180deg, oklch(0.20 0.03 258) 0%, oklch(0.17 0.02 258) 55%, oklch(0.16 0.02 258) 100%);
+  }
+  .bg-section-soft {
+    background-image: linear-gradient(180deg, #ffffff 0%, oklch(0.98 0.015 250) 100%);
+  }
+  .dark .bg-section-soft {
+    background-image: linear-gradient(180deg, var(--color-background) 0%, oklch(0.19 0.02 258) 100%);
+  }
+  .bg-section-soft-reverse {
+    background-image: linear-gradient(180deg, oklch(0.98 0.015 250) 0%, #ffffff 100%);
+  }
+  .dark .bg-section-soft-reverse {
+    background-image: linear-gradient(180deg, oklch(0.19 0.02 258) 0%, var(--color-background) 100%);
+  }
 
   .skeleton {
     background: linear-gradient(90deg, var(--color-muted) 0%, oklch(0.94 0.008 240) 50%, var(--color-muted) 100%);
