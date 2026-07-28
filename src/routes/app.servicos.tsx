@@ -22,6 +22,8 @@ function Page() {
   const { data: pro, isLoading } = useMyProfessional();
   const qc = useQueryClient();
   const [editing, setEditing] = useState<Partial<Service> | null>(null);
+  const [view, setView] = useState<ViewMode>("list");
+
 
   const { data: services } = useQuery({
     queryKey: ["services", pro?.id],
@@ -58,25 +60,46 @@ function Page() {
     <AppShell title="Serviços">
       {isLoading ? <div className="skeleton h-32" /> : !pro ? <OnboardingCard /> : (
         <>
-          <button onClick={() => setEditing({ duration_minutes: 30 })} className="btn-brand inline-flex items-center gap-2 mb-6">
-            <Plus className="h-4 w-4" /> Novo serviço
-          </button>
-          <div className="grid gap-3">
-            {(services ?? []).length === 0 && <p className="text-muted-foreground text-sm">Nenhum serviço ainda. Crie o primeiro para começar a receber agendamentos.</p>}
-            {(services ?? []).map((s) => (
-              <div key={s.id} className="card-elevated p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="font-semibold truncate">{s.name}</p>
-                  <p className="text-sm text-muted-foreground">{s.duration_minutes} min · {formatBRL(s.price_cents)}</p>
-                  {s.description && <p className="text-sm mt-1 text-muted-foreground line-clamp-2">{s.description}</p>}
-                </div>
-                <div className="flex gap-2 shrink-0">
-                  <button onClick={() => setEditing(s)} className="btn-outline-brand inline-flex items-center gap-1 text-sm !py-2"><Pencil className="h-4 w-4" /> Editar</button>
-                  <button onClick={() => { if (confirm("Excluir este serviço?")) remove.mutate(s.id); }} className="btn-outline-brand inline-flex items-center gap-1 text-sm !py-2 text-destructive"><Trash2 className="h-4 w-4" /></button>
-                </div>
-              </div>
-            ))}
+          <div className="flex items-center justify-between gap-3 mb-6 flex-wrap">
+            <button onClick={() => setEditing({ duration_minutes: 30 })} className="btn-brand inline-flex items-center gap-2">
+              <Plus className="h-4 w-4" /> Novo serviço
+            </button>
+            <ViewToggle value={view} onChange={setView} />
           </div>
+          {(services ?? []).length === 0 && <p className="text-muted-foreground text-sm">Nenhum serviço ainda. Crie o primeiro para começar a receber agendamentos.</p>}
+          {view === "list" ? (
+            <div className="grid gap-3">
+              {(services ?? []).map((s) => (
+                <div key={s.id} className="card-elevated p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-semibold truncate">{s.name}</p>
+                    <p className="text-sm text-muted-foreground">{s.duration_minutes} min · {formatBRL(s.price_cents)}</p>
+                    {s.description && <p className="text-sm mt-1 text-muted-foreground line-clamp-2">{s.description}</p>}
+                  </div>
+                  <div className="flex gap-2 shrink-0">
+                    <button onClick={() => setEditing(s)} className="btn-outline-brand inline-flex items-center gap-1 text-sm !py-2"><Pencil className="h-4 w-4" /> Editar</button>
+                    <button onClick={() => { if (confirm("Excluir este serviço?")) remove.mutate(s.id); }} className="btn-outline-brand inline-flex items-center gap-1 text-sm !py-2 text-destructive"><Trash2 className="h-4 w-4" /></button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {(services ?? []).map((s) => (
+                <div key={s.id} className="card-elevated p-4 flex flex-col gap-2">
+                  <p className="font-semibold truncate">{s.name}</p>
+                  <p className="text-sm text-muted-foreground inline-flex items-center gap-1.5"><Clock className="h-3.5 w-3.5" /> {s.duration_minutes} min</p>
+                  <p className="text-lg font-black tracking-tight">{formatBRL(s.price_cents)}</p>
+                  {s.description && <p className="text-sm text-muted-foreground line-clamp-3">{s.description}</p>}
+                  <div className="flex gap-2 mt-auto pt-2">
+                    <button onClick={() => setEditing(s)} className="btn-outline-brand inline-flex items-center gap-1 text-sm !py-2 flex-1 justify-center"><Pencil className="h-4 w-4" /> Editar</button>
+                    <button onClick={() => { if (confirm("Excluir este serviço?")) remove.mutate(s.id); }} className="btn-outline-brand inline-flex items-center gap-1 text-sm !py-2 text-destructive"><Trash2 className="h-4 w-4" /></button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
 
           {editing && (
             <Modal onClose={() => setEditing(null)}>
