@@ -112,7 +112,7 @@ export function AuthLayout({
 export function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="block text-sm font-semibold text-foreground mb-1.5">{label}</span>
+      <span className="block text-sm font-semibold text-foreground dark:text-slate-100 mb-1.5">{label}</span>
       {children}
     </label>
   );
