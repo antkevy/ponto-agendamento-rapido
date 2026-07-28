@@ -28,6 +28,8 @@ function Page() {
   const qc = useQueryClient();
   const [editing, setEditing] = useState<Employee | null>(null);
   const [creating, setCreating] = useState(false);
+  const [view, setView] = useState<ViewMode>("list");
+
 
   const { data: employees } = useQuery({
     queryKey: ["employees", pro?.id],
@@ -77,37 +79,67 @@ function Page() {
           <p className="text-sm text-muted-foreground mb-4">
             Cadastre as pessoas que atendem no seu negócio. Cada funcionário tem seus próprios serviços, horários e bloqueios de agenda.
           </p>
-          <button onClick={() => setCreating(true)} className="btn-brand inline-flex items-center gap-2 mb-6">
-            <Plus className="h-4 w-4" /> Novo funcionário
-          </button>
+          <div className="flex items-center justify-between gap-3 mb-6 flex-wrap">
+            <button onClick={() => setCreating(true)} className="btn-brand inline-flex items-center gap-2">
+              <Plus className="h-4 w-4" /> Novo funcionário
+            </button>
+            <ViewToggle value={view} onChange={setView} />
+          </div>
 
-          <div className="grid gap-3">
-            {(employees ?? []).length === 0 && (
-              <p className="text-muted-foreground text-sm">Nenhum funcionário ainda.</p>
-            )}
-            {(employees ?? []).map((e) => (
-              <div key={e.id} className={`card-elevated p-4 flex flex-col sm:flex-row sm:items-center gap-3 ${!e.is_active ? "opacity-60" : ""}`}>
-                <div className="flex items-center gap-3 min-w-0 flex-1">
-                  {e.photo_url ? (
-                    <img src={e.photo_url} alt="" className="h-12 w-12 rounded-full object-cover border border-border shrink-0" />
-                  ) : (
-                    <div className="h-12 w-12 rounded-full grid place-items-center bg-secondary shrink-0">
-                      <User className="h-5 w-5 text-muted-foreground" />
+          {view === "list" ? (
+            <div className="grid gap-3">
+              {(employees ?? []).length === 0 && (
+                <p className="text-muted-foreground text-sm">Nenhum funcionário ainda.</p>
+              )}
+              {(employees ?? []).map((e) => (
+                <div key={e.id} className={`card-elevated p-4 flex flex-col sm:flex-row sm:items-center gap-3 ${!e.is_active ? "opacity-60" : ""}`}>
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    {e.photo_url ? (
+                      <img src={e.photo_url} alt="" className="h-12 w-12 rounded-full object-cover border border-border shrink-0" />
+                    ) : (
+                      <div className="h-12 w-12 rounded-full grid place-items-center bg-secondary shrink-0">
+                        <User className="h-5 w-5 text-muted-foreground" />
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <p className="font-semibold truncate">{e.name}</p>
+                      <p className="text-xs text-muted-foreground">{e.is_active ? "Ativo" : "Inativo"}</p>
                     </div>
-                  )}
-                  <div className="min-w-0">
-                    <p className="font-semibold truncate">{e.name}</p>
-                    <p className="text-xs text-muted-foreground">{e.is_active ? "Ativo" : "Inativo"}</p>
+                  </div>
+                  <div className="flex gap-2 shrink-0">
+                    <button onClick={() => setEditing(e)} className="btn-outline-brand inline-flex items-center gap-1 text-sm !py-2"><Pencil className="h-4 w-4" /> Editar</button>
+                    <button onClick={() => toggle.mutate(e)} className="btn-outline-brand inline-flex items-center gap-1 text-sm !py-2" title={e.is_active ? "Desativar" : "Ativar"}><Power className="h-4 w-4" /></button>
+                    <button onClick={() => { if (confirm(`Excluir ${e.name}? Os agendamentos passados dele serão preservados.`)) remove.mutate(e.id); }} className="btn-outline-brand inline-flex items-center gap-1 text-sm !py-2 text-destructive"><Trash2 className="h-4 w-4" /></button>
                   </div>
                 </div>
-                <div className="flex gap-2 shrink-0">
-                  <button onClick={() => setEditing(e)} className="btn-outline-brand inline-flex items-center gap-1 text-sm !py-2"><Pencil className="h-4 w-4" /> Editar</button>
-                  <button onClick={() => toggle.mutate(e)} className="btn-outline-brand inline-flex items-center gap-1 text-sm !py-2" title={e.is_active ? "Desativar" : "Ativar"}><Power className="h-4 w-4" /></button>
-                  <button onClick={() => { if (confirm(`Excluir ${e.name}? Os agendamentos passados dele serão preservados.`)) remove.mutate(e.id); }} className="btn-outline-brand inline-flex items-center gap-1 text-sm !py-2 text-destructive"><Trash2 className="h-4 w-4" /></button>
+              ))}
+            </div>
+          ) : (
+            <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
+              {(employees ?? []).length === 0 && (
+                <p className="text-muted-foreground text-sm col-span-full">Nenhum funcionário ainda.</p>
+              )}
+              {(employees ?? []).map((e) => (
+                <div key={e.id} className={`card-elevated p-4 flex flex-col items-center text-center gap-2 ${!e.is_active ? "opacity-60" : ""}`}>
+                  {e.photo_url ? (
+                    <img src={e.photo_url} alt="" className="h-20 w-20 rounded-full object-cover border border-border" />
+                  ) : (
+                    <div className="h-20 w-20 rounded-full grid place-items-center bg-secondary">
+                      <User className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                  )}
+                  <p className="font-semibold truncate w-full">{e.name}</p>
+                  <p className="text-xs text-muted-foreground">{e.is_active ? "Ativo" : "Inativo"}</p>
+                  <div className="flex gap-1 mt-1 flex-wrap justify-center">
+                    <button onClick={() => setEditing(e)} className="btn-outline-brand !py-1.5 !px-2 text-xs"><Pencil className="h-3 w-3" /></button>
+                    <button onClick={() => toggle.mutate(e)} className="btn-outline-brand !py-1.5 !px-2 text-xs" title={e.is_active ? "Desativar" : "Ativar"}><Power className="h-3 w-3" /></button>
+                    <button onClick={() => { if (confirm(`Excluir ${e.name}?`)) remove.mutate(e.id); }} className="btn-outline-brand !py-1.5 !px-2 text-xs text-destructive"><Trash2 className="h-3 w-3" /></button>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
+
 
           {creating && (
             <Modal onClose={() => setCreating(false)}>
@@ -135,12 +167,12 @@ function NewEmployeeForm({ onSubmit, saving }: { onSubmit: (v: { name: string; p
       <h2 className="text-2xl font-black tracking-tight text-foreground">Novo funcionário</h2>
       <label className="block"><span className="text-sm font-medium">Nome</span>
         <input required value={name} onChange={(e) => setName(e.target.value)} className={inputCls} /></label>
-      <label className="block"><span className="text-sm font-medium">Foto (URL, opcional)</span>
-        <input value={photo} onChange={(e) => setPhoto(e.target.value)} placeholder="https://..." className={inputCls} /></label>
+      <ImageUpload value={photo} onChange={setPhoto} label="Foto (opcional)" shape="circle" folder="employees" />
       <button disabled={saving} className="btn-brand w-full disabled:opacity-60">{saving ? "Salvando..." : "Adicionar"}</button>
     </form>
   );
 }
+
 
 function EmployeeEditor({ employee, onClose }: { employee: Employee; onClose: () => void }) {
   const [tab, setTab] = useState<"data" | "services" | "hours" | "blocks">("data");
