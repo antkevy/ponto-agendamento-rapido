@@ -47,22 +47,31 @@ function Page() {
   });
 
   return (
-    <div className="min-h-screen bg-surface">
-      <header className="bg-background border-b border-border">
-        <div className="max-w-2xl mx-auto px-4 h-16 flex items-center justify-between">
+    <div
+      className="min-h-screen"
+      style={{
+        backgroundImage:
+          "linear-gradient(180deg, oklch(0.97 0.02 250) 0%, oklch(0.99 0.008 250) 55%, #ffffff 100%)",
+      }}
+    >
+      <header className="bg-transparent">
+        <div className="max-w-2xl mx-auto px-4 h-20 flex items-center justify-between">
+          <BrandLogo />
           <Link to="/" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="h-4 w-4" /> Início</Link>
-          <span className="font-display text-xl text-primary">Agendaí</span>
         </div>
       </header>
 
       <main className="max-w-2xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-display text-primary">Meus agendamentos</h1>
-        <p className="text-muted-foreground mt-1 mb-6">Digite o email ou telefone que você usou ao agendar.</p>
+        <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-foreground leading-[1.05]">
+          Meus <span style={{ color: "oklch(0.55 0.18 250)" }}>agendamentos.</span>
+        </h1>
+        <p className="text-muted-foreground mt-3 mb-6">Digite o email ou telefone que você usou ao agendar.</p>
 
-        <form onSubmit={(e) => { e.preventDefault(); setSubmitted(normalizeContact(contact)); }} className="card-elevated p-4 flex flex-col sm:flex-row gap-3">
-          <input required value={contact} onChange={(e) => setContact(e.target.value)} placeholder="seu@email.com ou (11) 91234-5678" className="flex-1 min-h-[48px] px-3 py-2 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-ring" />
-          <button className="btn-brand">Consultar</button>
+        <form onSubmit={(e) => { e.preventDefault(); setSubmitted(normalizeContact(contact)); }} className="bg-white border border-border rounded-2xl p-4 flex flex-col sm:flex-row gap-3 shadow-[0_20px_60px_-30px_oklch(0.55_0.18_250_/_0.25)]">
+          <input required value={contact} onChange={(e) => setContact(e.target.value)} placeholder="seu@email.com ou (11) 91234-5678" className="flex-1 min-h-[48px] px-4 py-3 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-ring" />
+          <button className="btn-gradient inline-flex items-center justify-center">Consultar</button>
         </form>
+
 
         {submitted && (
           <div className="mt-6 space-y-3">
