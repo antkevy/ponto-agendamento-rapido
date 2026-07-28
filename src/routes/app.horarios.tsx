@@ -122,7 +122,7 @@ function PeriodBlock({
       ) : (
         <ul className="flex flex-wrap gap-2">
           {rows.map((r) => (
-            <li key={r.id} className="inline-flex items-center gap-2 bg-white border border-border rounded-lg px-3 py-2 text-sm">
+            <li key={r.id} className="inline-flex items-center gap-2 bg-card text-foreground border border-border rounded-lg px-3 py-2 text-sm">
               <span className="font-mono">{r.start_time.slice(0, 5)} – {r.end_time.slice(0, 5)}</span>
               <button onClick={() => onRemove(r.id)} className="text-destructive hover:opacity-70" aria-label="Remover"><Trash2 className="h-4 w-4" /></button>
             </li>
