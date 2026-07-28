@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { BrandLogo } from "@/components/brand-logo";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { X, ArrowLeft, CalendarClock } from "lucide-react";
 import { PhoneInput } from "@/components/phone-input";
 import { isValidPhoneBR } from "@/lib/phone";
@@ -51,17 +52,14 @@ function Page() {
   });
 
   return (
-    <div
-      className="min-h-screen"
-      style={{
-        backgroundImage:
-          "linear-gradient(180deg, oklch(0.97 0.02 250) 0%, oklch(0.99 0.008 250) 55%, #ffffff 100%)",
-      }}
-    >
+    <div className="min-h-screen bg-page-gradient">
       <header className="bg-transparent">
         <div className="max-w-2xl mx-auto px-4 h-20 flex items-center justify-between">
           <BrandLogo />
-          <Link to="/" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="h-4 w-4" /> Início</Link>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <Link to="/" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="h-4 w-4" /> Início</Link>
+          </div>
         </div>
       </header>
 
@@ -89,7 +87,7 @@ function Page() {
             }
             setSubmitted(normalizeContact(contact, mode));
           }}
-          className="bg-white border border-border rounded-2xl p-4 flex flex-col sm:flex-row gap-3 shadow-[0_20px_60px_-30px_oklch(0.55_0.18_250_/_0.25)]"
+          className="bg-card border border-border rounded-2xl p-4 flex flex-col sm:flex-row gap-3 shadow-[0_20px_60px_-30px_oklch(0.55_0.18_250_/_0.25)]"
         >
           {mode === "phone" ? (
             <PhoneInput

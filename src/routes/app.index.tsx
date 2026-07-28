@@ -56,7 +56,7 @@ function Dashboard() {
             <a
               href={`/p/${pro.slug}`}
               target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-white text-foreground font-semibold rounded-full px-5 py-2.5 min-h-[44px] hover:bg-white/90 transition shrink-0"
+              className="inline-flex items-center gap-2 bg-white text-[#0F172A] font-semibold rounded-full px-5 py-2.5 min-h-[44px] hover:bg-white/90 hover:text-[#0F172A] transition shrink-0"
             >
               <ExternalLink className="h-4 w-4" /> Ver página
             </a>

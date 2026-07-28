@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { ThemeToggle } from "@/components/theme-toggle";
 import {
   ArrowRight,
   Check,
@@ -85,6 +86,7 @@ function Landing() {
             <Link to="/entrar" className="hidden sm:inline-flex text-sm text-muted-foreground hover:text-foreground px-3 py-2">
               Entrar
             </Link>
+            <ThemeToggle />
             <Link to="/cadastrar" className="btn-pill-solid inline-flex items-center text-sm sm:text-base">
               Começar grátis
             </Link>
@@ -93,13 +95,7 @@ function Landing() {
       </header>
 
       {/* Hero with soft gradient */}
-      <section
-        className="relative"
-        style={{
-          backgroundImage:
-            "linear-gradient(180deg, oklch(0.97 0.02 250) 0%, oklch(0.99 0.008 250) 55%, #ffffff 100%)",
-        }}
-      >
+      <section className="relative bg-page-gradient">
         <div className="max-w-3xl mx-auto px-5 sm:px-8 pt-14 pb-24 sm:pt-20 sm:pb-28 text-center">
           <div className="animate-fade-in-up inline-flex">
             <span className="badge-pill">
@@ -184,9 +180,7 @@ function Landing() {
       </section>
 
       {/* How it works */}
-      <section id="como-funciona" className="py-20 sm:py-28" style={{
-        backgroundImage: "linear-gradient(180deg, #ffffff 0%, oklch(0.98 0.015 250) 100%)",
-      }}>
+      <section id="como-funciona" className="py-20 sm:py-28 bg-section-soft">
         <div className="max-w-5xl mx-auto px-5 sm:px-8 text-center">
           <p className="text-sm font-semibold uppercase tracking-widest" style={{ color: "oklch(0.55 0.18 250)" }}>Como funciona</p>
           <h2 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-foreground">
@@ -236,9 +230,7 @@ function Landing() {
       </section>
 
       {/* FAQ */}
-      <section id="faq" className="py-20 sm:py-28" style={{
-        backgroundImage: "linear-gradient(180deg, oklch(0.98 0.015 250) 0%, #ffffff 100%)",
-      }}>
+      <section id="faq" className="py-20 sm:py-28 bg-section-soft-reverse">
         <div className="max-w-3xl mx-auto px-5 sm:px-8">
           <div className="text-center">
             <p className="text-sm font-semibold uppercase tracking-widest" style={{ color: "oklch(0.55 0.18 250)" }}>Perguntas frequentes</p>
@@ -272,7 +264,7 @@ function Landing() {
               Crie sua conta em menos de dois minutos e compartilhe seu link ainda hoje.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-3 items-center justify-center">
-              <Link to="/cadastrar" className="inline-flex items-center gap-2 bg-white text-foreground font-semibold px-7 py-3.5 rounded-full hover:bg-white/95 transition-colors">
+              <Link to="/cadastrar" className="inline-flex items-center gap-2 bg-white text-[#0F172A] font-semibold px-7 py-3.5 rounded-full hover:bg-white/95 hover:text-[#0F172A] transition-colors">
                 Criar minha conta grátis
                 <ArrowRight className="h-5 w-5" />
               </Link>

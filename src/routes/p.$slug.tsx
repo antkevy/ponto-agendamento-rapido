@@ -16,6 +16,7 @@ import {
 import { PhoneInput } from "@/components/phone-input";
 import { isValidPhoneBR } from "@/lib/phone";
 import { CheckCircle2, ChevronLeft, ChevronRight, MapPin, Clock, ArrowLeft, User } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export const Route = createFileRoute("/p/$slug")({
   loader: async ({ params }) => {
@@ -119,12 +120,8 @@ function BookingPage() {
 
   return (
     <div
-      className="min-h-screen"
-      style={{
-        ["--brand" as string]: brand,
-        backgroundImage:
-          "linear-gradient(180deg, oklch(0.97 0.02 250) 0%, oklch(0.99 0.008 250) 55%, #ffffff 100%)",
-      } as React.CSSProperties}
+      className="min-h-screen bg-page-gradient"
+      style={{ ["--brand" as string]: brand } as React.CSSProperties}
     >
       <header className="bg-transparent">
         <div className="max-w-2xl mx-auto px-4 py-8 sm:py-10 flex items-start gap-4">
@@ -133,11 +130,12 @@ function BookingPage() {
           ) : (
             <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl grid place-items-center text-2xl font-bold text-white shrink-0 shadow-md" style={{ backgroundColor: brand }}>{pro.business_name.charAt(0).toUpperCase()}</div>
           )}
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground truncate leading-[1.1]">{pro.business_name}</h1>
             {pro.description && <p className="text-sm text-muted-foreground mt-1.5">{pro.description}</p>}
             {pro.address && <p className="text-xs text-muted-foreground mt-1 inline-flex items-center gap-1"><MapPin className="h-3 w-3" /> {pro.address}</p>}
           </div>
+          <ThemeToggle className="shrink-0" />
         </div>
       </header>
 

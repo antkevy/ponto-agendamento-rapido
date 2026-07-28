@@ -3,6 +3,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { BrandLogo } from "@/components/brand-logo";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { ArrowRight, Check } from "lucide-react";
 
 export const Route = createFileRoute("/entrar")({
@@ -52,7 +53,7 @@ function SignIn() {
 }
 
 const inputCls =
-  "w-full min-h-[48px] px-4 py-3 rounded-xl border border-border bg-white text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition";
+  "w-full min-h-[48px] px-4 py-3 rounded-xl border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition";
 
 export function AuthLayout({
   title,
@@ -66,18 +67,15 @@ export function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div
-      className="min-h-screen"
-      style={{
-        backgroundImage:
-          "linear-gradient(180deg, oklch(0.97 0.02 250) 0%, oklch(0.99 0.008 250) 55%, #ffffff 100%)",
-      }}
-    >
+    <div className="min-h-screen bg-page-gradient">
       <header className="max-w-6xl mx-auto px-5 sm:px-8 h-20 flex items-center justify-between">
         <BrandLogo />
-        <Link to="/" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-          Voltar ao início
-        </Link>
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <Link to="/" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            Voltar ao início
+          </Link>
+        </div>
       </header>
 
       <main className="max-w-md mx-auto px-5 sm:px-8 pt-6 pb-20">
