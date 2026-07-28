@@ -6,7 +6,7 @@ import { AppShell } from "@/components/app-shell";
 import { useMyProfessional } from "@/hooks/use-my-professional";
 import { supabase } from "@/integrations/supabase/client";
 import { formatBRL } from "@/lib/booking";
-import { Calendar, DollarSign, CheckCircle2, ExternalLink, TrendingUp, ChevronLeft, ChevronRight, Percent } from "lucide-react";
+import { Calendar, DollarSign, CheckCircle2, TrendingUp, ChevronLeft, ChevronRight, Percent } from "lucide-react";
 import { OnboardingCard } from "@/components/onboarding-card";
 
 export const Route = createFileRoute("/app/")({
@@ -151,23 +151,6 @@ function Dashboard() {
         <OnboardingCard />
       ) : (
         <>
-          <div
-            className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-5 rounded-2xl text-white shadow-[0_20px_60px_-30px_oklch(0.55_0.18_250_/_0.4)]"
-            style={{ backgroundImage: "linear-gradient(135deg, oklch(0.55 0.18 250) 0%, oklch(0.45 0.14 245) 100%)" }}
-          >
-            <div className="min-w-0">
-              <p className="text-xs opacity-80">Sua página pública</p>
-              <p className="font-mono text-sm break-all">/p/{pro.slug}</p>
-            </div>
-            <a
-              href={`/p/${pro.slug}`}
-              target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-white text-[#0F172A] font-semibold rounded-full px-5 py-2.5 min-h-[44px] hover:bg-white/90 hover:text-[#0F172A] transition shrink-0"
-            >
-              <ExternalLink className="h-4 w-4" /> Ver página
-            </a>
-          </div>
-
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-2">
               <button onClick={() => setMonthOffset((p) => p - 1)} className="p-2 min-h-[40px] min-w-[40px] grid place-items-center rounded-lg hover:bg-muted border border-border"><ChevronLeft className="h-4 w-4" /></button>
