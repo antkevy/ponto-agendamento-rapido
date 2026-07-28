@@ -141,11 +141,11 @@ function Page() {
             <p className="text-muted-foreground text-sm">Nenhum agendamento encontrado.</p>
           ) : view === "list" ? (
             <div className="space-y-3">
-              {filtered.map((a) => <ApptRow key={a.id} a={a} businessName={pro.business_name} onUpdate={(s) => update.mutate({ id: a.id, status: s })} />)}
+              {filtered.map((a) => <ApptRow key={a.id} a={a} businessName={pro.business_name} msgConfirmed={pro.msg_confirmed} msgCancelled={pro.msg_cancelled} onUpdate={(s) => update.mutate({ id: a.id, status: s })} />)}
             </div>
           ) : (
             <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
-              {filtered.map((a) => <ApptCard key={a.id} a={a} businessName={pro.business_name} onUpdate={(s) => update.mutate({ id: a.id, status: s })} />)}
+              {filtered.map((a) => <ApptCard key={a.id} a={a} businessName={pro.business_name} msgConfirmed={pro.msg_confirmed} msgCancelled={pro.msg_cancelled} onUpdate={(s) => update.mutate({ id: a.id, status: s })} />)}
             </div>
           )}
         </>
@@ -160,17 +160,28 @@ function whatsAppUrl(phone: string) {
   return `https://wa.me/${full}`;
 }
 
-function whatsAppMsg(a: Appt, businessName: string, status: Appt["status"]) {
+function whatsAppMsg(a: Appt, businessName: string, status: Appt["status"], customConfirmed: string | null, customCancelled: string | null) {
   if (status === "completed") return "";
   const date = new Date(a.starts_at).toLocaleDateString("pt-BR", { dateStyle: "full" });
   const time = new Date(a.starts_at).toLocaleTimeString("pt-BR", { timeStyle: "short" });
+  const vars: Record<string, string> = {
+    "{nome}": a.client_name,
+    "{negocio}": businessName,
+    "{data}": date,
+    "{horario}": time,
+    "{servico}": a.service_snapshot_name,
+    "{valor}": formatBRL(a.service_snapshot_price_cents),
+  };
+  const replace = (s: string) => Object.entries(vars).reduce((acc, [k, v]) => acc.replaceAll(k, v), s);
+  const template = status === "confirmed" ? customConfirmed : customCancelled;
+  if (template?.trim()) return replace(template);
   if (status === "confirmed") {
     return `Ola ${a.client_name}! Seu agendamento na ${businessName} esta confirmado!\n\nData: ${date}\nHorario: ${time}\nServico: ${a.service_snapshot_name}\nValor: ${formatBRL(a.service_snapshot_price_cents)}\n\nQualquer duvida, estamos a disposicao!`;
   }
   return `Ola ${a.client_name}! Notamos que voce cancelou seu agendamento na ${businessName}.\n\nSe precisar de ajuda ou quiser remarcar, e so nos chamar! Estamos aqui para o que precisar.`;
 }
 
-function ApptRow({ a, businessName, onUpdate }: { a: Appt; businessName: string; onUpdate: (s: Appt["status"]) => void }) {
+function ApptRow({ a, businessName, msgConfirmed, msgCancelled, onUpdate }: { a: Appt; businessName: string; msgConfirmed: string | null; msgCancelled: string | null; onUpdate: (s: Appt["status"]) => void }) {
   return (
     <div className="card-elevated p-4">
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
@@ -184,7 +195,7 @@ function ApptRow({ a, businessName, onUpdate }: { a: Appt; businessName: string;
           <p className="text-xs text-muted-foreground mt-1">{displayPhoneBR(a.client_phone)}{a.client_email ? ` · ${a.client_email}` : ""}</p>
         </div>
         <div className="flex gap-2 shrink-0">
-          <button onClick={() => { const msg = whatsAppMsg(a, businessName, a.status); window.open(`${whatsAppUrl(a.client_phone)}${msg ? `?text=${encodeURIComponent(msg)}` : ""}`, "_blank"); }} className="btn-outline-brand inline-flex items-center gap-1 !py-2 text-sm" title="Enviar mensagem"><MessageSquare className="h-4 w-4" /> Enviar mensagem</button>
+          <button onClick={() => { const msg = whatsAppMsg(a, businessName, a.status, msgConfirmed, msgCancelled); window.open(`${whatsAppUrl(a.client_phone)}${msg ? `?text=${encodeURIComponent(msg)}` : ""}`, "_blank"); }} className="btn-outline-brand inline-flex items-center gap-1 !py-2 text-sm" title="Enviar mensagem"><MessageSquare className="h-4 w-4" /> Enviar mensagem</button>
           {a.status === "confirmed" && <Actions onUpdate={onUpdate} />}
         </div>
       </div>
@@ -192,20 +203,20 @@ function ApptRow({ a, businessName, onUpdate }: { a: Appt; businessName: string;
   );
 }
 
-function ApptCard({ a, businessName, onUpdate }: { a: Appt; businessName: string; onUpdate: (s: Appt["status"]) => void }) {
+function ApptCard({ a, businessName, msgConfirmed, msgCancelled, onUpdate }: { a: Appt; businessName: string; msgConfirmed: string | null; msgCancelled: string | null; onUpdate: (s: Appt["status"]) => void }) {
   return (
-    <div className="card-elevated p-4 flex flex-col gap-2">
+    <div className="card-elevated p-3 sm:p-4 flex flex-col gap-1.5">
       <div className="flex items-start justify-between gap-2">
-        <p className="font-semibold truncate">{a.client_name}</p>
+        <p className="font-semibold truncate text-sm sm:text-base">{a.client_name}</p>
         <StatusBadge status={a.status} />
       </div>
-      <p className="text-sm text-muted-foreground truncate">{a.service_snapshot_name}</p>
-      <p className="text-sm font-medium">{formatBRL(a.service_snapshot_price_cents)}</p>
-      <p className="text-xs text-muted-foreground inline-flex items-center gap-1"><CalendarClock className="h-3.5 w-3.5" /> {new Date(a.starts_at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}</p>
-      <p className="text-xs text-muted-foreground inline-flex items-center gap-1 truncate"><Phone className="h-3 w-3" /> {displayPhoneBR(a.client_phone)}</p>
-      {a.client_email && <p className="text-xs text-muted-foreground inline-flex items-center gap-1 truncate"><Mail className="h-3 w-3" /> {a.client_email}</p>}
-      <div className="flex gap-2 mt-auto pt-3">
-        <button onClick={() => { const msg = whatsAppMsg(a, businessName, a.status); window.open(`${whatsAppUrl(a.client_phone)}${msg ? `?text=${encodeURIComponent(msg)}` : ""}`, "_blank"); }} className="btn-outline-brand inline-flex items-center gap-1 !py-2 text-sm flex-1 justify-center" title="Enviar mensagem"><MessageSquare className="h-4 w-4" /> Enviar mensagem</button>
+      <p className="text-xs sm:text-sm text-muted-foreground truncate">{a.service_snapshot_name}</p>
+      <p className="text-sm sm:text-base font-medium">{formatBRL(a.service_snapshot_price_cents)}</p>
+      <p className="text-xs text-muted-foreground inline-flex items-center gap-1"><CalendarClock className="h-3 w-3 shrink-0" /> {new Date(a.starts_at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}</p>
+      <p className="text-xs text-muted-foreground inline-flex items-center gap-1 truncate"><Phone className="h-3 w-3 shrink-0" /> {displayPhoneBR(a.client_phone)}</p>
+      {a.client_email && <p className="text-xs text-muted-foreground inline-flex items-center gap-1 truncate"><Mail className="h-3 w-3 shrink-0" /> {a.client_email}</p>}
+      <div className="flex gap-2 mt-1 sm:mt-auto sm:pt-2">
+        <button onClick={() => { const msg = whatsAppMsg(a, businessName, a.status, msgConfirmed, msgCancelled); window.open(`${whatsAppUrl(a.client_phone)}${msg ? `?text=${encodeURIComponent(msg)}` : ""}`, "_blank"); }} className="btn-outline-brand inline-flex items-center gap-1 !py-2 text-sm flex-1 justify-center" title="Enviar mensagem"><MessageSquare className="h-4 w-4 shrink-0" /><span className="max-sm:sr-only"> Enviar mensagem</span></button>
         {a.status === "confirmed" && <Actions onUpdate={onUpdate} />}
       </div>
     </div>
@@ -215,8 +226,8 @@ function ApptCard({ a, businessName, onUpdate }: { a: Appt; businessName: string
 function Actions({ onUpdate }: { onUpdate: (s: Appt["status"]) => void }) {
   return (
     <div className="flex gap-2 shrink-0">
-      <button onClick={() => onUpdate("completed")} className="btn-outline-brand inline-flex items-center gap-1 !py-2 text-sm"><CheckCheck className="h-4 w-4" /> Concluir</button>
-      <button onClick={() => { if (confirm("Cancelar este agendamento?")) onUpdate("cancelled"); }} className="btn-outline-brand inline-flex items-center gap-1 !py-2 text-sm text-destructive"><X className="h-4 w-4" /> Cancelar</button>
+      <button onClick={() => onUpdate("completed")} className="btn-outline-brand inline-flex items-center gap-1 !py-2 text-sm"><CheckCheck className="h-4 w-4" /><span className="max-sm:sr-only"> Concluir</span></button>
+      <button onClick={() => { if (confirm("Cancelar este agendamento?")) onUpdate("cancelled"); }} className="btn-outline-brand inline-flex items-center gap-1 !py-2 text-sm text-destructive"><X className="h-4 w-4" /><span className="max-sm:sr-only"> Cancelar</span></button>
     </div>
   );
 }

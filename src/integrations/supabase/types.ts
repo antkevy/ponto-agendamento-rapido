@@ -312,6 +312,8 @@ export type Database = {
           lat: number | null
           lng: number | null
           logo_url: string | null
+          msg_cancelled: string | null
+          msg_confirmed: string | null
           owner_name: string | null
           phone: string | null
           slug: string
@@ -329,6 +331,8 @@ export type Database = {
           lat?: number | null
           lng?: number | null
           logo_url?: string | null
+          msg_cancelled?: string | null
+          msg_confirmed?: string | null
           owner_name?: string | null
           phone?: string | null
           slug: string
@@ -346,6 +350,8 @@ export type Database = {
           lat?: number | null
           lng?: number | null
           logo_url?: string | null
+          msg_cancelled?: string | null
+          msg_confirmed?: string | null
           owner_name?: string | null
           phone?: string | null
           slug?: string

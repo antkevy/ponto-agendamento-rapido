@@ -51,7 +51,7 @@ function BookingPage() {
   const brand = pro.brand_color || "#0284C7";
 
   const [step, setStep] = useState<Step>("service");
-  const [service, setService] = useState<Service | null>(null);
+  const [selectedServices, setSelectedServices] = useState<Service[]>([]);
   const [serviceView, setServiceView] = useState<ViewMode>("list");
   const [detailService, setDetailService] = useState<Service | null>(null);
   const [employee, setEmployee] = useState<Employee | null>(null);
@@ -96,21 +96,25 @@ function BookingPage() {
   });
 
   const eligibleEmployees = useMemo(() => {
-    if (!employeesData || !service) return [] as Employee[];
+    if (!employeesData || selectedServices.length === 0) return [] as Employee[];
+    const serviceIds = new Set(selectedServices.map((s) => s.id));
     const linked = new Set(
-      employeesData.links.filter((l) => l.service_id === service.id).map((l) => l.employee_id),
+      employeesData.links.filter((l) => serviceIds.has(l.service_id)).map((l) => l.employee_id),
     );
     return employeesData.employees.filter((e) => linked.has(e.id));
-  }, [employeesData, service]);
+  }, [employeesData, selectedServices]);
 
   const hasAnyEmployees = (employeesData?.employees.length ?? 0) > 0;
 
-  function handleServicePick(s: Service) {
-    setService(s);
+  function toggleService(s: Service) {
+    setSelectedServices((prev) =>
+      prev.some((x) => x.id === s.id) ? prev.filter((x) => x.id !== s.id) : [...prev, s],
+    );
+  }
+
+  function proceedFromServices() {
     setEmployee(null);
     setWhen(null);
-    // If the business has any employees configured, always go through the
-    // employee step so the customer knows who will attend them.
     if (hasAnyEmployees) setStep("employee");
     else setStep("when");
   }
@@ -119,6 +123,7 @@ function BookingPage() {
     if (step === "form") setStep("when");
     else if (step === "when") setStep(hasAnyEmployees ? "employee" : "service");
     else if (step === "employee") setStep("service");
+    else if (step === "done") { setSelectedServices([]); setEmployee(null); setWhen(null); setConfirmedId(null); setStep("service"); }
   }
 
   return (
@@ -167,73 +172,105 @@ function BookingPage() {
         {step === "service" && (
           <section className="animate-fade-in-up">
             <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
-              <h2 className="text-xl font-bold tracking-tight text-foreground">1. Escolha o serviço</h2>
+              <h2 className="text-xl font-bold tracking-tight text-foreground">1. Escolha os serviços</h2>
               {(services ?? []).length > 0 && <ViewToggle value={serviceView} onChange={setServiceView} />}
             </div>
             {loadingServices ? (
               <div className="space-y-3">{[0, 1, 2].map((i) => <div key={i} className="skeleton h-20" />)}</div>
             ) : (services ?? []).length === 0 ? (
               <p className="text-sm text-muted-foreground">Este profissional ainda não cadastrou serviços.</p>
-            ) : serviceView === "list" ? (
-              <ul className="space-y-3">
-                {services!.map((s) => (
-                  <li key={s.id}>
-                    <button
-                      onClick={() => handleServicePick(s)}
-                      className="w-full text-left card-elevated p-4 hover:border-accent transition-all hover:-translate-y-0.5"
-                    >
-                      <div className="flex items-start gap-3">
-                        {s.image_url && <img src={s.image_url} alt={s.name} className="h-16 w-16 rounded-lg object-cover shrink-0" />}
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold">{s.name}</p>
-                          {s.description && <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{s.description}</p>}
-                          <div className="flex items-center gap-3 mt-2">
-                            <span className="text-sm text-muted-foreground inline-flex items-center gap-1"><Clock className="h-3 w-3" /> {s.duration_minutes} min</span>
-                            <span className="font-semibold text-primary">{formatBRL(s.price_cents)}</span>
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={(e) => { e.stopPropagation(); setDetailService(s); }}
-                          className="btn-outline-brand !py-1 !px-2 text-xs shrink-0 mt-1"
-                        >Ver mais</button>
-                      </div>
-                    </button>
-                  </li>
-                ))}
-              </ul>
             ) : (
-              <ul className="grid gap-3 grid-cols-2 lg:grid-cols-3">
-                {services!.map((s) => (
-                  <li key={s.id}>
-                    <button
-                      onClick={() => handleServicePick(s)}
-                      className="w-full h-full text-left card-elevated p-4 hover:border-accent transition-all hover:-translate-y-0.5 flex flex-col gap-2"
-                    >
-                      {s.image_url && <img src={s.image_url} alt={s.name} className="w-full h-28 rounded-lg object-cover" />}
-                      <p className="font-semibold truncate">{s.name}</p>
-                      <p className="text-xs text-muted-foreground inline-flex items-center gap-1"><Clock className="h-3 w-3" /> {s.duration_minutes} min</p>
-                      <p className="text-lg font-black tracking-tight text-primary">{formatBRL(s.price_cents)}</p>
-                      {s.description && <p className="text-xs text-muted-foreground line-clamp-2">{s.description}</p>}
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); setDetailService(s); }}
-                        className="btn-outline-brand !py-1.5 !px-3 text-xs w-full mt-auto"
-                      >Ver mais</button>
-                    </button>
-                  </li>
-                ))}
-              </ul>
+              <>
+                {serviceView === "list" ? (
+                  <ul className="space-y-3">
+                    {services!.map((s) => {
+                      const selected = selectedServices.some((x) => x.id === s.id);
+                      return (
+                        <li key={s.id}>
+                          <button
+                            onClick={() => toggleService(s)}
+                            data-selected={selected || undefined}
+                            className="w-full text-left card-elevated p-4 hover:border-accent transition-all hover:-translate-y-0.5 data-[selected]:border-accent data-[selected]:ring-2 data-[selected]:ring-accent/30"
+                          >
+                            <div className="flex items-start gap-3">
+                              {s.image_url && <img src={s.image_url} alt={s.name} className="h-16 w-16 rounded-lg object-cover shrink-0" />}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                  {selected && <CheckCircle2 className="h-5 w-5 text-accent shrink-0" />}
+                                  <p className="font-semibold">{s.name}</p>
+                                </div>
+                                {s.description && <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{s.description}</p>}
+                                <div className="flex items-center gap-3 mt-2">
+                                  <span className="text-sm text-muted-foreground inline-flex items-center gap-1"><Clock className="h-3 w-3" /> {s.duration_minutes} min</span>
+                                  <span className="font-semibold text-primary">{formatBRL(s.price_cents)}</span>
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); setDetailService(s); }}
+                                className="btn-outline-brand !py-1 !px-2 text-xs shrink-0 mt-1"
+                              >Ver mais</button>
+                            </div>
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                ) : (
+                  <ul className="grid gap-3 grid-cols-2 lg:grid-cols-3">
+                    {services!.map((s) => {
+                      const selected = selectedServices.some((x) => x.id === s.id);
+                      return (
+                        <li key={s.id}>
+                          <button
+                            onClick={() => toggleService(s)}
+                            data-selected={selected || undefined}
+                            className="w-full h-full text-left card-elevated p-4 hover:border-accent transition-all hover:-translate-y-0.5 flex flex-col gap-2 data-[selected]:border-accent data-[selected]:ring-2 data-[selected]:ring-accent/30"
+                          >
+                            {s.image_url && <img src={s.image_url} alt={s.name} className="w-full h-28 rounded-lg object-cover" />}
+                            <div className="flex items-center gap-2">
+                              {selected && <CheckCircle2 className="h-4 w-4 text-accent shrink-0" />}
+                              <p className="font-semibold truncate">{s.name}</p>
+                            </div>
+                            <p className="text-xs text-muted-foreground inline-flex items-center gap-1"><Clock className="h-3 w-3" /> {s.duration_minutes} min</p>
+                            <p className="text-lg font-black tracking-tight text-primary">{formatBRL(s.price_cents)}</p>
+                            {s.description && <p className="text-xs text-muted-foreground line-clamp-2">{s.description}</p>}
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); setDetailService(s); }}
+                              className="btn-outline-brand !py-1.5 !px-3 text-xs w-full mt-auto"
+                            >Ver mais</button>
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+                <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-3 p-4 card-elevated">
+                  <div className="text-sm">
+                    {selectedServices.length === 0 ? (
+                      <span className="text-muted-foreground">Nenhum serviço selecionado</span>
+                    ) : (
+                      <span><strong>{selectedServices.length}</strong> serviço(s) · <strong>{formatBRL(selectedServices.reduce((a, s) => a + s.price_cents, 0))}</strong> total · {selectedServices.reduce((a, s) => a + s.duration_minutes, 0)} min</span>
+                    )}
+                  </div>
+                  <button
+                    disabled={selectedServices.length === 0}
+                    onClick={proceedFromServices}
+                    className="btn-brand disabled:opacity-50 w-full sm:w-auto"
+                  >Continuar</button>
+                </div>
+              </>
             )}
           </section>
         )}
 
-        {step === "employee" && service && (
+        {step === "employee" && selectedServices.length > 0 && (
           <section className="animate-fade-in-up">
             <h2 className="text-xl font-bold tracking-tight text-foreground mb-4">2. Escolha o profissional</h2>
-            <p className="text-sm text-muted-foreground mb-4">{service.name} · {service.duration_minutes} min</p>
+            <p className="text-sm text-muted-foreground mb-4">{selectedServices.map((s) => s.name).join(" + ")} · {selectedServices.reduce((a, s) => a + s.duration_minutes, 0)} min</p>
             {eligibleEmployees.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Nenhum profissional disponível para esse serviço no momento.</p>
+              <p className="text-sm text-muted-foreground">Nenhum profissional disponível para esses serviços no momento.</p>
             ) : (
               <ul className="grid gap-3 sm:grid-cols-2">
                 {eligibleEmployees.map((emp) => (
@@ -258,20 +295,20 @@ function BookingPage() {
           </section>
         )}
 
-        {step === "when" && service && (
+        {step === "when" && selectedServices.length > 0 && (
           <WhenStep
             pro={pro}
-            service={service}
+            selectedServices={selectedServices}
             employee={employee}
             onPick={(d) => { setWhen(d); setStep("form"); }}
             brand={brand}
           />
         )}
 
-        {step === "form" && service && when && (
+        {step === "form" && selectedServices.length > 0 && when && (
           <FormStep
             pro={pro}
-            service={service}
+            selectedServices={selectedServices}
             employee={employee}
             when={when}
             brand={brand}
@@ -279,13 +316,13 @@ function BookingPage() {
           />
         )}
 
-        {step === "done" && service && when && confirmedId && (
+        {step === "done" && selectedServices.length > 0 && when && confirmedId && (
           <DoneStep
             pro={pro}
-            service={service}
+            selectedServices={selectedServices}
             employee={employee}
             when={when}
-            onReset={() => { setService(null); setEmployee(null); setWhen(null); setConfirmedId(null); setStep("service"); }}
+            onReset={() => { setSelectedServices([]); setEmployee(null); setWhen(null); setConfirmedId(null); setStep("service"); }}
           />
         )}
 
@@ -303,8 +340,8 @@ function BookingPage() {
                   <span className="text-xl font-black text-primary">{formatBRL(detailService.price_cents)}</span>
                 </div>
                 {detailService.description && <p className="text-sm text-muted-foreground leading-relaxed">{detailService.description}</p>}
-                <button onClick={() => { setDetailService(null); handleServicePick(detailService); }} className="btn-gradient w-full">
-                  Agendar este serviço
+                <button onClick={() => { toggleService(detailService); setDetailService(null); }} className="btn-gradient w-full">
+                  {selectedServices.some((x) => x.id === detailService.id) ? "Remover serviço" : "Adicionar este serviço"}
                 </button>
               </div>
             </div>
@@ -319,7 +356,8 @@ function BookingPage() {
   );
 }
 
-function WhenStep({ pro, service, employee, onPick, brand }: { pro: { id: string }; service: Service; employee: Employee | null; onPick: (d: Date) => void; brand: string }) {
+function WhenStep({ pro, selectedServices, employee, onPick, brand }: { pro: { id: string }; selectedServices: Service[]; employee: Employee | null; onPick: (d: Date) => void; brand: string }) {
+  const combinedDuration = useMemo(() => selectedServices.reduce((a, s) => a + s.duration_minutes, 0), [selectedServices]);
   const [monthStart, setMonthStart] = useState(() => { const d = new Date(); d.setDate(1); d.setHours(0, 0, 0, 0); return d; });
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
 
@@ -432,18 +470,18 @@ function WhenStep({ pro, service, employee, onPick, brand }: { pro: { id: string
     if (employee && !empBlocks) return [];
     return computeSlots({
       day: selectedDay,
-      serviceDurationMinutes: service.duration_minutes,
+      serviceDurationMinutes: combinedDuration,
       availability: avail,
       blocks: combinedBlocks,
       busy,
     });
-  }, [selectedDay, avail, proBlocks, empBlocks, busy, service.duration_minutes, employee, combinedBlocks]);
+  }, [selectedDay, avail, proBlocks, empBlocks, busy, combinedDuration, employee, combinedBlocks]);
 
   return (
     <section className="animate-fade-in-up">
       <h2 className="text-xl font-bold tracking-tight text-foreground mb-4">{employee ? "3" : "2"}. Escolha data e horário</h2>
       <p className="text-sm text-muted-foreground mb-4">
-        {service.name} · {service.duration_minutes} min{employee ? ` · com ${employee.name}` : ""}
+        {selectedServices.map((s) => s.name).join(" + ")} · {combinedDuration} min{employee ? ` · com ${employee.name}` : ""}
       </p>
 
       <div className="card-elevated p-4 mb-4">
@@ -509,24 +547,28 @@ function WhenStep({ pro, service, employee, onPick, brand }: { pro: { id: string
   );
 }
 
-function FormStep({ pro, service, employee, when, onDone, brand }: { pro: { id: string }; service: Service; employee: Employee | null; when: Date; onDone: (id: string) => void; brand: string }) {
+function FormStep({ pro, selectedServices, employee, when, onDone, brand }: { pro: { id: string }; selectedServices: Service[]; employee: Employee | null; when: Date; onDone: (id: string) => void; brand: string }) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [notes, setNotes] = useState("");
 
+  const combinedPrice = useMemo(() => selectedServices.reduce((a, s) => a + s.price_cents, 0), [selectedServices]);
+  const combinedDuration = useMemo(() => selectedServices.reduce((a, s) => a + s.duration_minutes, 0), [selectedServices]);
+  const combinedName = useMemo(() => selectedServices.map((s) => s.name).join(" + "), [selectedServices]);
+
   const create = useMutation({
     mutationFn: async () => {
       if (!name.trim()) throw new Error("Informe seu nome.");
       if (!isValidPhoneBR(phone)) throw new Error("Informe um WhatsApp válido no formato (XX) XXXXX-XXXX.");
-      const ends = new Date(when.getTime() + service.duration_minutes * 60 * 1000);
+      const ends = new Date(when.getTime() + combinedDuration * 60 * 1000);
       const appointmentId = crypto.randomUUID();
       const { error } = await supabase
         .from("appointments")
         .insert({
           id: appointmentId,
           professional_id: pro.id,
-          service_id: service.id,
+          service_id: selectedServices[0].id,
           employee_id: employee?.id ?? null,
           starts_at: when.toISOString(),
           ends_at: ends.toISOString(),
@@ -534,8 +576,8 @@ function FormStep({ pro, service, employee, when, onDone, brand }: { pro: { id: 
           client_phone: phone,
           client_email: email.trim() || null,
           notes: notes.trim() || null,
-          service_snapshot_name: service.name,
-          service_snapshot_price_cents: service.price_cents,
+          service_snapshot_name: combinedName,
+          service_snapshot_price_cents: combinedPrice,
         });
       if (error) throw error;
       return appointmentId;
@@ -553,7 +595,7 @@ function FormStep({ pro, service, employee, when, onDone, brand }: { pro: { id: 
     <section className="animate-fade-in-up">
       <h2 className="text-xl font-bold tracking-tight text-foreground mb-4">{employee ? "4" : "3"}. Seus dados</h2>
       <div className="card-elevated p-4 mb-4 text-sm">
-        <p><strong>{service.name}</strong> · {formatBRL(service.price_cents)}</p>
+        <p><strong>{combinedName}</strong> · {formatBRL(combinedPrice)}</p>
         <p className="text-muted-foreground capitalize">{formatLongDate(when)} às {formatTime(when)}</p>
         {employee && <p className="text-muted-foreground mt-1">com {employee.name}</p>}
       </div>
@@ -571,7 +613,9 @@ function FormStep({ pro, service, employee, when, onDone, brand }: { pro: { id: 
   );
 }
 
-function DoneStep({ pro, service, employee, when, onReset }: { pro: { business_name: string }; service: Service; employee: Employee | null; when: Date; onReset: () => void }) {
+function DoneStep({ pro, selectedServices, employee, when, onReset }: { pro: { business_name: string }; selectedServices: Service[]; employee: Employee | null; when: Date; onReset: () => void }) {
+  const combinedName = useMemo(() => selectedServices.map((s) => s.name).join(" + "), [selectedServices]);
+  const combinedPrice = useMemo(() => selectedServices.reduce((a, s) => a + s.price_cents, 0), [selectedServices]);
   return (
     <section className="text-center py-8 animate-fade-in-up">
       <div className="mx-auto w-20 h-20 rounded-full bg-success/10 grid place-items-center animate-check-in">
@@ -579,11 +623,12 @@ function DoneStep({ pro, service, employee, when, onReset }: { pro: { business_n
       </div>
       <h2 className="mt-6 text-3xl font-black tracking-tight text-foreground">Agendamento confirmado!</h2>
       <p className="mt-2 text-muted-foreground">{pro.business_name} está te esperando.</p>
-      <div className="mt-6 card-elevated p-4 max-w-sm mx-auto text-left">
-        <p className="font-semibold">{service.name}</p>
-        <p className="text-sm text-muted-foreground capitalize mt-1">{formatLongDate(when)}</p>
+      <div className="mt-6 card-elevated p-4 max-w-sm mx-auto text-left space-y-1">
+        <p className="font-semibold">{combinedName}</p>
+        <p className="text-sm text-muted-foreground">{formatBRL(combinedPrice)}</p>
+        <p className="text-sm text-muted-foreground capitalize">{formatLongDate(when)}</p>
         <p className="text-sm text-muted-foreground">às {formatTime(when)}</p>
-        {employee && <p className="text-sm text-muted-foreground mt-1">com {employee.name}</p>}
+        {employee && <p className="text-sm text-muted-foreground">com {employee.name}</p>}
       </div>
       <div className="mt-6 flex flex-col sm:flex-row justify-center gap-2">
         <button onClick={onReset} className="btn-gradient inline-flex items-center justify-center">Fazer outro agendamento</button>

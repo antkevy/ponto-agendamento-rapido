@@ -19,7 +19,7 @@ export const Route = createFileRoute("/app/configuracoes")({
 function Page() {
   const { data: pro, isLoading } = useMyProfessional();
   const qc = useQueryClient();
-  const [form, setForm] = useState({ business_name: "", slug: "", description: "", address: "", phone: "", logo_url: "", lat: "", lng: "" });
+  const [form, setForm] = useState({ business_name: "", slug: "", description: "", address: "", phone: "", logo_url: "", lat: "", lng: "", msg_confirmed: "", msg_cancelled: "" });
 
   useEffect(() => {
     if (pro) setForm({
@@ -31,6 +31,8 @@ function Page() {
       logo_url: pro.logo_url ?? "",
       lat: pro.lat?.toString() ?? "",
       lng: pro.lng?.toString() ?? "",
+      msg_confirmed: pro.msg_confirmed ?? "",
+      msg_cancelled: pro.msg_cancelled ?? "",
     });
   }, [pro]);
 
@@ -50,6 +52,8 @@ function Page() {
         logo_url: form.logo_url || null,
         lat,
         lng,
+        msg_confirmed: form.msg_confirmed.trim() || null,
+        msg_cancelled: form.msg_cancelled.trim() || null,
       }).eq("id", pro!.id);
       if (error) throw error;
     },
@@ -78,6 +82,12 @@ function Page() {
             <F label="Latitude"><input type="number" step="any" value={form.lat} onChange={(e) => setForm({ ...form, lat: e.target.value })} placeholder="-23.5505" className={cls} /></F>
             <F label="Longitude"><input type="number" step="any" value={form.lng} onChange={(e) => setForm({ ...form, lng: e.target.value })} placeholder="-46.6333" className={cls} /></F>
             <span className="text-xs text-muted-foreground sm:col-span-2 -mt-2">Para encontrar as coordenadas, pesquise seu endereço no <a href="https://www.google.com/maps" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">Google Maps</a>, clique com o botão direito no local e copie as coordenadas.</span>
+          </div>
+          <div className="space-y-4 border-t border-border pt-5">
+            <p className="text-sm font-semibold">Mensagens do WhatsApp</p>
+            <p className="text-xs text-muted-foreground">Use <code className="text-accent">{`{nome}`}</code>, <code className="text-accent">{`{negocio}`}</code>, <code className="text-accent">{`{servico}`}</code>, <code className="text-accent">{`{valor}`}</code>, <code className="text-accent">{`{data}`}</code>, <code className="text-accent">{`{horario}`}</code> para personalizar.</p>
+            <F label="Confirmado"><textarea rows={4} value={form.msg_confirmed} onChange={(e) => setForm({ ...form, msg_confirmed: e.target.value })} className={cls} placeholder={"Ola {nome}! Seu agendamento na {negocio} esta confirmado!\n\nData: {data}\nHorario: {horario}\nServico: {servico}\nValor: {valor}"} /></F>
+            <F label="Cancelado"><textarea rows={4} value={form.msg_cancelled} onChange={(e) => setForm({ ...form, msg_cancelled: e.target.value })} className={cls} placeholder={"Ola {nome}! Notamos que voce cancelou seu agendamento na {negocio}.\n\nSe precisar de ajuda ou quiser remarcar, e so nos chamar!"} /></F>
           </div>
           <ImageUpload
             value={form.logo_url}
