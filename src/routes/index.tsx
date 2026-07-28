@@ -264,7 +264,7 @@ function Landing() {
               Crie sua conta em menos de dois minutos e compartilhe seu link ainda hoje.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-3 items-center justify-center">
-              <Link to="/cadastrar" className="inline-flex items-center gap-2 bg-white text-foreground font-semibold px-7 py-3.5 rounded-full hover:bg-white/95 transition-colors">
+              <Link to="/cadastrar" className="inline-flex items-center gap-2 bg-white text-[#0F172A] font-semibold px-7 py-3.5 rounded-full hover:bg-white/95 hover:text-[#0F172A] transition-colors">
                 Criar minha conta grátis
                 <ArrowRight className="h-5 w-5" />
               </Link>
