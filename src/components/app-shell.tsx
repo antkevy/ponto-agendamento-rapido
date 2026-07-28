@@ -54,9 +54,10 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
         <aside
           className={`${open ? "block" : "hidden"} lg:block fixed lg:sticky top-0 lg:top-0 inset-x-0 lg:inset-auto z-20 lg:h-screen w-full lg:w-64 bg-background lg:bg-sidebar border-r border-border`}
         >
-          <div className="hidden lg:flex items-center h-16 px-6 border-b border-border">
-            <Link to="/app" className="font-display text-2xl text-primary">Agendaí</Link>
+          <div className="hidden lg:flex items-center h-20 px-6 border-b border-border">
+            <BrandLogo to="/app" />
           </div>
+
           <nav className="p-3 space-y-1">
             {links.map((l) => (
               <Link
