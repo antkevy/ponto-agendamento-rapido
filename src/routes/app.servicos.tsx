@@ -39,19 +39,26 @@ function Page() {
     mutationFn: async ({ image, ...s }: Partial<Service> & { image?: File }) => {
       if (!pro) throw new Error();
       let image_url = s.image_url ?? null;
+      let serviceId = s.id ?? crypto.randomUUID();
       if (image) {
         const ext = image.name.split(".").pop();
-        const path = `${pro.user_id}/services/${crypto.randomUUID()}.${ext}`;
-        const { error: uploadError } = await supabase.storage.from("brand-assets").upload(path, image);
+        const path = `${pro.user_id}/services/${serviceId}.${ext}`;
+        const { error: uploadError } = await supabase.storage.from("brand-assets").upload(path, image, {
+          upsert: true,
+          contentType: image.type || `image/${ext === "jpg" ? "jpeg" : ext}`,
+        });
         if (uploadError) throw uploadError;
-        const { data: urlData } = supabase.storage.from("brand-assets").getPublicUrl(path);
-        image_url = urlData.publicUrl;
+        const { data: signed, error: signErr } = await supabase.storage
+          .from("brand-assets")
+          .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+        if (signErr) throw signErr;
+        image_url = signed.signedUrl;
       }
       if (s.id) {
         const { error } = await supabase.from("services").update({ name: s.name!, duration_minutes: s.duration_minutes!, price_cents: s.price_cents ?? 0, description: s.description ?? null, image_url, is_active: s.is_active ?? true }).eq("id", s.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("services").insert({ professional_id: pro.id, name: s.name!, duration_minutes: s.duration_minutes!, price_cents: s.price_cents ?? 0, description: s.description ?? null, image_url });
+        const { error } = await supabase.from("services").insert({ id: serviceId, professional_id: pro.id, name: s.name!, duration_minutes: s.duration_minutes!, price_cents: s.price_cents ?? 0, description: s.description ?? null, image_url });
         if (error) throw error;
       }
     },
