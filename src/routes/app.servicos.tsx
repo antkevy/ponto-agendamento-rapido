@@ -95,7 +95,7 @@ function ServiceForm({ initial, onSubmit, saving }: { initial: Partial<Service>;
 
   return (
     <form onSubmit={(e) => { e.preventDefault(); const cents = Math.round(parseFloat(priceReais.replace(",", ".") || "0") * 100); onSubmit({ id: initial.id, name, duration_minutes: duration, price_cents: cents, description }); }} className="space-y-4">
-      <h2 className="font-display text-2xl text-primary">{initial.id ? "Editar" : "Novo"} serviço</h2>
+      <h2 className="text-2xl font-black tracking-tight text-foreground">{initial.id ? "Editar" : "Novo"} serviço</h2>
       <label className="block"><span className="text-sm font-medium">Nome</span>
         <input required value={name} onChange={(e) => setName(e.target.value)} className={inputCls} /></label>
       <div className="grid grid-cols-2 gap-3">
