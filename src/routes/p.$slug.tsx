@@ -151,7 +151,7 @@ function BookingPage() {
 
         {step === "service" && (
           <section className="animate-fade-in-up">
-            <h2 className="text-xl font-semibold text-primary mb-4">1. Escolha o serviço</h2>
+            <h2 className="text-xl font-bold tracking-tight text-foreground mb-4">1. Escolha o serviço</h2>
             {loadingServices ? (
               <div className="space-y-3">{[0, 1, 2].map((i) => <div key={i} className="skeleton h-20" />)}</div>
             ) : (services ?? []).length === 0 ? (
@@ -182,7 +182,7 @@ function BookingPage() {
 
         {step === "employee" && service && (
           <section className="animate-fade-in-up">
-            <h2 className="text-xl font-semibold text-primary mb-4">2. Escolha o profissional</h2>
+            <h2 className="text-xl font-bold tracking-tight text-foreground mb-4">2. Escolha o profissional</h2>
             <p className="text-sm text-muted-foreground mb-4">{service.name} · {service.duration_minutes} min</p>
             {eligibleEmployees.length === 0 ? (
               <p className="text-sm text-muted-foreground">Nenhum profissional disponível para esse serviço no momento.</p>
@@ -243,7 +243,7 @@ function BookingPage() {
       </main>
 
       <footer className="text-center py-8 text-xs text-muted-foreground">
-        Agendamento por <a href="/" className="font-display text-sm text-primary hover:underline">Agendaí</a>
+        Agendamento por <a href="/" className="font-bold text-sm hover:underline" style={{ color: "oklch(0.55 0.18 250)" }">Agendaí</a>
       </footer>
     </div>
   );
@@ -371,7 +371,7 @@ function WhenStep({ pro, service, employee, onPick, brand }: { pro: { id: string
 
   return (
     <section className="animate-fade-in-up">
-      <h2 className="text-xl font-semibold text-primary mb-4">{employee ? "3" : "2"}. Escolha data e horário</h2>
+      <h2 className="text-xl font-bold tracking-tight text-foreground mb-4">{employee ? "3" : "2"}. Escolha data e horário</h2>
       <p className="text-sm text-muted-foreground mb-4">
         {service.name} · {service.duration_minutes} min{employee ? ` · com ${employee.name}` : ""}
       </p>
@@ -469,7 +469,7 @@ function FormStep({ pro, service, employee, when, onDone, brand }: { pro: { id: 
 
   return (
     <section className="animate-fade-in-up">
-      <h2 className="text-xl font-semibold text-primary mb-4">{employee ? "4" : "3"}. Seus dados</h2>
+      <h2 className="text-xl font-bold tracking-tight text-foreground mb-4">{employee ? "4" : "3"}. Seus dados</h2>
       <div className="card-elevated p-4 mb-4 text-sm">
         <p><strong>{service.name}</strong> · {formatBRL(service.price_cents)}</p>
         <p className="text-muted-foreground capitalize">{formatLongDate(when)} às {formatTime(when)}</p>
@@ -494,7 +494,7 @@ function DoneStep({ pro, service, employee, when, onReset }: { pro: { business_n
       <div className="mx-auto w-20 h-20 rounded-full bg-success/10 grid place-items-center animate-check-in">
         <CheckCircle2 className="h-10 w-10 text-success" />
       </div>
-      <h2 className="mt-6 text-2xl font-display text-primary">Agendamento confirmado!</h2>
+      <h2 className="mt-6 text-3xl font-black tracking-tight text-foreground">Agendamento confirmado!</h2>
       <p className="mt-2 text-muted-foreground">{pro.business_name} está te esperando.</p>
       <div className="mt-6 card-elevated p-4 max-w-sm mx-auto text-left">
         <p className="font-semibold">{service.name}</p>
