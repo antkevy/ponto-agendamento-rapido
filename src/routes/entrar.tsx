@@ -91,7 +91,7 @@ export function AuthLayout({
           </h1>
           <p className="mt-3 text-base text-muted-foreground">{subtitle}</p>
 
-          <div className="mt-8 bg-white border border-border rounded-2xl p-6 sm:p-8 shadow-[0_20px_60px_-30px_oklch(0.55_0.18_250_/_0.25)]">
+          <div className="mt-8 bg-card dark:bg-slate-800 border border-border rounded-2xl p-6 sm:p-8 shadow-[0_20px_60px_-30px_oklch(0.55_0.18_250_/_0.25)]">
             {children}
           </div>
 
