@@ -118,7 +118,7 @@ function StatCard({ icon: Icon, label, value, hint }: { icon: typeof Calendar; l
         <span className="text-sm font-medium text-muted-foreground">{label}</span>
         <Icon className="h-4 w-4 text-accent" />
       </div>
-      <p className="mt-2 text-3xl font-semibold text-primary">{value}</p>
+      <p className="mt-2 text-3xl font-black tracking-tight text-foreground">{value}</p>
       <p className="text-xs text-muted-foreground mt-1">{hint}</p>
     </div>
   );
