@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { slugify } from "@/lib/booking";
 import { PhoneInput } from "@/components/phone-input";
 import { isValidPhoneBR, onlyDigits } from "@/lib/phone";
+import { ImageUpload } from "@/components/image-upload";
 
 export const Route = createFileRoute("/app/configuracoes")({
   head: () => ({ meta: [{ title: "Configurações — Agendaí" }] }),
@@ -18,7 +19,7 @@ export const Route = createFileRoute("/app/configuracoes")({
 function Page() {
   const { data: pro, isLoading } = useMyProfessional();
   const qc = useQueryClient();
-  const [form, setForm] = useState({ business_name: "", slug: "", description: "", address: "", phone: "", brand_color: "#0284C7", logo_url: "" });
+  const [form, setForm] = useState({ business_name: "", slug: "", description: "", address: "", phone: "", logo_url: "" });
 
   useEffect(() => {
     if (pro) setForm({
@@ -27,7 +28,6 @@ function Page() {
       description: pro.description ?? "",
       address: pro.address ?? "",
       phone: onlyDigits(pro.phone ?? ""),
-      brand_color: pro.brand_color ?? "#0284C7",
       logo_url: pro.logo_url ?? "",
     });
   }, [pro]);
@@ -42,7 +42,6 @@ function Page() {
         description: form.description || null,
         address: form.address || null,
         phone: form.phone || null,
-        brand_color: form.brand_color,
         logo_url: form.logo_url || null,
       }).eq("id", pro!.id);
       if (error) throw error;
@@ -54,7 +53,7 @@ function Page() {
   return (
     <AppShell title="Configurações">
       {isLoading ? <div className="skeleton h-32" /> : !pro ? <OnboardingCard /> : (
-        <form onSubmit={(e) => { e.preventDefault(); save.mutate(); }} className="card-elevated p-6 space-y-4 max-w-2xl">
+        <form onSubmit={(e) => { e.preventDefault(); save.mutate(); }} className="card-elevated p-6 space-y-5 max-w-2xl">
           <F label="Nome do negócio">
             <input required value={form.business_name} onChange={(e) => setForm({ ...form, business_name: e.target.value })} className={cls} />
           </F>
@@ -68,15 +67,13 @@ function Page() {
             <F label="Endereço físico"><input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className={cls} /></F>
             <F label="Telefone de contato"><PhoneInput value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} className={cls} /></F>
           </div>
-          <div className="grid sm:grid-cols-2 gap-4">
-            <F label="Cor de destaque">
-              <div className="flex items-center gap-2 mt-1">
-                <input type="color" value={form.brand_color} onChange={(e) => setForm({ ...form, brand_color: e.target.value })} className="h-11 w-16 rounded-lg border border-border cursor-pointer" />
-                <input value={form.brand_color} onChange={(e) => setForm({ ...form, brand_color: e.target.value })} className={cls + " font-mono"} />
-              </div>
-            </F>
-            <F label="Logo (URL)"><input value={form.logo_url} onChange={(e) => setForm({ ...form, logo_url: e.target.value })} placeholder="https://..." className={cls} /></F>
-          </div>
+          <ImageUpload
+            value={form.logo_url}
+            onChange={(v) => setForm({ ...form, logo_url: v })}
+            label="Logo do negócio"
+            shape="circle"
+            folder="logos"
+          />
           <button disabled={save.isPending} className="btn-brand disabled:opacity-60">{save.isPending ? "Salvando..." : "Salvar alterações"}</button>
         </form>
       )}
