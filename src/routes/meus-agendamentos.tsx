@@ -1,11 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { BrandLogo } from "@/components/brand-logo";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { X, ArrowLeft, CalendarClock } from "lucide-react";
+import { X, ArrowLeft, CalendarClock, ChevronDown, ChevronRight } from "lucide-react";
 import { PhoneInput } from "@/components/phone-input";
 import { isValidPhoneBR } from "@/lib/phone";
 
@@ -114,31 +114,78 @@ function Page() {
 
 
         {submitted && (
-          <div className="mt-6 space-y-3">
-            {isFetching ? (
-              <div className="skeleton h-24" />
-            ) : (data ?? []).length === 0 ? (
-              <p className="text-sm text-muted-foreground">Nenhum agendamento encontrado com esse contato.</p>
-            ) : data!.map((r) => (
-              <div key={r.id} className="card-elevated p-4 animate-fade-in-up">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="font-semibold truncate">{r.professional_business_name}</p>
-                    <p className="text-sm text-muted-foreground truncate">{r.service_name}</p>
-                    <div className="flex flex-wrap items-center gap-2 mt-1 text-sm">
-                      <span className="inline-flex items-center gap-1"><CalendarClock className="h-3 w-3" /> {new Date(r.starts_at).toLocaleString("pt-BR", { dateStyle: "medium", timeStyle: "short" })}</span>
-                      <StatusPill status={r.status} />
-                    </div>
-                  </div>
-                  {r.status === "confirmed" && new Date(r.starts_at) > new Date() && (
-                    <button onClick={() => { if (confirm("Cancelar este agendamento?")) cancel.mutate(r.id); }} className="btn-outline-brand inline-flex items-center gap-1 !py-2 text-sm text-destructive shrink-0"><X className="h-4 w-4" /> Cancelar</button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
+          <AppointmentList data={data ?? []} isFetching={isFetching} cancel={cancel} />
         )}
       </main>
+    </div>
+  );
+}
+
+function AppointmentList({ data, isFetching, cancel }: { data: Row[]; isFetching: boolean; cancel: ReturnType<typeof useMutation> }) {
+  const [historyOpen, setHistoryOpen] = useState(false);
+
+  const now = new Date();
+
+  const upcoming = useMemo(
+    () => data.filter((r) => r.status === "confirmed" && new Date(r.starts_at) > now),
+    [data, now],
+  );
+
+  const history = useMemo(
+    () => data.filter((r) => r.status !== "confirmed" || new Date(r.starts_at) <= now),
+    [data, now],
+  );
+
+  if (isFetching) return <div className="mt-6 skeleton h-24" />;
+  if (data.length === 0) return <p className="mt-6 text-sm text-muted-foreground">Nenhum agendamento encontrado com esse contato.</p>;
+
+  return (
+    <div className="mt-6 space-y-3">
+      {upcoming.map((r) => (
+        <div key={r.id} className="card-elevated p-4 animate-fade-in-up ring-2 ring-accent/20">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="min-w-0">
+              <p className="font-semibold truncate text-base">{r.professional_business_name}</p>
+              <p className="text-sm text-muted-foreground truncate">{r.service_name}</p>
+              <div className="flex flex-wrap items-center gap-2 mt-1 text-sm">
+                <span className="inline-flex items-center gap-1"><CalendarClock className="h-3 w-3" /> {new Date(r.starts_at).toLocaleString("pt-BR", { dateStyle: "medium", timeStyle: "short" })}</span>
+                <StatusPill status={r.status} />
+              </div>
+            </div>
+            <button onClick={() => { if (confirm("Cancelar este agendamento?")) cancel.mutate(r.id); }} className="btn-outline-brand inline-flex items-center gap-1 !py-2 text-sm text-destructive shrink-0"><X className="h-4 w-4" /> Cancelar</button>
+          </div>
+        </div>
+      ))}
+
+      {history.length > 0 && (
+        <div className="animate-fade-in-up">
+          <button
+            onClick={() => setHistoryOpen((p) => !p)}
+            className="w-full flex items-center justify-between gap-2 p-3 rounded-xl hover:bg-muted/50 transition-colors text-sm text-muted-foreground"
+          >
+            <span><strong className="text-foreground">{history.length}</strong> agendamento(s) anterior(es)</span>
+            {historyOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+          </button>
+          {historyOpen && (
+            <div className="space-y-3 mt-3">
+              {history.map((r) => (
+                <div key={r.id} className="card-elevated p-4 opacity-80">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-semibold truncate">{r.professional_business_name}</p>
+                      <p className="text-sm text-muted-foreground truncate">{r.service_name}</p>
+                      <div className="flex flex-wrap items-center gap-2 mt-1 text-sm">
+                        <span className="inline-flex items-center gap-1"><CalendarClock className="h-3 w-3" /> {new Date(r.starts_at).toLocaleString("pt-BR", { dateStyle: "medium", timeStyle: "short" })}</span>
+                        <StatusPill status={r.status} />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

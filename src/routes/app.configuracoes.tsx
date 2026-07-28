@@ -53,8 +53,6 @@ function Page() {
         logo_url: form.logo_url || null,
         lat,
         lng,
-        msg_confirmed: form.msg_confirmed.trim() || null,
-        msg_cancelled: form.msg_cancelled.trim() || null,
       }).eq("id", pro!.id);
       if (error) throw error;
     },
