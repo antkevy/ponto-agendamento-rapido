@@ -504,9 +504,10 @@ function DoneStep({ pro, service, employee, when, onReset }: { pro: { business_n
         {employee && <p className="text-sm text-muted-foreground mt-1">com {employee.name}</p>}
       </div>
       <div className="mt-6 flex flex-col sm:flex-row justify-center gap-2">
-        <button onClick={onReset} className="btn-outline-brand">Fazer outro agendamento</button>
-        <a href="/meus-agendamentos" className="btn-outline-brand">Ver meus agendamentos</a>
+        <button onClick={onReset} className="btn-gradient inline-flex items-center justify-center">Fazer outro agendamento</button>
+        <a href="/meus-agendamentos" className="btn-pill-outline inline-flex items-center justify-center">Ver meus agendamentos</a>
       </div>
+
     </section>
   );
 }
