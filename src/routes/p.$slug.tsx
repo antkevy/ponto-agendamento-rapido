@@ -389,13 +389,15 @@ function WhenStep({ pro, service, employee, onPick, brand }: { pro: { id: string
             const past = d < today;
             const canSelect = !past && dayHasAvailability(d);
             const selected = selectedDay && d.toDateString() === selectedDay.toDateString();
+            const isToday = d.toDateString() === today.toDateString();
             return (
               <button
                 key={i}
                 disabled={!canSelect}
                 onClick={() => setSelectedDay(d)}
                 data-selected={selected || undefined}
-                className="aspect-square rounded-lg text-sm font-medium min-h-[44px] disabled:opacity-30 disabled:cursor-not-allowed hover:bg-muted transition-colors data-[selected]:bg-accent data-[selected]:text-accent-foreground"
+                data-today={isToday || undefined}
+                className="aspect-square rounded-lg text-sm font-medium min-h-[44px] disabled:opacity-30 disabled:cursor-not-allowed hover:bg-accent/10 hover:text-accent transition-colors data-[today]:ring-1 data-[today]:ring-accent/40 data-[selected]:!bg-accent data-[selected]:!text-accent-foreground data-[selected]:ring-0"
               >{d.getDate()}</button>
             );
           })}
