@@ -111,14 +111,9 @@ function Page() {
 
           <div className="card-elevated p-6 space-y-5">
             <h3 className="text-lg font-bold tracking-tight">Localização</h3>
-            <F label="Endereço físico" hint="Aparece na página de agendamento com link para o Google Maps">
+            <F label="Endereço físico">
               <input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="Rua, número, bairro..." className={cls} />
             </F>
-            <div className="grid sm:grid-cols-2 gap-4">
-              <F label="Latitude"><input type="number" step="any" value={form.lat} onChange={(e) => setForm({ ...form, lat: e.target.value })} placeholder="-23.5505" className={cls} /></F>
-              <F label="Longitude"><input type="number" step="any" value={form.lng} onChange={(e) => setForm({ ...form, lng: e.target.value })} placeholder="-46.6333" className={cls} /></F>
-            </div>
-            <p className="text-xs text-muted-foreground">Para encontrar as coordenadas, pesquise seu endereço no <a href="https://www.google.com/maps" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">Google Maps</a>, clique com o botão direito no local e copie as coordenadas.</p>
           </div>
 
           <div className="card-elevated p-6 space-y-5">
