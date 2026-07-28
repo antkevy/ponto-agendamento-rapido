@@ -438,9 +438,11 @@ function FormStep({ pro, service, employee, when, onDone, brand }: { pro: { id: 
       if (!name.trim()) throw new Error("Informe seu nome.");
       if (!isValidPhoneBR(phone)) throw new Error("Informe um WhatsApp válido no formato (XX) XXXXX-XXXX.");
       const ends = new Date(when.getTime() + service.duration_minutes * 60 * 1000);
-      const { data, error } = await supabase
+      const appointmentId = crypto.randomUUID();
+      const { error } = await supabase
         .from("appointments")
         .insert({
+          id: appointmentId,
           professional_id: pro.id,
           service_id: service.id,
           employee_id: employee?.id ?? null,
@@ -452,11 +454,9 @@ function FormStep({ pro, service, employee, when, onDone, brand }: { pro: { id: 
           notes: notes.trim() || null,
           service_snapshot_name: service.name,
           service_snapshot_price_cents: service.price_cents,
-        })
-        .select("id")
-        .single();
+        });
       if (error) throw error;
-      return data.id;
+      return appointmentId;
     },
     onSuccess: (id) => onDone(id),
     onError: (e: Error) => {
