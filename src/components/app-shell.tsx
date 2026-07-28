@@ -2,8 +2,10 @@ import { Link, useRouter } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { BrandLogo } from "@/components/brand-logo";
 import { Calendar, LayoutDashboard, Briefcase, Clock, Ban, Settings, LogOut, Menu, Users } from "lucide-react";
 import { useState } from "react";
+
 
 const links: Array<{ to: string; label: string; icon: typeof Calendar; exact?: boolean }> = [
   { to: "/app", label: "Painel", icon: LayoutDashboard, exact: true },
