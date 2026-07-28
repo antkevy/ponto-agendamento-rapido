@@ -69,7 +69,7 @@ function Dashboard() {
           </div>
 
           <section className="mt-8 card-elevated p-5">
-            <h2 className="text-xl font-semibold text-primary mb-4">Agendamentos de hoje</h2>
+            <h2 className="text-xl font-black tracking-tight text-foreground mb-4">Agendamentos de hoje</h2>
             {(stats?.today.length ?? 0) === 0 ? (
               <p className="text-muted-foreground text-sm">Nenhum agendamento hoje.</p>
             ) : (
