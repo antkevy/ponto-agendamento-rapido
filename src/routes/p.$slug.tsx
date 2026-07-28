@@ -480,9 +480,10 @@ function FormStep({ pro, service, employee, when, onDone, brand }: { pro: { id: 
         <F label="WhatsApp"><PhoneInput value={phone} onChange={setPhone} className={cls} /></F>
         <F label="Email (opcional)"><input type="email" inputMode="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className={cls} /></F>
         <F label="Observação (opcional)"><textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} className={cls} /></F>
-        <button disabled={create.isPending} className="w-full font-semibold text-white rounded-lg py-3 min-h-[48px] transition-transform active:scale-[0.98] disabled:opacity-60" style={{ backgroundColor: brand }}>
+        <button disabled={create.isPending} className="btn-gradient w-full inline-flex items-center justify-center disabled:opacity-60">
           {create.isPending ? "Confirmando..." : "Confirmar agendamento"}
         </button>
+
       </form>
     </section>
   );
