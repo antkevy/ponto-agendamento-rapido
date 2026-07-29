@@ -595,13 +595,13 @@ function LocationSection({ pro }: any) {
         )}
         {(pro.lat && pro.lng) ? (
           <div className="rounded-2xl overflow-hidden border border-border shadow-lg max-w-2xl mx-auto h-72">
-            <iframe title="Localização" loading="lazy" className="w-full h-full" src={`https://www.google.com/maps?q=${pro.lat},${pro.lng}&z=15&output=embed`} />
+            <iframe title="Localização" loading="lazy" className="w-full h-full" src={`https://www.openstreetmap.org/export/embed.html?bbox=${pro.lng - 0.02}%2C${pro.lat - 0.02}%2C${pro.lng + 0.02}%2C${pro.lat + 0.02}&layer=mapnik&marker=${pro.lat}%2C${pro.lng}`} />
           </div>
-        ) : pro.address && (
+        ) : pro.address ? (
           <div className="rounded-2xl overflow-hidden border border-border shadow-lg max-w-2xl mx-auto h-72 bg-muted flex items-center justify-center">
             <p className="text-muted-foreground text-sm">Mapa indisponível</p>
           </div>
-        )}
+        ) : null}
       </div>
     </section>
   );
