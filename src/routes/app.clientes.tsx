@@ -8,7 +8,7 @@ import { useMyProfessional } from "@/hooks/use-my-professional";
 import { supabase } from "@/integrations/supabase/client";
 import { db } from "@/lib/db-tables";
 import { formatBRL, formatLongDate, formatTime } from "@/lib/booking";
-import { isValidPhoneBR, displayPhoneBR } from "@/lib/phone";
+import { isValidPhoneBR, displayPhoneBR, onlyDigits } from "@/lib/phone";
 import { PhoneInput } from "@/components/phone-input";
 import { ViewToggle, type ViewMode } from "@/components/view-toggle";
 import { Plus, Pencil, Trash2, Search, Phone, Mail, Calendar, DollarSign, X } from "lucide-react";
@@ -76,8 +76,9 @@ function Page() {
 
   const save = useMutation({
     mutationFn: async (v: { id?: string; name: string; phone: string; email: string; notes: string }) => {
-      if (!isValidPhoneBR(v.phone)) throw new Error("Telefone incompleto. Use (XX) XXXXX-XXXX.");
-      const payload = { name: v.name.trim(), phone: v.phone, email: v.email.trim() || null, notes: v.notes.trim() || null };
+      const phone = onlyDigits(v.phone);
+      if (!isValidPhoneBR(phone)) throw new Error("Telefone incompleto. Use (XX) XXXXX-XXXX.");
+      const payload = { name: v.name.trim(), phone, email: v.email.trim() || null, notes: v.notes.trim() || null };
       if (v.id) {
         const { error } = await supabase.from(db.clientes).update(payload).eq("id", v.id);
         if (error) throw error;
@@ -216,7 +217,7 @@ function ClienteForm({ initial, onSubmit, saving, onCancel }: {
   onCancel: () => void;
 }) {
   const [name, setName] = useState(initial?.name ?? "");
-  const [phone, setPhone] = useState(initial?.phone ?? "");
+  const [phone, setPhone] = useState(onlyDigits(initial?.phone ?? ""));
   const [email, setEmail] = useState(initial?.email ?? "");
   const [notes, setNotes] = useState(initial?.notes ?? "");
   return (
@@ -224,7 +225,7 @@ function ClienteForm({ initial, onSubmit, saving, onCancel }: {
       <label className="block"><span className="text-sm font-medium">Nome</span>
         <input required value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome completo" className={inpCls} /></label>
       <label className="block"><span className="text-sm font-medium">WhatsApp</span>
-        <PhoneInput value={phone} onChange={setPhone} /></label>
+        <PhoneInput value={phone} onChange={setPhone} className={inpCls} /></label>
       <label className="block"><span className="text-sm font-medium">Email</span>
         <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email@exemplo.com" className={inpCls} /></label>
       <label className="block sm:col-span-2"><span className="text-sm font-medium">Observações</span>
