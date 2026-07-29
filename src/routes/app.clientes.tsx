@@ -43,7 +43,6 @@ function Page() {
   const [view, setView] = useState<ViewMode>("list");
   const [editing, setEditing] = useState<Cliente | null>(null);
   const [creating, setCreating] = useState(false);
-  const [selected, setSelected] = useState<Cliente | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const { data: clientes } = useQuery({
@@ -61,14 +60,16 @@ function Page() {
   });
 
   const { data: appts } = useQuery({
-    queryKey: ["cliente-appts", selected?.id],
-    enabled: !!selected,
+    queryKey: ["cliente-appts", expandedId, clientes],
+    enabled: !!expandedId && !!clientes,
     queryFn: async () => {
+      const c = clientes!.find((x) => x.id === expandedId);
+      if (!c) return [];
       const { data, error } = await supabase
         .from(db.agendamentos)
         .select("id, starts_at, ends_at, service_snapshot_name, service_snapshot_price_cents, status")
         .eq("professional_id", pro!.id)
-        .eq("client_phone", selected!.phone)
+        .eq("client_phone", c.phone)
         .order("starts_at", { ascending: false });
       if (error) throw error;
       return data as ClienteAppt[];
@@ -100,7 +101,7 @@ function Page() {
       const { error } = await supabase.from(db.clientes).delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["clientes"] }); setSelected(null); toast.success("Cliente removido."); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["clientes"] }); setExpandedId(null); toast.success("Cliente removido."); },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -124,54 +125,12 @@ function Page() {
           {creating && !editing && <ClienteForm onSubmit={(v) => save.mutate(v)} saving={save.isPending} onCancel={() => setCreating(false)} />}
           {editing && <ClienteForm initial={editing} onSubmit={(v) => save.mutate(v)} saving={save.isPending} onCancel={() => { setEditing(null); setCreating(false); }} />}
 
-          {selected && !editing && (
-            <div className="card-elevated p-4 mb-4">
-              <div className="flex items-start justify-between gap-3 mb-3">
-                <div>
-                  <h3 className="font-semibold text-lg">{selected.name}</h3>
-                  <p className="text-sm text-muted-foreground flex items-center gap-1"><Phone className="h-3 w-3" /> {displayPhoneBR(selected.phone)}</p>
-                  {selected.email && <p className="text-sm text-muted-foreground flex items-center gap-1"><Mail className="h-3 w-3" /> {selected.email}</p>}
-                  {selected.notes && <p className="text-sm text-muted-foreground mt-1">{selected.notes}</p>}
-                </div>
-                <div className="flex gap-2">
-                  <button onClick={() => setEditing(selected)} className="text-primary p-2 min-h-[44px] min-w-[44px] grid place-items-center"><Pencil className="h-4 w-4" /></button>
-                  <button onClick={() => { if (confirm("Remover este cliente?")) remove.mutate(selected.id); }} className="text-destructive p-2 min-h-[44px] min-w-[44px] grid place-items-center"><Trash2 className="h-4 w-4" /></button>
-                  <button onClick={() => setSelected(null)} className="text-muted-foreground p-2 min-h-[44px] min-w-[44px] grid place-items-center"><X className="h-4 w-4" /></button>
-                </div>
-              </div>
-              {appts && appts.length > 0 && (
-                <>
-                  <h4 className="text-sm font-medium mb-2 flex items-center gap-1"><Calendar className="h-3 w-3" /> Histórico de agendamentos</h4>
-                  <div className="space-y-2">
-                    {appts.map((a) => (
-                      <div key={a.id} className="flex items-center justify-between gap-3 p-3 rounded-lg bg-muted/50">
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium">{a.service_snapshot_name}</p>
-                          <p className="text-xs text-muted-foreground">{formatLongDate(new Date(a.starts_at))} às {formatTime(new Date(a.starts_at))}</p>
-                        </div>
-                        <div className="text-right shrink-0">
-                          <p className="text-sm font-medium">{formatBRL(a.service_snapshot_price_cents)}</p>
-                          <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                            a.status === "completed" ? "bg-green-100 text-green-700" :
-                            a.status === "cancelled" ? "bg-red-100 text-red-700" :
-                            "bg-blue-100 text-blue-700"
-                          }`}>
-                            {a.status === "completed" ? "Concluído" : a.status === "cancelled" ? "Cancelado" : "Confirmado"}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
-              {(!appts || appts.length === 0) && <p className="text-sm text-muted-foreground">Nenhum agendamento encontrado.</p>}
-            </div>
-          )}
+          {}
 
           {view === "grid" ? (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {filtered.map((c) => (
-                <div key={c.id} onClick={() => setSelected(c)} className={`card-elevated p-4 cursor-pointer transition group ${selected?.id === c.id ? "ring-2 ring-primary" : ""}`}>
+                <div key={c.id} className="card-elevated p-4 transition group">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
                       <p className="font-medium truncate">{c.name}</p>
@@ -193,10 +152,10 @@ function Page() {
               {filtered.map((c) => {
                 const isExpanded = expandedId === c.id;
                 return (
-                  <div key={c.id} className={`card-elevated p-4 transition ${selected?.id === c.id ? "ring-2 ring-primary" : ""}`}>
+                  <div key={c.id} className="card-elevated p-4 transition">
                     <div className="flex items-center justify-between gap-3">
-                      <div className="min-w-0 flex-1" onClick={() => setSelected(c)}>
-                        <p className="font-medium truncate cursor-pointer">{c.name}</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium truncate">{c.name}</p>
                         <p className="text-sm text-muted-foreground">{displayPhoneBR(c.phone)}</p>
                       </div>
                       <div className="flex gap-1 shrink-0">
@@ -207,12 +166,39 @@ function Page() {
                       </div>
                     </div>
                     {isExpanded && (
-                      <div className="mt-3 pt-3 border-t border-border space-y-2">
+                      <div className="mt-3 pt-3 border-t border-border space-y-3">
                         {c.email && <p className="text-sm text-muted-foreground flex items-center gap-1"><Mail className="h-3.5 w-3.5 shrink-0" /> {c.email}</p>}
                         {c.notes && <p className="text-sm text-muted-foreground">{c.notes}</p>}
-                        <div className="flex gap-2 pt-1">
+                        <div className="flex gap-2">
                           <button onClick={() => setEditing(c)} className="btn-outline-brand inline-flex items-center gap-1 text-sm !py-2"><Pencil className="h-4 w-4" /> Editar</button>
                           <button onClick={() => { if (confirm("Remover este cliente?")) remove.mutate(c.id); }} className="btn-outline-brand inline-flex items-center gap-1 text-sm !py-2 text-destructive"><Trash2 className="h-4 w-4" /> Remover</button>
+                        </div>
+                        <div className="border-t border-border pt-3">
+                          <h4 className="text-sm font-medium mb-2 flex items-center gap-1"><Calendar className="h-3.5 w-3.5" /> Histórico de agendamentos</h4>
+                          {appts && appts.length > 0 ? (
+                            <div className="space-y-2">
+                              {appts.map((a) => (
+                                <div key={a.id} className="flex items-center justify-between gap-3 p-3 rounded-lg bg-muted/50">
+                                  <div className="min-w-0">
+                                    <p className="text-sm font-medium">{a.service_snapshot_name}</p>
+                                    <p className="text-xs text-muted-foreground">{formatLongDate(new Date(a.starts_at))} às {formatTime(new Date(a.starts_at))}</p>
+                                  </div>
+                                  <div className="text-right shrink-0">
+                                    <p className="text-sm font-medium">{formatBRL(a.service_snapshot_price_cents)}</p>
+                                    <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                                      a.status === "completed" ? "bg-green-100 text-green-700" :
+                                      a.status === "cancelled" ? "bg-red-100 text-red-700" :
+                                      "bg-blue-100 text-blue-700"
+                                    }`}>
+                                      {a.status === "completed" ? "Concluído" : a.status === "cancelled" ? "Cancelado" : "Confirmado"}
+                                    </span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-sm text-muted-foreground">Nenhum agendamento encontrado.</p>
+                          )}
                         </div>
                       </div>
                     )}
