@@ -45,7 +45,7 @@ function Page() {
 
       const [appts, employeesR, empServices, services] = await Promise.all([
         supabase
-          .from("appointments")
+          .from(db.agendamentos)
           .select("client_name, client_phone, employee_id, service_snapshot_name, service_snapshot_price_cents, status, starts_at")
           .eq("professional_id", proId)
           .gte("starts_at", monthStart.toISOString())

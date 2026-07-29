@@ -37,7 +37,7 @@ function Page() {
     enabled: !!pro?.id,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("employees")
+        .from(db.funcionarios)
         .select("id, name, photo_url, is_active")
         .eq("professional_id", pro!.id)
         .order("created_at");
@@ -298,7 +298,7 @@ function HoursTab({ employee }: { employee: Employee }) {
     queryKey: ["employee-availability", employee.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("employee_availability")
+        .from(db.disponibilidadeFuncionario)
         .select("id, weekday, start_time, end_time")
         .eq("employee_id", employee.id)
         .order("weekday").order("start_time");
@@ -374,7 +374,7 @@ function BlocksTab({ employee }: { employee: Employee }) {
     queryKey: ["employee-blocks", employee.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("employee_blocks")
+        .from(db.bloqueiosFuncionario)
         .select("id, starts_at, ends_at, reason")
         .eq("employee_id", employee.id)
         .order("starts_at");

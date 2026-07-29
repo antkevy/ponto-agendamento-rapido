@@ -63,7 +63,7 @@ function BookingPage() {
     queryKey: ["public-services", pro.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("services")
+        .from(db.servicos)
         .select("*")
         .eq("professional_id", pro.id)
         .eq("is_active", true)
@@ -79,7 +79,7 @@ function BookingPage() {
     queryKey: ["public-employees", pro.id],
     queryFn: async () => {
       const { data: emps, error } = await supabase
-        .from("employees")
+        .from(db.funcionarios)
         .select("id, name, photo_url, is_active")
         .eq("professional_id", pro.id)
         .eq("is_active", true)
@@ -88,7 +88,7 @@ function BookingPage() {
       const ids = (emps ?? []).map((e) => e.id);
       if (ids.length === 0) return { employees: [] as Employee[], links: [] as Array<{ employee_id: string; service_id: string }> };
       const { data: links, error: linkErr } = await supabase
-        .from("employee_services")
+        .from(db.servicosFuncionario)
         .select("employee_id, service_id")
         .in("employee_id", ids);
       if (linkErr) throw linkErr;
@@ -396,7 +396,7 @@ function WhenStep({ pro, selectedServices, employee, onPick, brand }: { pro: { i
     enabled: !!employee,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("employee_availability")
+        .from(db.disponibilidadeFuncionario)
         .select("weekday, start_time, end_time")
         .eq("employee_id", employee!.id);
       if (error) throw error;
@@ -418,7 +418,7 @@ function WhenStep({ pro, selectedServices, employee, onPick, brand }: { pro: { i
     queryKey: ["public-blocks", pro.id, monthStart.toISOString()],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("blocks")
+        .from(db.bloqueios)
         .select("starts_at,ends_at")
         .eq("professional_id", pro.id)
         .lt("starts_at", rangeEnd.toISOString())
@@ -433,7 +433,7 @@ function WhenStep({ pro, selectedServices, employee, onPick, brand }: { pro: { i
     enabled: !!employee,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("employee_blocks")
+        .from(db.bloqueiosFuncionario)
         .select("starts_at,ends_at")
         .eq("employee_id", employee!.id)
         .lt("starts_at", rangeEnd.toISOString())
@@ -584,7 +584,7 @@ function FormStep({ pro, selectedServices, employee, when, onDone, brand }: { pr
       const ends = new Date(when.getTime() + combinedDuration * 60 * 1000);
       const appointmentId = crypto.randomUUID();
       const { error } = await supabase
-        .from("appointments")
+        .from(db.agendamentos)
         .insert({
           id: appointmentId,
           professional_id: pro.id,

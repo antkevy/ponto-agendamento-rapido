@@ -5,6 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pi
 import { AppShell } from "@/components/app-shell";
 import { useMyProfessional } from "@/hooks/use-my-professional";
 import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/lib/db-tables";
 import { formatBRL } from "@/lib/booking";
 import { Calendar, DollarSign, CheckCircle2, TrendingUp, ChevronLeft, ChevronRight, Percent } from "lucide-react";
 import { OnboardingCard } from "@/components/onboarding-card";
@@ -45,26 +46,26 @@ function Dashboard() {
 
       const [current, previous, todayAppts, upcoming] = await Promise.all([
         supabase
-          .from("appointments")
+          .from(db.agendamentos)
           .select("id, starts_at, service_snapshot_name, service_snapshot_price_cents, status")
           .eq("professional_id", proId)
           .gte("starts_at", monthStart.toISOString())
           .lt("starts_at", monthEnd.toISOString()),
         supabase
-          .from("appointments")
+          .from(db.agendamentos)
           .select("id, starts_at, service_snapshot_name, service_snapshot_price_cents, status")
           .eq("professional_id", proId)
           .gte("starts_at", prevMonthStart.toISOString())
           .lt("starts_at", prevMonthEnd.toISOString()),
         supabase
-          .from("appointments")
+          .from(db.agendamentos)
           .select("id, starts_at, client_name, service_snapshot_name, status")
           .eq("professional_id", proId)
           .gte("starts_at", today.toISOString())
           .lt("starts_at", new Date(today.getTime() + 86400000).toISOString())
           .order("starts_at"),
         supabase
-          .from("appointments")
+          .from(db.agendamentos)
           .select("id, starts_at, client_name, service_snapshot_name, status")
           .eq("professional_id", proId)
           .eq("status", "confirmed")

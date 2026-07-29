@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/lib/db-tables";
 import { useAuth } from "@/hooks/use-auth";
 
 export function useMyProfessional() {
@@ -10,7 +11,7 @@ export function useMyProfessional() {
     queryFn: async () => {
       if (!user) return null;
       const { data, error } = await supabase
-        .from("professionals")
+        .from(db.profissionais)
         .select("*")
         .eq("user_id", user.id)
         .maybeSingle();

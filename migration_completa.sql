@@ -16,8 +16,8 @@ CREATE TYPE public.appointment_status AS ENUM ('confirmed', 'cancelled', 'comple
 
 -- ********** 3. TABELAS ********** --
 
--- 3.1 Professionals
-CREATE TABLE IF NOT EXISTS public.professionals (
+-- 3.1 Profissionais
+CREATE TABLE IF NOT EXISTS public.profissionais (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
   slug TEXT NOT NULL UNIQUE,
@@ -37,10 +37,10 @@ CREATE TABLE IF NOT EXISTS public.professionals (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- 3.2 Services
-CREATE TABLE IF NOT EXISTS public.services (
+-- 3.2 Servicos
+CREATE TABLE IF NOT EXISTS public.servicos (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  professional_id UUID NOT NULL REFERENCES public.professionals(id) ON DELETE CASCADE,
+  professional_id UUID NOT NULL REFERENCES public.profissionais(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   duration_minutes INT NOT NULL CHECK (duration_minutes > 0),
   price_cents INT NOT NULL DEFAULT 0 CHECK (price_cents >= 0),
@@ -51,10 +51,10 @@ CREATE TABLE IF NOT EXISTS public.services (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- 3.3 Availability (weekly schedule)
-CREATE TABLE IF NOT EXISTS public.availability (
+-- 3.3 Horarios (weekly schedule)
+CREATE TABLE IF NOT EXISTS public.horarios (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  professional_id UUID NOT NULL REFERENCES public.professionals(id) ON DELETE CASCADE,
+  professional_id UUID NOT NULL REFERENCES public.profissionais(id) ON DELETE CASCADE,
   weekday SMALLINT NOT NULL CHECK (weekday BETWEEN 0 AND 6),
   start_time TIME NOT NULL,
   end_time TIME NOT NULL,
@@ -62,10 +62,10 @@ CREATE TABLE IF NOT EXISTS public.availability (
   CHECK (end_time > start_time)
 );
 
--- 3.4 Blocks (vacations / time-off)
-CREATE TABLE IF NOT EXISTS public.blocks (
+-- 3.4 Bloqueios (vacations / time-off)
+CREATE TABLE IF NOT EXISTS public.bloqueios (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  professional_id UUID NOT NULL REFERENCES public.professionals(id) ON DELETE CASCADE,
+  professional_id UUID NOT NULL REFERENCES public.profissionais(id) ON DELETE CASCADE,
   starts_at TIMESTAMPTZ NOT NULL,
   ends_at TIMESTAMPTZ NOT NULL,
   reason TEXT,
@@ -73,11 +73,11 @@ CREATE TABLE IF NOT EXISTS public.blocks (
   CHECK (ends_at > starts_at)
 );
 
--- 3.5 Appointments
-CREATE TABLE IF NOT EXISTS public.appointments (
+-- 3.5 Agendamentos
+CREATE TABLE IF NOT EXISTS public.agendamentos (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  professional_id UUID NOT NULL REFERENCES public.professionals(id) ON DELETE CASCADE,
-  service_id UUID NOT NULL REFERENCES public.services(id) ON DELETE RESTRICT,
+  professional_id UUID NOT NULL REFERENCES public.profissionais(id) ON DELETE CASCADE,
+  service_id UUID NOT NULL REFERENCES public.servicos(id) ON DELETE RESTRICT,
   employee_id UUID,
   starts_at TIMESTAMPTZ NOT NULL,
   ends_at TIMESTAMPTZ NOT NULL,
@@ -93,10 +93,10 @@ CREATE TABLE IF NOT EXISTS public.appointments (
   CHECK (ends_at > starts_at)
 );
 
--- 3.6 Employees
-CREATE TABLE IF NOT EXISTS public.employees (
+-- 3.6 Funcionarios
+CREATE TABLE IF NOT EXISTS public.funcionarios (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  professional_id UUID NOT NULL REFERENCES public.professionals(id) ON DELETE CASCADE,
+  professional_id UUID NOT NULL REFERENCES public.profissionais(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   photo_url TEXT,
   is_active BOOLEAN NOT NULL DEFAULT true,
@@ -104,28 +104,28 @@ CREATE TABLE IF NOT EXISTS public.employees (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- 3.7 Employee <-> Services (many-to-many)
-CREATE TABLE IF NOT EXISTS public.employee_services (
-  employee_id UUID NOT NULL REFERENCES public.employees(id) ON DELETE CASCADE,
-  service_id UUID NOT NULL REFERENCES public.services(id) ON DELETE CASCADE,
+-- 3.7 Funcionario <-> Servicos (many-to-many)
+CREATE TABLE IF NOT EXISTS public.servicos_funcionario (
+  employee_id UUID NOT NULL REFERENCES public.funcionarios(id) ON DELETE CASCADE,
+  service_id UUID NOT NULL REFERENCES public.servicos(id) ON DELETE CASCADE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   PRIMARY KEY (employee_id, service_id)
 );
 
--- 3.8 Employee availability
-CREATE TABLE IF NOT EXISTS public.employee_availability (
+-- 3.8 Disponibilidade Funcionario
+CREATE TABLE IF NOT EXISTS public.disponibilidade_funcionario (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  employee_id UUID NOT NULL REFERENCES public.employees(id) ON DELETE CASCADE,
+  employee_id UUID NOT NULL REFERENCES public.funcionarios(id) ON DELETE CASCADE,
   weekday SMALLINT NOT NULL CHECK (weekday BETWEEN 0 AND 6),
   start_time TIME NOT NULL,
   end_time TIME NOT NULL CHECK (end_time > start_time),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- 3.9 Employee blocks
-CREATE TABLE IF NOT EXISTS public.employee_blocks (
+-- 3.9 Bloqueios Funcionario
+CREATE TABLE IF NOT EXISTS public.bloqueios_funcionario (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  employee_id UUID NOT NULL REFERENCES public.employees(id) ON DELETE CASCADE,
+  employee_id UUID NOT NULL REFERENCES public.funcionarios(id) ON DELETE CASCADE,
   starts_at TIMESTAMPTZ NOT NULL,
   ends_at TIMESTAMPTZ NOT NULL CHECK (ends_at > starts_at),
   reason TEXT,
@@ -133,24 +133,24 @@ CREATE TABLE IF NOT EXISTS public.employee_blocks (
 );
 
 -- ********** 4. ÍNDICES ********** --
-CREATE INDEX IF NOT EXISTS idx_professionals_slug ON public.professionals(slug);
-CREATE INDEX IF NOT EXISTS idx_services_professional ON public.services(professional_id);
-CREATE INDEX IF NOT EXISTS idx_availability_professional ON public.availability(professional_id);
-CREATE INDEX IF NOT EXISTS idx_blocks_professional_starts ON public.blocks(professional_id, starts_at);
-CREATE INDEX IF NOT EXISTS idx_appointments_professional_starts ON public.appointments(professional_id, starts_at);
-CREATE INDEX IF NOT EXISTS idx_appointments_client_phone ON public.appointments(client_phone);
-CREATE INDEX IF NOT EXISTS idx_appointments_client_email ON public.appointments(client_email);
-CREATE INDEX IF NOT EXISTS idx_employees_professional ON public.employees(professional_id);
-CREATE INDEX IF NOT EXISTS idx_employee_services_service ON public.employee_services(service_id);
-CREATE INDEX IF NOT EXISTS idx_employee_availability_employee ON public.employee_availability(employee_id);
-CREATE INDEX IF NOT EXISTS idx_employee_blocks_employee ON public.employee_blocks(employee_id);
-CREATE INDEX IF NOT EXISTS idx_appointments_employee ON public.appointments(employee_id);
+CREATE INDEX IF NOT EXISTS idx_profissionais_slug ON public.profissionais(slug);
+CREATE INDEX IF NOT EXISTS idx_servicos_profissional ON public.servicos(professional_id);
+CREATE INDEX IF NOT EXISTS idx_horarios_profissional ON public.horarios(professional_id);
+CREATE INDEX IF NOT EXISTS idx_bloqueios_profissional_inicio ON public.bloqueios(professional_id, starts_at);
+CREATE INDEX IF NOT EXISTS idx_agendamentos_profissional_inicio ON public.agendamentos(professional_id, starts_at);
+CREATE INDEX IF NOT EXISTS idx_agendamentos_cliente_telefone ON public.agendamentos(client_phone);
+CREATE INDEX IF NOT EXISTS idx_agendamentos_cliente_email ON public.agendamentos(client_email);
+CREATE INDEX IF NOT EXISTS idx_funcionarios_profissional ON public.funcionarios(professional_id);
+CREATE INDEX IF NOT EXISTS idx_servicos_funcionario_servico ON public.servicos_funcionario(service_id);
+CREATE INDEX IF NOT EXISTS idx_disponibilidade_funcionario_funcionario ON public.disponibilidade_funcionario(employee_id);
+CREATE INDEX IF NOT EXISTS idx_bloqueios_funcionario_funcionario ON public.bloqueios_funcionario(employee_id);
+CREATE INDEX IF NOT EXISTS idx_agendamentos_funcionario ON public.agendamentos(employee_id);
 
 -- Exclusion constraint: prevent overlapping confirmed appointments
 CREATE EXTENSION IF NOT EXISTS btree_gist;
-ALTER TABLE public.appointments DROP CONSTRAINT IF EXISTS no_overlap_confirmed;
-ALTER TABLE public.appointments
-  ADD CONSTRAINT no_overlap_confirmed
+ALTER TABLE public.agendamentos DROP CONSTRAINT IF EXISTS no_conflito_agendamentos;
+ALTER TABLE public.agendamentos
+  ADD CONSTRAINT no_conflito_agendamentos
   EXCLUDE USING gist (
     (COALESCE(employee_id, professional_id)) WITH =,
     tstzrange(starts_at, ends_at, '[)') WITH &&
@@ -162,20 +162,20 @@ RETURNS TRIGGER AS $$
 BEGIN NEW.updated_at = now(); RETURN NEW; END;
 $$ LANGUAGE plpgsql SET search_path = public;
 
-DROP TRIGGER IF EXISTS trg_pros_updated ON public.professionals;
-CREATE TRIGGER trg_pros_updated BEFORE UPDATE ON public.professionals
+DROP TRIGGER IF EXISTS trg_pros_atualizado ON public.profissionais;
+CREATE TRIGGER trg_pros_atualizado BEFORE UPDATE ON public.profissionais
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
-DROP TRIGGER IF EXISTS trg_services_updated ON public.services;
-CREATE TRIGGER trg_services_updated BEFORE UPDATE ON public.services
+DROP TRIGGER IF EXISTS trg_servicos_atualizado ON public.servicos;
+CREATE TRIGGER trg_servicos_atualizado BEFORE UPDATE ON public.servicos
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
-DROP TRIGGER IF EXISTS trg_appts_updated ON public.appointments;
-CREATE TRIGGER trg_appts_updated BEFORE UPDATE ON public.appointments
+DROP TRIGGER IF EXISTS trg_agendamentos_atualizado ON public.agendamentos;
+CREATE TRIGGER trg_agendamentos_atualizado BEFORE UPDATE ON public.agendamentos
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
-DROP TRIGGER IF EXISTS trg_employees_updated ON public.employees;
-CREATE TRIGGER trg_employees_updated BEFORE UPDATE ON public.employees
+DROP TRIGGER IF EXISTS trg_funcionarios_atualizado ON public.funcionarios;
+CREATE TRIGGER trg_funcionarios_atualizado BEFORE UPDATE ON public.funcionarios
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 -- ********** 6. FUNCTIONS / RPCs ********** --
@@ -189,7 +189,7 @@ CREATE OR REPLACE FUNCTION public.get_busy_slots(
 RETURNS TABLE(starts_at TIMESTAMPTZ, ends_at TIMESTAMPTZ)
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
 AS $$
-  SELECT starts_at, ends_at FROM public.appointments
+  SELECT starts_at, ends_at FROM public.agendamentos
   WHERE professional_id = _professional_id
     AND status = 'confirmed'
     AND starts_at < _to
@@ -205,7 +205,7 @@ CREATE OR REPLACE FUNCTION public.get_employee_busy_slots(
 RETURNS TABLE(starts_at TIMESTAMPTZ, ends_at TIMESTAMPTZ)
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
 AS $$
-  SELECT starts_at, ends_at FROM public.appointments
+  SELECT starts_at, ends_at FROM public.agendamentos
   WHERE employee_id = _employee_id
     AND status = 'confirmed'
     AND starts_at < _to
@@ -229,8 +229,8 @@ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
 AS $$
   SELECT a.id, a.professional_id, p.business_name, p.slug, a.service_snapshot_name,
          a.starts_at, a.ends_at, a.status, a.client_name
-  FROM public.appointments a
-  JOIN public.professionals p ON p.id = a.professional_id
+  FROM public.agendamentos a
+  JOIN public.profissionais p ON p.id = a.professional_id
   WHERE (lower(a.client_email) = lower(_contact) OR a.client_phone = _contact)
   ORDER BY a.starts_at DESC
   LIMIT 100;
@@ -243,7 +243,7 @@ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public
 AS $$
 DECLARE rows_affected INT;
 BEGIN
-  UPDATE public.appointments
+  UPDATE public.agendamentos
   SET status = 'cancelled', updated_at = now()
   WHERE id = _id
     AND status = 'confirmed'
@@ -256,41 +256,41 @@ $$;
 -- ********** 7. PERMISSÕES (GRANTS) ********** --
 
 -- Tabelas
-GRANT SELECT                           ON public.professionals TO anon;
-GRANT SELECT, INSERT, UPDATE, DELETE   ON public.professionals TO authenticated;
-GRANT ALL                              ON public.professionals TO service_role;
+GRANT SELECT                           ON public.profissionais TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE   ON public.profissionais TO authenticated;
+GRANT ALL                              ON public.profissionais TO service_role;
 
-GRANT SELECT                           ON public.services TO anon;
-GRANT SELECT, INSERT, UPDATE, DELETE   ON public.services TO authenticated;
-GRANT ALL                              ON public.services TO service_role;
+GRANT SELECT                           ON public.servicos TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE   ON public.servicos TO authenticated;
+GRANT ALL                              ON public.servicos TO service_role;
 
-GRANT SELECT                           ON public.availability TO anon;
-GRANT SELECT, INSERT, UPDATE, DELETE   ON public.availability TO authenticated;
-GRANT ALL                              ON public.availability TO service_role;
+GRANT SELECT                           ON public.horarios TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE   ON public.horarios TO authenticated;
+GRANT ALL                              ON public.horarios TO service_role;
 
-GRANT SELECT                           ON public.blocks TO anon;
-GRANT SELECT, INSERT, UPDATE, DELETE   ON public.blocks TO authenticated;
-GRANT ALL                              ON public.blocks TO service_role;
+GRANT SELECT                           ON public.bloqueios TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE   ON public.bloqueios TO authenticated;
+GRANT ALL                              ON public.bloqueios TO service_role;
 
-GRANT SELECT, INSERT                   ON public.appointments TO anon;
-GRANT SELECT, INSERT, UPDATE, DELETE   ON public.appointments TO authenticated;
-GRANT ALL                              ON public.appointments TO service_role;
+GRANT SELECT, INSERT                   ON public.agendamentos TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE   ON public.agendamentos TO authenticated;
+GRANT ALL                              ON public.agendamentos TO service_role;
 
-GRANT SELECT                           ON public.employees TO anon;
-GRANT SELECT, INSERT, UPDATE, DELETE   ON public.employees TO authenticated;
-GRANT ALL                              ON public.employees TO service_role;
+GRANT SELECT                           ON public.funcionarios TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE   ON public.funcionarios TO authenticated;
+GRANT ALL                              ON public.funcionarios TO service_role;
 
-GRANT SELECT                           ON public.employee_services TO anon;
-GRANT SELECT, INSERT, UPDATE, DELETE   ON public.employee_services TO authenticated;
-GRANT ALL                              ON public.employee_services TO service_role;
+GRANT SELECT                           ON public.servicos_funcionario TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE   ON public.servicos_funcionario TO authenticated;
+GRANT ALL                              ON public.servicos_funcionario TO service_role;
 
-GRANT SELECT                           ON public.employee_availability TO anon;
-GRANT SELECT, INSERT, UPDATE, DELETE   ON public.employee_availability TO authenticated;
-GRANT ALL                              ON public.employee_availability TO service_role;
+GRANT SELECT                           ON public.disponibilidade_funcionario TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE   ON public.disponibilidade_funcionario TO authenticated;
+GRANT ALL                              ON public.disponibilidade_funcionario TO service_role;
 
-GRANT SELECT                           ON public.employee_blocks TO anon;
-GRANT SELECT, INSERT, UPDATE, DELETE   ON public.employee_blocks TO authenticated;
-GRANT ALL                              ON public.employee_blocks TO service_role;
+GRANT SELECT                           ON public.bloqueios_funcionario TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE   ON public.bloqueios_funcionario TO authenticated;
+GRANT ALL                              ON public.bloqueios_funcionario TO service_role;
 
 -- RPCs
 GRANT EXECUTE ON FUNCTION public.get_busy_slots(UUID, TIMESTAMPTZ, TIMESTAMPTZ)                TO anon, authenticated;
@@ -300,159 +300,159 @@ GRANT EXECUTE ON FUNCTION public.client_cancel_appointment(UUID, TEXT)          
 
 -- ********** 8. ROW LEVEL SECURITY (RLS) ********** --
 
--- 8.1 Professionals
-ALTER TABLE public.professionals ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "public read professionals" ON public.professionals;
-CREATE POLICY "public read professionals" ON public.professionals
+-- 8.1 Profissionais
+ALTER TABLE public.profissionais ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "public read profissionais" ON public.profissionais;
+CREATE POLICY "public read profissionais" ON public.profissionais
   FOR SELECT USING (true);
-DROP POLICY IF EXISTS "owner insert professional" ON public.professionals;
-CREATE POLICY "owner insert professional" ON public.professionals
+DROP POLICY IF EXISTS "owner insert profissional" ON public.profissionais;
+CREATE POLICY "owner insert profissional" ON public.profissionais
   FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
-DROP POLICY IF EXISTS "owner update professional" ON public.professionals;
-CREATE POLICY "owner update professional" ON public.professionals
+DROP POLICY IF EXISTS "owner update profissional" ON public.profissionais;
+CREATE POLICY "owner update profissional" ON public.profissionais
   FOR UPDATE TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
-DROP POLICY IF EXISTS "owner delete professional" ON public.professionals;
-CREATE POLICY "owner delete professional" ON public.professionals
+DROP POLICY IF EXISTS "owner delete profissional" ON public.profissionais;
+CREATE POLICY "owner delete profissional" ON public.profissionais
   FOR DELETE TO authenticated USING (auth.uid() = user_id);
 
--- 8.2 Services
-ALTER TABLE public.services ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "public read services" ON public.services;
-CREATE POLICY "public read services" ON public.services
+-- 8.2 Servicos
+ALTER TABLE public.servicos ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "public read servicos" ON public.servicos;
+CREATE POLICY "public read servicos" ON public.servicos
   FOR SELECT USING (true);
-DROP POLICY IF EXISTS "owner manage services" ON public.services;
-CREATE POLICY "owner manage services" ON public.services
+DROP POLICY IF EXISTS "owner manage servicos" ON public.servicos;
+CREATE POLICY "owner manage servicos" ON public.servicos
   FOR ALL TO authenticated
-  USING (EXISTS (SELECT 1 FROM public.professionals p WHERE p.id = services.professional_id AND p.user_id = auth.uid()))
-  WITH CHECK (EXISTS (SELECT 1 FROM public.professionals p WHERE p.id = services.professional_id AND p.user_id = auth.uid()));
+  USING (EXISTS (SELECT 1 FROM public.profissionais p WHERE p.id = servicos.professional_id AND p.user_id = auth.uid()))
+  WITH CHECK (EXISTS (SELECT 1 FROM public.profissionais p WHERE p.id = servicos.professional_id AND p.user_id = auth.uid()));
 
--- 8.3 Availability
-ALTER TABLE public.availability ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "public read availability" ON public.availability;
-CREATE POLICY "public read availability" ON public.availability
+-- 8.3 Horarios
+ALTER TABLE public.horarios ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "public read horarios" ON public.horarios;
+CREATE POLICY "public read horarios" ON public.horarios
   FOR SELECT USING (true);
-DROP POLICY IF EXISTS "owner manage availability" ON public.availability;
-CREATE POLICY "owner manage availability" ON public.availability
+DROP POLICY IF EXISTS "owner manage horarios" ON public.horarios;
+CREATE POLICY "owner manage horarios" ON public.horarios
   FOR ALL TO authenticated
-  USING (EXISTS (SELECT 1 FROM public.professionals p WHERE p.id = availability.professional_id AND p.user_id = auth.uid()))
-  WITH CHECK (EXISTS (SELECT 1 FROM public.professionals p WHERE p.id = availability.professional_id AND p.user_id = auth.uid()));
+  USING (EXISTS (SELECT 1 FROM public.profissionais p WHERE p.id = horarios.professional_id AND p.user_id = auth.uid()))
+  WITH CHECK (EXISTS (SELECT 1 FROM public.profissionais p WHERE p.id = horarios.professional_id AND p.user_id = auth.uid()));
 
--- 8.4 Blocks
-ALTER TABLE public.blocks ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "public read blocks" ON public.blocks;
-CREATE POLICY "public read blocks" ON public.blocks
+-- 8.4 Bloqueios
+ALTER TABLE public.bloqueios ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "public read bloqueios" ON public.bloqueios;
+CREATE POLICY "public read bloqueios" ON public.bloqueios
   FOR SELECT USING (true);
-DROP POLICY IF EXISTS "owner manage blocks" ON public.blocks;
-CREATE POLICY "owner manage blocks" ON public.blocks
+DROP POLICY IF EXISTS "owner manage bloqueios" ON public.bloqueios;
+CREATE POLICY "owner manage bloqueios" ON public.bloqueios
   FOR ALL TO authenticated
-  USING (EXISTS (SELECT 1 FROM public.professionals p WHERE p.id = blocks.professional_id AND p.user_id = auth.uid()))
-  WITH CHECK (EXISTS (SELECT 1 FROM public.professionals p WHERE p.id = blocks.professional_id AND p.user_id = auth.uid()));
+  USING (EXISTS (SELECT 1 FROM public.profissionais p WHERE p.id = bloqueios.professional_id AND p.user_id = auth.uid()))
+  WITH CHECK (EXISTS (SELECT 1 FROM public.profissionais p WHERE p.id = bloqueios.professional_id AND p.user_id = auth.uid()));
 
--- 8.5 Appointments
-ALTER TABLE public.appointments ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "public create appointments" ON public.appointments;
-CREATE POLICY "public create appointments" ON public.appointments
+-- 8.5 Agendamentos
+ALTER TABLE public.agendamentos ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "public create agendamentos" ON public.agendamentos;
+CREATE POLICY "public create agendamentos" ON public.agendamentos
   FOR INSERT TO anon, authenticated
   WITH CHECK (
     starts_at > now()
     AND ends_at > starts_at
     AND status = 'confirmed'
     AND EXISTS (
-      SELECT 1 FROM public.services s
-      WHERE s.id = appointments.service_id
-        AND s.professional_id = appointments.professional_id
+      SELECT 1 FROM public.servicos s
+      WHERE s.id = agendamentos.service_id
+        AND s.professional_id = agendamentos.professional_id
         AND s.is_active
     )
     AND (
-      appointments.employee_id IS NULL
+      agendamentos.employee_id IS NULL
       OR EXISTS (
-        SELECT 1 FROM public.employees e
-        WHERE e.id = appointments.employee_id
-          AND e.professional_id = appointments.professional_id
+        SELECT 1 FROM public.funcionarios e
+        WHERE e.id = agendamentos.employee_id
+          AND e.professional_id = agendamentos.professional_id
           AND e.is_active
       )
     )
   );
-DROP POLICY IF EXISTS "owner read appointments" ON public.appointments;
-CREATE POLICY "owner read appointments" ON public.appointments
+DROP POLICY IF EXISTS "owner read agendamentos" ON public.agendamentos;
+CREATE POLICY "owner read agendamentos" ON public.agendamentos
   FOR SELECT TO authenticated
-  USING (EXISTS (SELECT 1 FROM public.professionals p WHERE p.id = appointments.professional_id AND p.user_id = auth.uid()));
-DROP POLICY IF EXISTS "owner update appointments" ON public.appointments;
-CREATE POLICY "owner update appointments" ON public.appointments
+  USING (EXISTS (SELECT 1 FROM public.profissionais p WHERE p.id = agendamentos.professional_id AND p.user_id = auth.uid()));
+DROP POLICY IF EXISTS "owner update agendamentos" ON public.agendamentos;
+CREATE POLICY "owner update agendamentos" ON public.agendamentos
   FOR UPDATE TO authenticated
-  USING (EXISTS (SELECT 1 FROM public.professionals p WHERE p.id = appointments.professional_id AND p.user_id = auth.uid()))
-  WITH CHECK (EXISTS (SELECT 1 FROM public.professionals p WHERE p.id = appointments.professional_id AND p.user_id = auth.uid()));
-DROP POLICY IF EXISTS "owner delete appointments" ON public.appointments;
-CREATE POLICY "owner delete appointments" ON public.appointments
+  USING (EXISTS (SELECT 1 FROM public.profissionais p WHERE p.id = agendamentos.professional_id AND p.user_id = auth.uid()))
+  WITH CHECK (EXISTS (SELECT 1 FROM public.profissionais p WHERE p.id = agendamentos.professional_id AND p.user_id = auth.uid()));
+DROP POLICY IF EXISTS "owner delete agendamentos" ON public.agendamentos;
+CREATE POLICY "owner delete agendamentos" ON public.agendamentos
   FOR DELETE TO authenticated
-  USING (EXISTS (SELECT 1 FROM public.professionals p WHERE p.id = appointments.professional_id AND p.user_id = auth.uid()));
+  USING (EXISTS (SELECT 1 FROM public.profissionais p WHERE p.id = agendamentos.professional_id AND p.user_id = auth.uid()));
 
--- 8.6 Employees
-ALTER TABLE public.employees ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "public read employees" ON public.employees;
-CREATE POLICY "public read employees" ON public.employees
+-- 8.6 Funcionarios
+ALTER TABLE public.funcionarios ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "public read funcionarios" ON public.funcionarios;
+CREATE POLICY "public read funcionarios" ON public.funcionarios
   FOR SELECT TO public USING (true);
-DROP POLICY IF EXISTS "owner manage employees" ON public.employees;
-CREATE POLICY "owner manage employees" ON public.employees
+DROP POLICY IF EXISTS "owner manage funcionarios" ON public.funcionarios;
+CREATE POLICY "owner manage funcionarios" ON public.funcionarios
   FOR ALL TO authenticated
-  USING (EXISTS (SELECT 1 FROM public.professionals p WHERE p.id = employees.professional_id AND p.user_id = auth.uid()))
-  WITH CHECK (EXISTS (SELECT 1 FROM public.professionals p WHERE p.id = employees.professional_id AND p.user_id = auth.uid()));
+  USING (EXISTS (SELECT 1 FROM public.profissionais p WHERE p.id = funcionarios.professional_id AND p.user_id = auth.uid()))
+  WITH CHECK (EXISTS (SELECT 1 FROM public.profissionais p WHERE p.id = funcionarios.professional_id AND p.user_id = auth.uid()));
 
--- 8.7 Employee Services
-ALTER TABLE public.employee_services ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "public read employee_services" ON public.employee_services;
-CREATE POLICY "public read employee_services" ON public.employee_services
+-- 8.7 Servicos Funcionario
+ALTER TABLE public.servicos_funcionario ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "public read servicos_funcionario" ON public.servicos_funcionario;
+CREATE POLICY "public read servicos_funcionario" ON public.servicos_funcionario
   FOR SELECT TO public USING (true);
-DROP POLICY IF EXISTS "owner manage employee_services" ON public.employee_services;
-CREATE POLICY "owner manage employee_services" ON public.employee_services
+DROP POLICY IF EXISTS "owner manage servicos_funcionario" ON public.servicos_funcionario;
+CREATE POLICY "owner manage servicos_funcionario" ON public.servicos_funcionario
   FOR ALL TO authenticated
   USING (EXISTS (
-    SELECT 1 FROM public.employees e
-    JOIN public.professionals p ON p.id = e.professional_id
-    WHERE e.id = employee_services.employee_id AND p.user_id = auth.uid()
+    SELECT 1 FROM public.funcionarios e
+    JOIN public.profissionais p ON p.id = e.professional_id
+    WHERE e.id = servicos_funcionario.employee_id AND p.user_id = auth.uid()
   ))
   WITH CHECK (EXISTS (
-    SELECT 1 FROM public.employees e
-    JOIN public.professionals p ON p.id = e.professional_id
-    WHERE e.id = employee_services.employee_id AND p.user_id = auth.uid()
+    SELECT 1 FROM public.funcionarios e
+    JOIN public.profissionais p ON p.id = e.professional_id
+    WHERE e.id = servicos_funcionario.employee_id AND p.user_id = auth.uid()
   ));
 
--- 8.8 Employee Availability
-ALTER TABLE public.employee_availability ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "public read employee_availability" ON public.employee_availability;
-CREATE POLICY "public read employee_availability" ON public.employee_availability
+-- 8.8 Disponibilidade Funcionario
+ALTER TABLE public.disponibilidade_funcionario ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "public read disponibilidade_funcionario" ON public.disponibilidade_funcionario;
+CREATE POLICY "public read disponibilidade_funcionario" ON public.disponibilidade_funcionario
   FOR SELECT TO public USING (true);
-DROP POLICY IF EXISTS "owner manage employee_availability" ON public.employee_availability;
-CREATE POLICY "owner manage employee_availability" ON public.employee_availability
+DROP POLICY IF EXISTS "owner manage disponibilidade_funcionario" ON public.disponibilidade_funcionario;
+CREATE POLICY "owner manage disponibilidade_funcionario" ON public.disponibilidade_funcionario
   FOR ALL TO authenticated
   USING (EXISTS (
-    SELECT 1 FROM public.employees e
-    JOIN public.professionals p ON p.id = e.professional_id
-    WHERE e.id = employee_availability.employee_id AND p.user_id = auth.uid()
+    SELECT 1 FROM public.funcionarios e
+    JOIN public.profissionais p ON p.id = e.professional_id
+    WHERE e.id = disponibilidade_funcionario.employee_id AND p.user_id = auth.uid()
   ))
   WITH CHECK (EXISTS (
-    SELECT 1 FROM public.employees e
-    JOIN public.professionals p ON p.id = e.professional_id
-    WHERE e.id = employee_availability.employee_id AND p.user_id = auth.uid()
+    SELECT 1 FROM public.funcionarios e
+    JOIN public.profissionais p ON p.id = e.professional_id
+    WHERE e.id = disponibilidade_funcionario.employee_id AND p.user_id = auth.uid()
   ));
 
--- 8.9 Employee Blocks
-ALTER TABLE public.employee_blocks ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "public read employee_blocks" ON public.employee_blocks;
-CREATE POLICY "public read employee_blocks" ON public.employee_blocks
+-- 8.9 Bloqueios Funcionario
+ALTER TABLE public.bloqueios_funcionario ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "public read bloqueios_funcionario" ON public.bloqueios_funcionario;
+CREATE POLICY "public read bloqueios_funcionario" ON public.bloqueios_funcionario
   FOR SELECT TO public USING (true);
-DROP POLICY IF EXISTS "owner manage employee_blocks" ON public.employee_blocks;
-CREATE POLICY "owner manage employee_blocks" ON public.employee_blocks
+DROP POLICY IF EXISTS "owner manage bloqueios_funcionario" ON public.bloqueios_funcionario;
+CREATE POLICY "owner manage bloqueios_funcionario" ON public.bloqueios_funcionario
   FOR ALL TO authenticated
   USING (EXISTS (
-    SELECT 1 FROM public.employees e
-    JOIN public.professionals p ON p.id = e.professional_id
-    WHERE e.id = employee_blocks.employee_id AND p.user_id = auth.uid()
+    SELECT 1 FROM public.funcionarios e
+    JOIN public.profissionais p ON p.id = e.professional_id
+    WHERE e.id = bloqueios_funcionario.employee_id AND p.user_id = auth.uid()
   ))
   WITH CHECK (EXISTS (
-    SELECT 1 FROM public.employees e
-    JOIN public.professionals p ON p.id = e.professional_id
-    WHERE e.id = employee_blocks.employee_id AND p.user_id = auth.uid()
+    SELECT 1 FROM public.funcionarios e
+    JOIN public.profissionais p ON p.id = e.professional_id
+    WHERE e.id = bloqueios_funcionario.employee_id AND p.user_id = auth.uid()
   ));
 
 -- ********** 9. STORAGE POLICIES (brand-assets) ********** --
@@ -487,9 +487,6 @@ CREATE POLICY "brand-assets owner delete"
 -- ============================================================
 -- FIM — BANCO DE DADOS CRIADO COM SUCESSO
 -- ============================================================
-
-
-
 
 -- ============================================================
 -- INSTRUÇÕES DE MIGRAÇÃO
