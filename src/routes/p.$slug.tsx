@@ -193,7 +193,7 @@ function BookingPage() {
                             className="w-full text-left card-elevated p-4 hover:border-accent transition-all hover:-translate-y-0.5 data-[selected]:border-accent data-[selected]:ring-2 data-[selected]:ring-accent/30"
                           >
                             <div className="flex items-start gap-3">
-                              {s.image_url && <img src={s.image_url} alt={s.name} className="h-16 w-16 rounded-lg object-cover shrink-0" />}
+                              {s.image_url && <img src={s.image_url} alt={s.name} className="h-16 w-16 rounded-lg object-cover shrink-0 aspect-square" />}
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2">
                                   {selected && <CheckCircle2 className="h-5 w-5 text-accent shrink-0" />}
@@ -227,7 +227,7 @@ function BookingPage() {
                             data-selected={selected || undefined}
                             className="w-full h-full text-left card-elevated p-4 hover:border-accent transition-all hover:-translate-y-0.5 flex flex-col gap-2 data-[selected]:border-accent data-[selected]:ring-2 data-[selected]:ring-accent/30"
                           >
-                            {s.image_url && <img src={s.image_url} alt={s.name} className="w-full h-28 rounded-lg object-cover" />}
+                            {s.image_url && <img src={s.image_url} alt={s.name} className="w-full aspect-square rounded-lg object-cover" />}
                             <div className="flex items-center gap-2">
                               {selected && <CheckCircle2 className="h-4 w-4 text-accent shrink-0" />}
                               <p className="font-semibold truncate">{s.name}</p>

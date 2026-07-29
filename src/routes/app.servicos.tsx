@@ -88,7 +88,7 @@ function Page() {
               {(services ?? []).map((s) => (
                 <div key={s.id} className="card-elevated p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div className="flex items-center gap-4 min-w-0">
-                    {s.image_url && <img src={s.image_url} alt={s.name} className="h-14 w-14 rounded-lg object-cover shrink-0" />}
+                    {s.image_url && <img src={s.image_url} alt={s.name} className="h-14 w-14 rounded-lg object-cover shrink-0 aspect-square" />}
                     <div className="min-w-0">
                       <p className="font-semibold truncate">{s.name}</p>
                       <p className="text-sm text-muted-foreground">{s.duration_minutes} min · {formatBRL(s.price_cents)}</p>
@@ -106,7 +106,7 @@ function Page() {
             <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
               {(services ?? []).map((s) => (
                 <div key={s.id} className="card-elevated p-4 flex flex-col gap-2">
-                  {s.image_url && <img src={s.image_url} alt={s.name} className="w-full h-32 rounded-lg object-cover" />}
+                  {s.image_url && <img src={s.image_url} alt={s.name} className="w-full aspect-square rounded-lg object-cover" />}
                   <p className="font-semibold truncate">{s.name}</p>
                   <p className="text-sm text-muted-foreground inline-flex items-center gap-1.5"><Clock className="h-3.5 w-3.5" /> {s.duration_minutes} min</p>
                   <p className="text-lg font-black tracking-tight">{formatBRL(s.price_cents)}</p>
