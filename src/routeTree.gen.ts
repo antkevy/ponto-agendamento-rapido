@@ -16,6 +16,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as PSlugRouteImport } from './routes/p.$slug'
 import { Route as AppServicosRouteImport } from './routes/app.servicos'
+import { Route as AppRelatorioRouteImport } from './routes/app.relatorio'
 import { Route as AppHorariosRouteImport } from './routes/app.horarios'
 import { Route as AppFuncionariosRouteImport } from './routes/app.funcionarios'
 import { Route as AppConfiguracoesRouteImport } from './routes/app.configuracoes'
@@ -57,6 +58,11 @@ const AppServicosRoute = AppServicosRouteImport.update({
   path: '/app/servicos',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppRelatorioRoute = AppRelatorioRouteImport.update({
+  id: '/app/relatorio',
+  path: '/app/relatorio',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppHorariosRoute = AppHorariosRouteImport.update({
   id: '/app/horarios',
   path: '/app/horarios',
@@ -93,6 +99,7 @@ export interface FileRoutesByFullPath {
   '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/funcionarios': typeof AppFuncionariosRoute
   '/app/horarios': typeof AppHorariosRoute
+  '/app/relatorio': typeof AppRelatorioRoute
   '/app/servicos': typeof AppServicosRoute
   '/p/$slug': typeof PSlugRoute
   '/app/': typeof AppIndexRoute
@@ -107,6 +114,7 @@ export interface FileRoutesByTo {
   '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/funcionarios': typeof AppFuncionariosRoute
   '/app/horarios': typeof AppHorariosRoute
+  '/app/relatorio': typeof AppRelatorioRoute
   '/app/servicos': typeof AppServicosRoute
   '/p/$slug': typeof PSlugRoute
   '/app': typeof AppIndexRoute
@@ -122,6 +130,7 @@ export interface FileRoutesById {
   '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/funcionarios': typeof AppFuncionariosRoute
   '/app/horarios': typeof AppHorariosRoute
+  '/app/relatorio': typeof AppRelatorioRoute
   '/app/servicos': typeof AppServicosRoute
   '/p/$slug': typeof PSlugRoute
   '/app/': typeof AppIndexRoute
@@ -138,6 +147,7 @@ export interface FileRouteTypes {
     | '/app/configuracoes'
     | '/app/funcionarios'
     | '/app/horarios'
+    | '/app/relatorio'
     | '/app/servicos'
     | '/p/$slug'
     | '/app/'
@@ -152,6 +162,7 @@ export interface FileRouteTypes {
     | '/app/configuracoes'
     | '/app/funcionarios'
     | '/app/horarios'
+    | '/app/relatorio'
     | '/app/servicos'
     | '/p/$slug'
     | '/app'
@@ -166,6 +177,7 @@ export interface FileRouteTypes {
     | '/app/configuracoes'
     | '/app/funcionarios'
     | '/app/horarios'
+    | '/app/relatorio'
     | '/app/servicos'
     | '/p/$slug'
     | '/app/'
@@ -181,6 +193,7 @@ export interface RootRouteChildren {
   AppConfiguracoesRoute: typeof AppConfiguracoesRoute
   AppFuncionariosRoute: typeof AppFuncionariosRoute
   AppHorariosRoute: typeof AppHorariosRoute
+  AppRelatorioRoute: typeof AppRelatorioRoute
   AppServicosRoute: typeof AppServicosRoute
   PSlugRoute: typeof PSlugRoute
   AppIndexRoute: typeof AppIndexRoute
@@ -237,6 +250,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppServicosRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app/relatorio': {
+      id: '/app/relatorio'
+      path: '/app/relatorio'
+      fullPath: '/app/relatorio'
+      preLoaderRoute: typeof AppRelatorioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/app/horarios': {
       id: '/app/horarios'
       path: '/app/horarios'
@@ -285,6 +305,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppConfiguracoesRoute: AppConfiguracoesRoute,
   AppFuncionariosRoute: AppFuncionariosRoute,
   AppHorariosRoute: AppHorariosRoute,
+  AppRelatorioRoute: AppRelatorioRoute,
   AppServicosRoute: AppServicosRoute,
   PSlugRoute: PSlugRoute,
   AppIndexRoute: AppIndexRoute,
@@ -292,3 +313,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
