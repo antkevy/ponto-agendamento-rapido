@@ -79,6 +79,7 @@ CREATE TABLE IF NOT EXISTS public.agendamentos (
   professional_id UUID NOT NULL REFERENCES public.profissionais(id) ON DELETE CASCADE,
   service_id UUID NOT NULL REFERENCES public.servicos(id) ON DELETE RESTRICT,
   employee_id UUID,
+  client_id UUID REFERENCES public.clientes(id) ON DELETE SET NULL,
   starts_at TIMESTAMPTZ NOT NULL,
   ends_at TIMESTAMPTZ NOT NULL,
   client_name TEXT NOT NULL,
@@ -132,6 +133,19 @@ CREATE TABLE IF NOT EXISTS public.bloqueios_funcionario (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- 3.10 Clientes
+CREATE TABLE IF NOT EXISTS public.clientes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  professional_id UUID NOT NULL REFERENCES public.profissionais(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  phone TEXT NOT NULL,
+  email TEXT,
+  notes TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (professional_id, phone)
+);
+
 -- ********** 4. ÍNDICES ********** --
 CREATE INDEX IF NOT EXISTS idx_profissionais_slug ON public.profissionais(slug);
 CREATE INDEX IF NOT EXISTS idx_servicos_profissional ON public.servicos(professional_id);
@@ -145,6 +159,9 @@ CREATE INDEX IF NOT EXISTS idx_servicos_funcionario_servico ON public.servicos_f
 CREATE INDEX IF NOT EXISTS idx_disponibilidade_funcionario_funcionario ON public.disponibilidade_funcionario(employee_id);
 CREATE INDEX IF NOT EXISTS idx_bloqueios_funcionario_funcionario ON public.bloqueios_funcionario(employee_id);
 CREATE INDEX IF NOT EXISTS idx_agendamentos_funcionario ON public.agendamentos(employee_id);
+CREATE INDEX IF NOT EXISTS idx_clientes_profissional ON public.clientes(professional_id);
+CREATE INDEX IF NOT EXISTS idx_clientes_telefone ON public.clientes(phone);
+CREATE INDEX IF NOT EXISTS idx_agendamentos_cliente ON public.agendamentos(client_id);
 
 -- Exclusion constraint: prevent overlapping confirmed appointments
 CREATE EXTENSION IF NOT EXISTS btree_gist;
@@ -291,6 +308,9 @@ GRANT ALL                              ON public.disponibilidade_funcionario TO 
 GRANT SELECT                           ON public.bloqueios_funcionario TO anon;
 GRANT SELECT, INSERT, UPDATE, DELETE   ON public.bloqueios_funcionario TO authenticated;
 GRANT ALL                              ON public.bloqueios_funcionario TO service_role;
+
+GRANT SELECT, INSERT, UPDATE, DELETE   ON public.clientes TO authenticated;
+GRANT ALL                              ON public.clientes TO service_role;
 
 -- RPCs
 GRANT EXECUTE ON FUNCTION public.get_busy_slots(UUID, TIMESTAMPTZ, TIMESTAMPTZ)                TO anon, authenticated;
@@ -454,6 +474,14 @@ CREATE POLICY "owner manage bloqueios_funcionario" ON public.bloqueios_funcionar
     JOIN public.profissionais p ON p.id = e.professional_id
     WHERE e.id = bloqueios_funcionario.employee_id AND p.user_id = auth.uid()
   ));
+
+-- 8.10 Clientes
+ALTER TABLE public.clientes ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "owner manage clientes" ON public.clientes;
+CREATE POLICY "owner manage clientes" ON public.clientes
+  FOR ALL TO authenticated
+  USING (EXISTS (SELECT 1 FROM public.profissionais p WHERE p.id = clientes.professional_id AND p.user_id = auth.uid()))
+  WITH CHECK (EXISTS (SELECT 1 FROM public.profissionais p WHERE p.id = clientes.professional_id AND p.user_id = auth.uid()));
 
 -- ********** 9. STORAGE POLICIES (brand-assets) ********** --
 DROP POLICY IF EXISTS "brand-assets public read" ON storage.objects;

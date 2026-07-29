@@ -16,6 +16,7 @@ import { Route as MeusAgendamentosRouteImport } from './routes/meus-agendamentos
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppAgendamentosRouteImport } from './routes/app.agendamentos'
 import { Route as AppBloqueiosRouteImport } from './routes/app.bloqueios'
+import { Route as AppClientesRouteImport } from './routes/app.clientes'
 import { Route as AppConfiguracoesRouteImport } from './routes/app.configuracoes'
 import { Route as AppFuncionariosRouteImport } from './routes/app.funcionarios'
 import { Route as AppHorariosRouteImport } from './routes/app.horarios'
@@ -58,6 +59,11 @@ const AppBloqueiosRoute = AppBloqueiosRouteImport.update({
   path: '/app/bloqueios',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppClientesRoute = AppClientesRouteImport.update({
+  id: '/app/clientes',
+  path: '/app/clientes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppConfiguracoesRoute = AppConfiguracoesRouteImport.update({
   id: '/app/configuracoes',
   path: '/app/configuracoes',
@@ -96,6 +102,7 @@ export interface FileRoutesByFullPath {
   '/meus-agendamentos': typeof MeusAgendamentosRoute
   '/app/agendamentos': typeof AppAgendamentosRoute
   '/app/bloqueios': typeof AppBloqueiosRoute
+  '/app/clientes': typeof AppClientesRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/funcionarios': typeof AppFuncionariosRoute
   '/app/horarios': typeof AppHorariosRoute
@@ -111,6 +118,7 @@ export interface FileRoutesByTo {
   '/meus-agendamentos': typeof MeusAgendamentosRoute
   '/app/agendamentos': typeof AppAgendamentosRoute
   '/app/bloqueios': typeof AppBloqueiosRoute
+  '/app/clientes': typeof AppClientesRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/funcionarios': typeof AppFuncionariosRoute
   '/app/horarios': typeof AppHorariosRoute
@@ -127,6 +135,7 @@ export interface FileRoutesById {
   '/meus-agendamentos': typeof MeusAgendamentosRoute
   '/app/agendamentos': typeof AppAgendamentosRoute
   '/app/bloqueios': typeof AppBloqueiosRoute
+  '/app/clientes': typeof AppClientesRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/funcionarios': typeof AppFuncionariosRoute
   '/app/horarios': typeof AppHorariosRoute
@@ -144,6 +153,7 @@ export interface FileRouteTypes {
     | '/meus-agendamentos'
     | '/app/agendamentos'
     | '/app/bloqueios'
+    | '/app/clientes'
     | '/app/configuracoes'
     | '/app/funcionarios'
     | '/app/horarios'
@@ -159,6 +169,7 @@ export interface FileRouteTypes {
     | '/meus-agendamentos'
     | '/app/agendamentos'
     | '/app/bloqueios'
+    | '/app/clientes'
     | '/app/configuracoes'
     | '/app/funcionarios'
     | '/app/horarios'
@@ -174,6 +185,7 @@ export interface FileRouteTypes {
     | '/meus-agendamentos'
     | '/app/agendamentos'
     | '/app/bloqueios'
+    | '/app/clientes'
     | '/app/configuracoes'
     | '/app/funcionarios'
     | '/app/horarios'
@@ -190,6 +202,7 @@ export interface RootRouteChildren {
   MeusAgendamentosRoute: typeof MeusAgendamentosRoute
   AppAgendamentosRoute: typeof AppAgendamentosRoute
   AppBloqueiosRoute: typeof AppBloqueiosRoute
+  AppClientesRoute: typeof AppClientesRoute
   AppConfiguracoesRoute: typeof AppConfiguracoesRoute
   AppFuncionariosRoute: typeof AppFuncionariosRoute
   AppHorariosRoute: typeof AppHorariosRoute
@@ -250,6 +263,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppBloqueiosRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app/clientes': {
+      id: '/app/clientes'
+      path: '/app/clientes'
+      fullPath: '/app/clientes'
+      preLoaderRoute: typeof AppClientesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/app/configuracoes': {
       id: '/app/configuracoes'
       path: '/app/configuracoes'
@@ -302,6 +322,7 @@ const rootRouteChildren: RootRouteChildren = {
   MeusAgendamentosRoute: MeusAgendamentosRoute,
   AppAgendamentosRoute: AppAgendamentosRoute,
   AppBloqueiosRoute: AppBloqueiosRoute,
+  AppClientesRoute: AppClientesRoute,
   AppConfiguracoesRoute: AppConfiguracoesRoute,
   AppFuncionariosRoute: AppFuncionariosRoute,
   AppHorariosRoute: AppHorariosRoute,
