@@ -329,7 +329,7 @@ function BookingPage() {
         {detailService && (
           <div className="fixed inset-0 z-50 bg-foreground/40 grid place-items-center p-4 animate-fade-in-up" onClick={() => setDetailService(null)}>
             <div className="bg-background w-full max-w-sm rounded-2xl overflow-hidden shadow-2xl" onClick={(e) => e.stopPropagation()}>
-              {detailService.image_url && <img src={detailService.image_url} alt={detailService.name} className="w-full h-52 object-cover" />}
+              {detailService.image_url && <img src={detailService.image_url} alt={detailService.name} className="w-full aspect-square object-cover" />}
               <div className="p-5 space-y-3">
                 <div className="flex items-start justify-between gap-3">
                   <h3 className="text-xl font-bold tracking-tight">{detailService.name}</h3>

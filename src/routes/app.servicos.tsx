@@ -170,7 +170,7 @@ function ServiceForm({ initial, onSubmit, saving }: { initial: Partial<Service>;
             <Upload className="h-4 w-4" /> Escolher foto
           </button>
         )}
-        <p className="text-xs text-muted-foreground mt-1">Recomendado: 600×400 px (3:2)</p>
+        <p className="text-xs text-muted-foreground mt-1">Recomendado: 600×600 px</p>
         <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
       </div>
 
