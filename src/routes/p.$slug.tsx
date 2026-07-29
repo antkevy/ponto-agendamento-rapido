@@ -16,7 +16,7 @@ import {
 } from "@/lib/booking";
 import { PhoneInput } from "@/components/phone-input";
 import { isValidPhoneBR } from "@/lib/phone";
-import { CheckCircle2, ChevronLeft, ChevronRight, MapPin, Clock, ArrowLeft, User, X, MessageCircle } from "lucide-react";
+import { CheckCircle2, ChevronLeft, ChevronRight, MapPin, Clock, ArrowLeft, User, X, MessageCircle, Gem } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ViewToggle, type ViewMode } from "@/components/view-toggle";
 
@@ -45,19 +45,33 @@ export const Route = createFileRoute("/p/$slug")({
 type Service = { id: string; name: string; duration_minutes: number; price_cents: number; description: string | null; image_url: string | null; is_active: boolean };
 type Employee = { id: string; name: string; photo_url: string | null; is_active: boolean };
 
-type Step = "service" | "employee" | "when" | "form" | "done";
+type Step = "landing" | "service" | "employee" | "when" | "form" | "done";
 
 function BookingPage() {
   const { pro } = Route.useLoaderData();
   const brand = pro.brand_color || "#0284C7";
 
-  const [step, setStep] = useState<Step>("service");
+  const [step, setStep] = useState<Step>("landing");
   const [selectedServices, setSelectedServices] = useState<Service[]>([]);
   const [serviceView, setServiceView] = useState<ViewMode>("list");
   const [detailService, setDetailService] = useState<Service | null>(null);
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [when, setWhen] = useState<Date | null>(null);
   const [confirmedId, setConfirmedId] = useState<string | null>(null);
+
+  const { data: planos, isLoading: loadingPlanos } = useQuery({
+    queryKey: ["public-planos", pro.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from(db.planos)
+        .select("*")
+        .eq("professional_id", pro.id)
+        .eq("is_active", true)
+        .order("price_cents");
+      if (error) throw error;
+      return data as Array<{ id: string; name: string; description: string | null; price_cents: number; image_url: string | null }>;
+    },
+  });
 
   const { data: services, isLoading: loadingServices } = useQuery({
     queryKey: ["public-services", pro.id],
@@ -124,7 +138,8 @@ function BookingPage() {
     if (step === "form") setStep("when");
     else if (step === "when") setStep(hasAnyEmployees ? "employee" : "service");
     else if (step === "employee") setStep("service");
-    else if (step === "done") { setSelectedServices([]); setEmployee(null); setWhen(null); setConfirmedId(null); setStep("service"); }
+    else if (step === "service") setStep("landing");
+    else if (step === "done") { setSelectedServices([]); setEmployee(null); setWhen(null); setConfirmedId(null); setStep("landing"); }
   }
 
   return (
@@ -164,10 +179,44 @@ function BookingPage() {
 
 
       <main className="max-w-2xl mx-auto px-4 py-6 sm:py-8">
-        {step !== "service" && step !== "done" && (
+        {step !== "landing" && step !== "service" && step !== "done" && (
           <button onClick={goBack} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4">
             <ArrowLeft className="h-4 w-4" /> Voltar
           </button>
+        )}
+
+        {step === "landing" && (
+          <section className="animate-fade-in-up space-y-8">
+            {pro.description && (
+              <div className="card-elevated p-6 text-center">
+                <p className="text-lg text-muted-foreground leading-relaxed">{pro.description}</p>
+              </div>
+            )}
+
+            {loadingPlanos ? (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{[0, 1].map((i) => <div key={i} className="skeleton h-48" />)}</div>
+            ) : planos && planos.length > 0 ? (
+              <div>
+                <h2 className="text-xl font-bold tracking-tight text-foreground mb-4 flex items-center gap-2"><Gem className="h-5 w-5" /> Nossos planos</h2>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {planos.map((p) => (
+                    <div key={p.id} className="card-elevated p-5 flex flex-col gap-3 hover:-translate-y-0.5 transition-all">
+                      {p.image_url && <img src={p.image_url} alt={p.name} className="w-full aspect-video rounded-lg object-cover" />}
+                      <p className="font-semibold text-lg">{p.name}</p>
+                      <p className="text-2xl font-black tracking-tight" style={{ color: brand }}>{formatBRL(p.price_cents)}</p>
+                      {p.description && <p className="text-sm text-muted-foreground leading-relaxed">{p.description}</p>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            <div className="text-center pb-4">
+              <button onClick={() => setStep("service")} className="btn-gradient text-lg px-10 py-4 inline-flex items-center gap-2">
+                Agendar serviço <ArrowLeft className="h-5 w-5 rotate-180" />
+              </button>
+            </div>
+          </section>
         )}
 
         {step === "service" && (
