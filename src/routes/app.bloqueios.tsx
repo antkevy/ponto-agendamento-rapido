@@ -6,6 +6,7 @@ import { AppShell } from "@/components/app-shell";
 import { OnboardingCard } from "@/components/onboarding-card";
 import { useMyProfessional } from "@/hooks/use-my-professional";
 import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/lib/db-tables";
 import { Plus, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/app/bloqueios")({
@@ -24,7 +25,7 @@ function Page() {
     queryKey: ["blocks", pro?.id],
     enabled: !!pro?.id,
     queryFn: async () => {
-      const { data, error } = await supabase.from("blocks").select("*").eq("professional_id", pro!.id).order("starts_at");
+      const { data, error } = await supabase.from(db.bloqueios).select("*").eq("professional_id", pro!.id).order("starts_at");
       if (error) throw error;
       return data as Block[];
     },
@@ -32,7 +33,7 @@ function Page() {
 
   const add = useMutation({
     mutationFn: async (v: { starts_at: string; ends_at: string; reason: string | null }) => {
-      const { error } = await supabase.from("blocks").insert({ professional_id: pro!.id, ...v });
+      const { error } = await supabase.from(db.bloqueios).insert({ professional_id: pro!.id, ...v });
       if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["blocks"] }); setShowForm(false); toast.success("Bloqueio adicionado."); },
@@ -40,7 +41,7 @@ function Page() {
   });
 
   const remove = useMutation({
-    mutationFn: async (id: string) => { const { error } = await supabase.from("blocks").delete().eq("id", id); if (error) throw error; },
+    mutationFn: async (id: string) => { const { error } = await supabase.from(db.bloqueios).delete().eq("id", id); if (error) throw error; },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["blocks"] }),
   });
 

@@ -6,6 +6,7 @@ import { AppShell } from "@/components/app-shell";
 import { OnboardingCard } from "@/components/onboarding-card";
 import { useMyProfessional } from "@/hooks/use-my-professional";
 import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/lib/db-tables";
 import { formatBRL } from "@/lib/booking";
 
 export const Route = createFileRoute("/app/relatorio")({
@@ -49,9 +50,9 @@ function Page() {
           .eq("professional_id", proId)
           .gte("starts_at", monthStart.toISOString())
           .lt("starts_at", monthEnd.toISOString()),
-        supabase.from("employees").select("id, name, photo_url").eq("professional_id", proId).eq("is_active", true),
-        supabase.from("employee_services").select("employee_id, service_id"),
-        supabase.from("services").select("id, name").eq("professional_id", proId),
+        supabase.from(db.funcionarios).select("id, name, photo_url").eq("professional_id", proId).eq("is_active", true),
+        supabase.from(db.servicosFuncionario).select("employee_id, service_id"),
+        supabase.from(db.servicos).select("id, name").eq("professional_id", proId),
       ]);
 
       return { appts: appts.data ?? [], employees: employeesR.data ?? [], empServices: empServices.data ?? [], services: services.data ?? [] };

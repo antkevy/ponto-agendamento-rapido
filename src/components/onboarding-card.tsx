@@ -2,6 +2,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/lib/db-tables";
 import { useAuth } from "@/hooks/use-auth";
 import { slugify } from "@/lib/booking";
 
@@ -19,7 +20,7 @@ export function OnboardingCard() {
       const baseSlug = slugify(businessName) || "meu-negocio";
       let slug = baseSlug;
       for (let i = 0; i < 8; i++) {
-        const { error } = await supabase.from("professionals").insert({
+        const { error } = await supabase.from(db.profissionais).insert({
           user_id: user.id,
           slug,
           business_name: businessName.trim(),

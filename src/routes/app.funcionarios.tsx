@@ -6,6 +6,7 @@ import { AppShell } from "@/components/app-shell";
 import { OnboardingCard } from "@/components/onboarding-card";
 import { useMyProfessional } from "@/hooks/use-my-professional";
 import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/lib/db-tables";
 import { WEEKDAYS_PT } from "@/lib/booking";
 import { Modal } from "@/routes/app.servicos";
 import { ImageUpload } from "@/components/image-upload";
@@ -47,7 +48,7 @@ function Page() {
 
   const create = useMutation({
     mutationFn: async (v: { name: string; photo_url: string | null }) => {
-      const { error } = await supabase.from("employees").insert({ professional_id: pro!.id, name: v.name, photo_url: v.photo_url });
+      const { error } = await supabase.from(db.funcionarios).insert({ professional_id: pro!.id, name: v.name, photo_url: v.photo_url });
       if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["employees"] }); setCreating(false); toast.success("Funcionário adicionado."); },
@@ -56,7 +57,7 @@ function Page() {
 
   const toggle = useMutation({
     mutationFn: async (e: Employee) => {
-      const { error } = await supabase.from("employees").update({ is_active: !e.is_active }).eq("id", e.id);
+      const { error } = await supabase.from(db.funcionarios).update({ is_active: !e.is_active }).eq("id", e.id);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["employees"] }),
@@ -65,7 +66,7 @@ function Page() {
 
   const remove = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("employees").delete().eq("id", id);
+      const { error } = await supabase.from(db.funcionarios).delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["employees"] }); toast.success("Removido."); },
@@ -210,7 +211,7 @@ function DataTab({ employee, onSaved }: { employee: Employee; onSaved: () => voi
   const [photo, setPhoto] = useState(employee.photo_url ?? "");
   const save = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("employees").update({ name: name.trim(), photo_url: photo.trim() || null }).eq("id", employee.id);
+      const { error } = await supabase.from(db.funcionarios).update({ name: name.trim(), photo_url: photo.trim() || null }).eq("id", employee.id);
       if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["employees"] }); toast.success("Salvo!"); onSaved(); },
@@ -234,7 +235,7 @@ function ServicesTab({ employee }: { employee: Employee }) {
     queryKey: ["services-for-emp", pro?.id],
     enabled: !!pro?.id,
     queryFn: async () => {
-      const { data, error } = await supabase.from("services").select("id, name").eq("professional_id", pro!.id).eq("is_active", true).order("name");
+      const { data, error } = await supabase.from(db.servicos).select("id, name").eq("professional_id", pro!.id).eq("is_active", true).order("name");
       if (error) throw error;
       return data as Service[];
     },
@@ -242,7 +243,7 @@ function ServicesTab({ employee }: { employee: Employee }) {
   const { data: linked } = useQuery({
     queryKey: ["employee-services", employee.id],
     queryFn: async () => {
-      const { data, error } = await supabase.from("employee_services").select("service_id").eq("employee_id", employee.id);
+      const { data, error } = await supabase.from(db.servicosFuncionario).select("service_id").eq("employee_id", employee.id);
       if (error) throw error;
       return new Set((data ?? []).map((r: { service_id: string }) => r.service_id));
     },
@@ -251,10 +252,10 @@ function ServicesTab({ employee }: { employee: Employee }) {
   const toggle = useMutation({
     mutationFn: async ({ serviceId, checked }: { serviceId: string; checked: boolean }) => {
       if (checked) {
-        const { error } = await supabase.from("employee_services").insert({ employee_id: employee.id, service_id: serviceId });
+        const { error } = await supabase.from(db.servicosFuncionario).insert({ employee_id: employee.id, service_id: serviceId });
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("employee_services").delete().eq("employee_id", employee.id).eq("service_id", serviceId);
+        const { error } = await supabase.from(db.servicosFuncionario).delete().eq("employee_id", employee.id).eq("service_id", serviceId);
         if (error) throw error;
       }
     },
@@ -308,14 +309,14 @@ function HoursTab({ employee }: { employee: Employee }) {
 
   const add = useMutation({
     mutationFn: async (v: { weekday: number; start_time: string; end_time: string }) => {
-      const { error } = await supabase.from("employee_availability").insert({ employee_id: employee.id, ...v });
+      const { error } = await supabase.from(db.disponibilidadeFuncionario).insert({ employee_id: employee.id, ...v });
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["employee-availability", employee.id] }),
     onError: (e: Error) => toast.error(e.message),
   });
   const remove = useMutation({
-    mutationFn: async (id: string) => { const { error } = await supabase.from("employee_availability").delete().eq("id", id); if (error) throw error; },
+    mutationFn: async (id: string) => { const { error } = await supabase.from(db.disponibilidadeFuncionario).delete().eq("id", id); if (error) throw error; },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["employee-availability", employee.id] }),
   });
 
@@ -385,7 +386,7 @@ function BlocksTab({ employee }: { employee: Employee }) {
   const add = useMutation({
     mutationFn: async () => {
       if (!start || !end) throw new Error("Preencha início e fim.");
-      const { error } = await supabase.from("employee_blocks").insert({
+      const { error } = await supabase.from(db.bloqueiosFuncionario).insert({
         employee_id: employee.id,
         starts_at: new Date(start).toISOString(),
         ends_at: new Date(end).toISOString(),
@@ -397,7 +398,7 @@ function BlocksTab({ employee }: { employee: Employee }) {
     onError: (e: Error) => toast.error(e.message),
   });
   const remove = useMutation({
-    mutationFn: async (id: string) => { const { error } = await supabase.from("employee_blocks").delete().eq("id", id); if (error) throw error; },
+    mutationFn: async (id: string) => { const { error } = await supabase.from(db.bloqueiosFuncionario).delete().eq("id", id); if (error) throw error; },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["employee-blocks", employee.id] }),
   });
 

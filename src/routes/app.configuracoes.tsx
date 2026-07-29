@@ -6,6 +6,7 @@ import { AppShell } from "@/components/app-shell";
 import { OnboardingCard } from "@/components/onboarding-card";
 import { useMyProfessional } from "@/hooks/use-my-professional";
 import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/lib/db-tables";
 import { slugify } from "@/lib/booking";
 import { PhoneInput } from "@/components/phone-input";
 import { isValidPhoneBR, onlyDigits } from "@/lib/phone";
@@ -44,7 +45,7 @@ function Page() {
       const lat = form.lat ? parseFloat(form.lat) : null;
       const lng = form.lng ? parseFloat(form.lng) : null;
       if ((lat && !lng) || (!lat && lng)) throw new Error("Preencha latitude e longitude, ou deixe ambos vazios.");
-      const { error } = await supabase.from("professionals").update({
+      const { error } = await supabase.from(db.profissionais).update({
         business_name: form.business_name.trim(),
         slug,
         description: form.description || null,

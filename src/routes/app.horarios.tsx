@@ -5,6 +5,7 @@ import { AppShell } from "@/components/app-shell";
 import { OnboardingCard } from "@/components/onboarding-card";
 import { useMyProfessional } from "@/hooks/use-my-professional";
 import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/lib/db-tables";
 import { WEEKDAYS_PT } from "@/lib/booking";
 import { Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
@@ -24,7 +25,7 @@ function Page() {
     queryKey: ["availability", pro?.id],
     enabled: !!pro?.id,
     queryFn: async () => {
-      const { data, error } = await supabase.from("availability").select("*").eq("professional_id", pro!.id).order("weekday").order("start_time");
+      const { data, error } = await supabase.from(db.horarios).select("*").eq("professional_id", pro!.id).order("weekday").order("start_time");
       if (error) throw error;
       return data as Row[];
     },
@@ -32,7 +33,7 @@ function Page() {
 
   const add = useMutation({
     mutationFn: async (v: { weekday: number; start_time: string; end_time: string }) => {
-      const { error } = await supabase.from("availability").insert({ professional_id: pro!.id, ...v });
+      const { error } = await supabase.from(db.horarios).insert({ professional_id: pro!.id, ...v });
       if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["availability"] }); toast.success("Horário adicionado."); },
@@ -40,7 +41,7 @@ function Page() {
   });
 
   const remove = useMutation({
-    mutationFn: async (id: string) => { const { error } = await supabase.from("availability").delete().eq("id", id); if (error) throw error; },
+    mutationFn: async (id: string) => { const { error } = await supabase.from(db.horarios).delete().eq("id", id); if (error) throw error; },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["availability"] }),
   });
 

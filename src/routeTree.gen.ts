@@ -14,10 +14,8 @@ import { Route as CadastrarRouteImport } from './routes/cadastrar'
 import { Route as EntrarRouteImport } from './routes/entrar'
 import { Route as MeusAgendamentosRouteImport } from './routes/meus-agendamentos'
 import { Route as AppIndexRouteImport } from './routes/app.index'
-import { Route as PSlugRouteImport } from './routes/p.$slug'
-import { Route as AppServicosRouteImport } from './routes/app.servicos'
-import { Route as AppHorariosRouteImport } from './routes/app.horarios'
-import { Route as AppFuncionariosRouteImport } from './routes/app.funcionarios'
+import { Route as AppAgendamentosRouteImport } from './routes/app.agendamentos'
+import { Route as AppBloqueiosRouteImport } from './routes/app.bloqueios'
 import { Route as AppConfiguracoesRouteImport } from './routes/app.configuracoes'
 import { Route as AppFuncionariosRouteImport } from './routes/app.funcionarios'
 import { Route as AppHorariosRouteImport } from './routes/app.horarios'
@@ -60,9 +58,9 @@ const AppBloqueiosRoute = AppBloqueiosRouteImport.update({
   path: '/app/bloqueios',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AppHorariosRoute = AppHorariosRouteImport.update({
-  id: '/app/horarios',
-  path: '/app/horarios',
+const AppConfiguracoesRoute = AppConfiguracoesRouteImport.update({
+  id: '/app/configuracoes',
+  path: '/app/configuracoes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppFuncionariosRoute = AppFuncionariosRouteImport.update({
@@ -252,11 +250,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppBloqueiosRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/app/horarios': {
-      id: '/app/horarios'
-      path: '/app/horarios'
-      fullPath: '/app/horarios'
-      preLoaderRoute: typeof AppHorariosRouteImport
+    '/app/configuracoes': {
+      id: '/app/configuracoes'
+      path: '/app/configuracoes'
+      fullPath: '/app/configuracoes'
+      preLoaderRoute: typeof AppConfiguracoesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app/funcionarios': {
@@ -315,3 +313,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

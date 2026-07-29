@@ -6,6 +6,7 @@ import { AppShell } from "@/components/app-shell";
 import { OnboardingCard } from "@/components/onboarding-card";
 import { useMyProfessional } from "@/hooks/use-my-professional";
 import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/lib/db-tables";
 import { formatBRL } from "@/lib/booking";
 import { ViewToggle, type ViewMode } from "@/components/view-toggle";
 import { Pencil, Trash2, Plus, Clock, Upload, X } from "lucide-react";
@@ -29,7 +30,7 @@ function Page() {
     queryKey: ["services", pro?.id],
     enabled: !!pro?.id,
     queryFn: async () => {
-      const { data, error } = await supabase.from("services").select("*").eq("professional_id", pro!.id).order("created_at");
+      const { data, error } = await supabase.from(db.servicos).select("*").eq("professional_id", pro!.id).order("created_at");
       if (error) throw error;
       return data as Service[];
     },
@@ -55,10 +56,10 @@ function Page() {
         image_url = signed.signedUrl;
       }
       if (s.id) {
-        const { error } = await supabase.from("services").update({ name: s.name!, duration_minutes: s.duration_minutes!, price_cents: s.price_cents ?? 0, description: s.description ?? null, image_url, is_active: s.is_active ?? true }).eq("id", s.id);
+        const { error } = await supabase.from(db.servicos).update({ name: s.name!, duration_minutes: s.duration_minutes!, price_cents: s.price_cents ?? 0, description: s.description ?? null, image_url, is_active: s.is_active ?? true }).eq("id", s.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("services").insert({ id: serviceId, professional_id: pro.id, name: s.name!, duration_minutes: s.duration_minutes!, price_cents: s.price_cents ?? 0, description: s.description ?? null, image_url });
+        const { error } = await supabase.from(db.servicos).insert({ id: serviceId, professional_id: pro.id, name: s.name!, duration_minutes: s.duration_minutes!, price_cents: s.price_cents ?? 0, description: s.description ?? null, image_url });
         if (error) throw error;
       }
     },
@@ -67,7 +68,7 @@ function Page() {
   });
 
   const remove = useMutation({
-    mutationFn: async (id: string) => { const { error } = await supabase.from("services").delete().eq("id", id); if (error) throw error; },
+    mutationFn: async (id: string) => { const { error } = await supabase.from(db.servicos).delete().eq("id", id); if (error) throw error; },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["services"] }); toast.success("Removido."); },
     onError: (e: Error) => toast.error(e.message),
   });

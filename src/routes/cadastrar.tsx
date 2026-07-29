@@ -2,6 +2,7 @@ import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/lib/db-tables";
 import { AuthLayout, Field } from "./entrar";
 import { slugify } from "@/lib/booking";
 
@@ -40,7 +41,7 @@ function SignUp() {
       const baseSlug = slugify(businessName) || "meu-negocio";
       let slug = baseSlug;
       for (let i = 0; i < 8; i++) {
-        const { error: insErr } = await supabase.from("professionals").insert({
+        const { error: insErr } = await supabase.from(db.profissionais).insert({
           user_id: user.id,
           slug,
           business_name: businessName.trim(),

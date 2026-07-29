@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/lib/db-tables";
 import {
   computeSlots,
   formatBRL,
@@ -21,7 +22,7 @@ import { ViewToggle, type ViewMode } from "@/components/view-toggle";
 
 export const Route = createFileRoute("/p/$slug")({
   loader: async ({ params }) => {
-    const { data: pro, error } = await supabase.from("professionals").select("*").eq("slug", params.slug).maybeSingle();
+    const { data: pro, error } = await supabase.from(db.profissionais).select("*").eq("slug", params.slug).maybeSingle();
     if (error) throw error;
     if (!pro) throw notFound();
     return { pro };
@@ -384,7 +385,7 @@ function WhenStep({ pro, selectedServices, employee, onPick, brand }: { pro: { i
   const { data: proAvail } = useQuery({
     queryKey: ["public-avail", pro.id],
     queryFn: async () => {
-      const { data, error } = await supabase.from("availability").select("*").eq("professional_id", pro.id);
+      const { data, error } = await supabase.from(db.horarios).select("*").eq("professional_id", pro.id);
       if (error) throw error;
       return data as AvailabilityRow[];
     },

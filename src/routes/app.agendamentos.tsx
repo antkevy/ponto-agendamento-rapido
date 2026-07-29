@@ -6,6 +6,7 @@ import { AppShell } from "@/components/app-shell";
 import { OnboardingCard } from "@/components/onboarding-card";
 import { useMyProfessional } from "@/hooks/use-my-professional";
 import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/lib/db-tables";
 import { formatBRL } from "@/lib/booking";
 import { X, CheckCheck, Search, CalendarClock, Phone, Mail, MessageSquare } from "lucide-react";
 import { displayPhoneBR } from "@/lib/phone";
@@ -65,7 +66,7 @@ function Page() {
       else if (range === "month") end.setMonth(end.getMonth() + 1);
       else end.setFullYear(end.getFullYear() + 5);
 
-      let q = supabase.from("appointments").select("*").eq("professional_id", pro!.id).gte("starts_at", start.toISOString()).lt("starts_at", end.toISOString()).order("starts_at");
+      let q = supabase.from(db.agendamentos).select("*").eq("professional_id", pro!.id).gte("starts_at", start.toISOString()).lt("starts_at", end.toISOString()).order("starts_at");
       if (status !== "all") q = q.eq("status", status);
       const { data, error } = await q;
       if (error) throw error;
@@ -87,7 +88,7 @@ function Page() {
 
   const update = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: Appt["status"] }) => {
-      const { error } = await supabase.from("appointments").update({ status }).eq("id", id);
+      const { error } = await supabase.from(db.agendamentos).update({ status }).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["appointments"] }); qc.invalidateQueries({ queryKey: ["dashboard-stats"] }); },
