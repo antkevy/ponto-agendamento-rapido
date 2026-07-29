@@ -11,7 +11,7 @@ import { formatBRL, formatLongDate, formatTime } from "@/lib/booking";
 import { isValidPhoneBR, displayPhoneBR, onlyDigits } from "@/lib/phone";
 import { PhoneInput } from "@/components/phone-input";
 import { ViewToggle, type ViewMode } from "@/components/view-toggle";
-import { Plus, Pencil, Trash2, Search, Phone, Mail, Calendar, DollarSign, X } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Phone, Mail, Calendar, ChevronDown, X } from "lucide-react";
 
 export const Route = createFileRoute("/app/clientes")({
   head: () => ({ meta: [{ title: "Clientes — Agendaí" }] }),
@@ -44,6 +44,7 @@ function Page() {
   const [editing, setEditing] = useState<Cliente | null>(null);
   const [creating, setCreating] = useState(false);
   const [selected, setSelected] = useState<Cliente | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const { data: clientes } = useQuery({
     queryKey: ["clientes", pro?.id],
@@ -116,7 +117,7 @@ function Page() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por nome ou telefone..." className="w-full min-h-[44px] pl-10 pr-4 py-2 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-ring" />
             </div>
-            <ViewToggle view={view} onChange={setView} />
+            <span className="max-sm:hidden"><ViewToggle view={view} onChange={setView} /></span>
             <button onClick={() => setCreating(true)} className="btn-brand inline-flex items-center gap-2"><Plus className="h-4 w-4" /> Novo cliente</button>
           </div>
 
@@ -189,18 +190,35 @@ function Page() {
             </div>
           ) : (
             <div className="space-y-2">
-              {filtered.map((c) => (
-                <div key={c.id} onClick={() => setSelected(c)} className={`card-elevated p-4 cursor-pointer transition flex items-center justify-between gap-3 group ${selected?.id === c.id ? "ring-2 ring-primary" : ""}`}>
-                  <div className="min-w-0">
-                    <p className="font-medium truncate">{c.name}</p>
-                    <p className="text-sm text-muted-foreground">{displayPhoneBR(c.phone)}</p>
+              {filtered.map((c) => {
+                const isExpanded = expandedId === c.id;
+                return (
+                  <div key={c.id} className={`card-elevated p-4 transition ${selected?.id === c.id ? "ring-2 ring-primary" : ""}`}>
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0 flex-1" onClick={() => setSelected(c)}>
+                        <p className="font-medium truncate cursor-pointer">{c.name}</p>
+                        <p className="text-sm text-muted-foreground">{displayPhoneBR(c.phone)}</p>
+                      </div>
+                      <div className="flex gap-1 shrink-0">
+                        <button onClick={() => setExpandedId(isExpanded ? null : c.id)} className="btn-outline-brand inline-flex items-center gap-1 !py-1.5 text-xs sm:text-sm">
+                          <ChevronDown className={`h-4 w-4 transition ${isExpanded ? "rotate-180" : ""}`} />
+                          <span>{isExpanded ? "Menos" : "Ver mais"}</span>
+                        </button>
+                      </div>
+                    </div>
+                    {isExpanded && (
+                      <div className="mt-3 pt-3 border-t border-border space-y-2">
+                        {c.email && <p className="text-sm text-muted-foreground flex items-center gap-1"><Mail className="h-3.5 w-3.5 shrink-0" /> {c.email}</p>}
+                        {c.notes && <p className="text-sm text-muted-foreground">{c.notes}</p>}
+                        <div className="flex gap-2 pt-1">
+                          <button onClick={() => setEditing(c)} className="btn-outline-brand inline-flex items-center gap-1 text-sm !py-2"><Pencil className="h-4 w-4" /> Editar</button>
+                          <button onClick={() => { if (confirm("Remover este cliente?")) remove.mutate(c.id); }} className="btn-outline-brand inline-flex items-center gap-1 text-sm !py-2 text-destructive"><Trash2 className="h-4 w-4" /> Remover</button>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <div className="flex gap-2 shrink-0 max-sm:sr-only group-hover:flex">
-                    <span onClick={(e) => { e.stopPropagation(); setEditing(c); }} className="text-primary p-2 min-h-[44px] min-w-[44px] grid place-items-center rounded-md hover:bg-muted"><Pencil className="h-4 w-4" /></span>
-                    <span onClick={(e) => { e.stopPropagation(); if (confirm("Remover este cliente?")) remove.mutate(c.id); }} className="text-destructive p-2 min-h-[44px] min-w-[44px] grid place-items-center rounded-md hover:bg-muted"><Trash2 className="h-4 w-4" /></span>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
               {filtered.length === 0 && <p className="text-sm text-muted-foreground">Nenhum cliente encontrado.</p>}
             </div>
           )}
