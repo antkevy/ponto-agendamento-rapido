@@ -9,4 +9,5 @@ export const db = {
   bloqueiosFuncionario: "bloqueios_funcionario",
   horarios: "horarios",
   clientes: "clientes",
+  planos: "planos",
 } as const;

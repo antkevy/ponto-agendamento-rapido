@@ -20,6 +20,7 @@ import { Route as AppClientesRouteImport } from './routes/app.clientes'
 import { Route as AppConfiguracoesRouteImport } from './routes/app.configuracoes'
 import { Route as AppFuncionariosRouteImport } from './routes/app.funcionarios'
 import { Route as AppHorariosRouteImport } from './routes/app.horarios'
+import { Route as AppPlanosRouteImport } from './routes/app.planos'
 import { Route as AppRelatorioRouteImport } from './routes/app.relatorio'
 import { Route as AppServicosRouteImport } from './routes/app.servicos'
 import { Route as PSlugRouteImport } from './routes/p.$slug'
@@ -79,6 +80,11 @@ const AppHorariosRoute = AppHorariosRouteImport.update({
   path: '/app/horarios',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppPlanosRoute = AppPlanosRouteImport.update({
+  id: '/app/planos',
+  path: '/app/planos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppRelatorioRoute = AppRelatorioRouteImport.update({
   id: '/app/relatorio',
   path: '/app/relatorio',
@@ -106,6 +112,7 @@ export interface FileRoutesByFullPath {
   '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/funcionarios': typeof AppFuncionariosRoute
   '/app/horarios': typeof AppHorariosRoute
+  '/app/planos': typeof AppPlanosRoute
   '/app/relatorio': typeof AppRelatorioRoute
   '/app/servicos': typeof AppServicosRoute
   '/p/$slug': typeof PSlugRoute
@@ -122,6 +129,7 @@ export interface FileRoutesByTo {
   '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/funcionarios': typeof AppFuncionariosRoute
   '/app/horarios': typeof AppHorariosRoute
+  '/app/planos': typeof AppPlanosRoute
   '/app/relatorio': typeof AppRelatorioRoute
   '/app/servicos': typeof AppServicosRoute
   '/p/$slug': typeof PSlugRoute
@@ -139,6 +147,7 @@ export interface FileRoutesById {
   '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/funcionarios': typeof AppFuncionariosRoute
   '/app/horarios': typeof AppHorariosRoute
+  '/app/planos': typeof AppPlanosRoute
   '/app/relatorio': typeof AppRelatorioRoute
   '/app/servicos': typeof AppServicosRoute
   '/p/$slug': typeof PSlugRoute
@@ -157,6 +166,7 @@ export interface FileRouteTypes {
     | '/app/configuracoes'
     | '/app/funcionarios'
     | '/app/horarios'
+    | '/app/planos'
     | '/app/relatorio'
     | '/app/servicos'
     | '/p/$slug'
@@ -173,6 +183,7 @@ export interface FileRouteTypes {
     | '/app/configuracoes'
     | '/app/funcionarios'
     | '/app/horarios'
+    | '/app/planos'
     | '/app/relatorio'
     | '/app/servicos'
     | '/p/$slug'
@@ -189,6 +200,7 @@ export interface FileRouteTypes {
     | '/app/configuracoes'
     | '/app/funcionarios'
     | '/app/horarios'
+    | '/app/planos'
     | '/app/relatorio'
     | '/app/servicos'
     | '/p/$slug'
@@ -206,6 +218,7 @@ export interface RootRouteChildren {
   AppConfiguracoesRoute: typeof AppConfiguracoesRoute
   AppFuncionariosRoute: typeof AppFuncionariosRoute
   AppHorariosRoute: typeof AppHorariosRoute
+  AppPlanosRoute: typeof AppPlanosRoute
   AppRelatorioRoute: typeof AppRelatorioRoute
   AppServicosRoute: typeof AppServicosRoute
   PSlugRoute: typeof PSlugRoute
@@ -291,6 +304,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppHorariosRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app/planos': {
+      id: '/app/planos'
+      path: '/app/planos'
+      fullPath: '/app/planos'
+      preLoaderRoute: typeof AppPlanosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/app/relatorio': {
       id: '/app/relatorio'
       path: '/app/relatorio'
@@ -326,6 +346,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppConfiguracoesRoute: AppConfiguracoesRoute,
   AppFuncionariosRoute: AppFuncionariosRoute,
   AppHorariosRoute: AppHorariosRoute,
+  AppPlanosRoute: AppPlanosRoute,
   AppRelatorioRoute: AppRelatorioRoute,
   AppServicosRoute: AppServicosRoute,
   PSlugRoute: PSlugRoute,

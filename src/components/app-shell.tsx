@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/hooks/use-theme";
 import { BrandLogo } from "@/components/brand-logo";
-import { Calendar, LayoutDashboard, Briefcase, Clock, Ban, Settings, LogOut, Menu, Users, Moon, Sun, X, BarChart3, User } from "lucide-react";
+import { Calendar, LayoutDashboard, Briefcase, Clock, Ban, Settings, LogOut, Menu, Users, Moon, Sun, X, BarChart3, User, Gem } from "lucide-react";
 import { useState } from "react";
 
 
@@ -14,6 +14,7 @@ const links: Array<{ to: string; label: string; icon: typeof Calendar; exact?: b
   { to: "/app/servicos", label: "Serviços", icon: Briefcase },
   { to: "/app/funcionarios", label: "Funcionários", icon: Users },
   { to: "/app/clientes", label: "Clientes", icon: User },
+  { to: "/app/planos", label: "Planos", icon: Gem },
   { to: "/app/horarios", label: "Horários", icon: Clock },
   { to: "/app/bloqueios", label: "Bloqueios", icon: Ban },
   { to: "/app/relatorio", label: "Relatório", icon: BarChart3 },
