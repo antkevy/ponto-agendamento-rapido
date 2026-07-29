@@ -119,9 +119,10 @@ function Page() {
             <button onClick={() => setCreating(true)} className="btn-brand inline-flex items-center gap-2"><Plus className="h-4 w-4" /> Novo cliente</button>
           </div>
 
-          {creating && <ClienteForm onSubmit={(v) => save.mutate(v)} saving={save.isPending} onCancel={() => setCreating(false)} />}
+          {creating && !editing && <ClienteForm onSubmit={(v) => save.mutate(v)} saving={save.isPending} onCancel={() => setCreating(false)} />}
+          {editing && <ClienteForm initial={editing} onSubmit={(v) => save.mutate(v)} saving={save.isPending} onCancel={() => { setEditing(null); setCreating(false); }} />}
 
-          {selected && (
+          {selected && !editing && (
             <div className="card-elevated p-4 mb-4">
               <div className="flex items-start justify-between gap-3 mb-3">
                 <div>
@@ -131,7 +132,7 @@ function Page() {
                   {selected.notes && <p className="text-sm text-muted-foreground mt-1">{selected.notes}</p>}
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => { setEditing(selected); setCreating(true); }} className="text-primary p-2 min-h-[44px] min-w-[44px] grid place-items-center"><Pencil className="h-4 w-4" /></button>
+                  <button onClick={() => setEditing(selected)} className="text-primary p-2 min-h-[44px] min-w-[44px] grid place-items-center"><Pencil className="h-4 w-4" /></button>
                   <button onClick={() => { if (confirm("Remover este cliente?")) remove.mutate(selected.id); }} className="text-destructive p-2 min-h-[44px] min-w-[44px] grid place-items-center"><Trash2 className="h-4 w-4" /></button>
                   <button onClick={() => setSelected(null)} className="text-muted-foreground p-2 min-h-[44px] min-w-[44px] grid place-items-center"><X className="h-4 w-4" /></button>
                 </div>
@@ -165,32 +166,39 @@ function Page() {
             </div>
           )}
 
-          {editing && creating && <ClienteForm initial={editing} onSubmit={(v) => save.mutate(v)} saving={save.isPending} onCancel={() => { setEditing(null); setCreating(false); }} />}
-
           {view === "grid" ? (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {filtered.map((c) => (
-                <button key={c.id} onClick={() => setSelected(c)} className={`card-elevated p-4 text-left transition ${selected?.id === c.id ? "ring-2 ring-primary" : ""}`}>
-                  <p className="font-medium truncate">{c.name}</p>
-                  <p className="text-sm text-muted-foreground">{displayPhoneBR(c.phone)}</p>
-                  {c.email && <p className="text-sm text-muted-foreground truncate">{c.email}</p>}
-                </button>
+                <div key={c.id} onClick={() => setSelected(c)} className={`card-elevated p-4 cursor-pointer transition group ${selected?.id === c.id ? "ring-2 ring-primary" : ""}`}>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium truncate">{c.name}</p>
+                      <p className="text-sm text-muted-foreground">{displayPhoneBR(c.phone)}</p>
+                      {c.email && <p className="text-sm text-muted-foreground truncate">{c.email}</p>}
+                      {c.notes && <p className="text-xs text-muted-foreground truncate mt-1 italic">{c.notes}</p>}
+                    </div>
+                    <div className="flex gap-1 shrink-0 max-sm:sr-only group-hover:flex">
+                      <span onClick={(e) => { e.stopPropagation(); setEditing(c); }} className="text-primary p-1.5 min-h-[36px] min-w-[36px] grid place-items-center rounded-md hover:bg-muted"><Pencil className="h-3.5 w-3.5" /></span>
+                      <span onClick={(e) => { e.stopPropagation(); if (confirm("Remover este cliente?")) remove.mutate(c.id); }} className="text-destructive p-1.5 min-h-[36px] min-w-[36px] grid place-items-center rounded-md hover:bg-muted"><Trash2 className="h-3.5 w-3.5" /></span>
+                    </div>
+                  </div>
+                </div>
               ))}
               {filtered.length === 0 && <p className="text-sm text-muted-foreground col-span-full">Nenhum cliente encontrado.</p>}
             </div>
           ) : (
             <div className="space-y-2">
               {filtered.map((c) => (
-                <button key={c.id} onClick={() => setSelected(c)} className={`card-elevated p-4 w-full text-left transition flex items-center justify-between gap-3 ${selected?.id === c.id ? "ring-2 ring-primary" : ""}`}>
+                <div key={c.id} onClick={() => setSelected(c)} className={`card-elevated p-4 cursor-pointer transition flex items-center justify-between gap-3 group ${selected?.id === c.id ? "ring-2 ring-primary" : ""}`}>
                   <div className="min-w-0">
                     <p className="font-medium truncate">{c.name}</p>
                     <p className="text-sm text-muted-foreground">{displayPhoneBR(c.phone)}</p>
                   </div>
-                  <div className="flex gap-2 shrink-0">
-                    <span onClick={(e) => { e.stopPropagation(); setEditing(c); setCreating(true); }} className="text-primary p-2 min-h-[44px] min-w-[44px] grid place-items-center"><Pencil className="h-4 w-4" /></span>
-                    <span onClick={(e) => { e.stopPropagation(); if (confirm("Remover este cliente?")) remove.mutate(c.id); }} className="text-destructive p-2 min-h-[44px] min-w-[44px] grid place-items-center"><Trash2 className="h-4 w-4" /></span>
+                  <div className="flex gap-2 shrink-0 max-sm:sr-only group-hover:flex">
+                    <span onClick={(e) => { e.stopPropagation(); setEditing(c); }} className="text-primary p-2 min-h-[44px] min-w-[44px] grid place-items-center rounded-md hover:bg-muted"><Pencil className="h-4 w-4" /></span>
+                    <span onClick={(e) => { e.stopPropagation(); if (confirm("Remover este cliente?")) remove.mutate(c.id); }} className="text-destructive p-2 min-h-[44px] min-w-[44px] grid place-items-center rounded-md hover:bg-muted"><Trash2 className="h-4 w-4" /></span>
                   </div>
-                </button>
+                </div>
               ))}
               {filtered.length === 0 && <p className="text-sm text-muted-foreground">Nenhum cliente encontrado.</p>}
             </div>

@@ -28,3 +28,30 @@ GRANT ALL ON public.clientes TO service_role;
 -- Adicionar client_id opcional nos agendamentos
 ALTER TABLE public.agendamentos ADD COLUMN IF NOT EXISTS client_id UUID REFERENCES public.clientes(id) ON DELETE SET NULL;
 CREATE INDEX IF NOT EXISTS idx_agendamentos_client ON public.agendamentos(client_id);
+
+-- Trigger: vincula/cria cliente automaticamente ao inserir agendamento
+CREATE OR REPLACE FUNCTION public.auto_link_client()
+RETURNS TRIGGER AS $$
+DECLARE
+  cid UUID;
+BEGIN
+  SELECT id INTO cid FROM public.clientes
+  WHERE professional_id = NEW.professional_id AND phone = NEW.client_phone
+  LIMIT 1;
+  IF NOT FOUND THEN
+    INSERT INTO public.clientes (professional_id, name, phone, email)
+    VALUES (NEW.professional_id, NEW.client_name, NEW.client_phone, NEW.client_email)
+    RETURNING id INTO cid;
+  ELSE
+    UPDATE public.clientes SET name = NEW.client_name, email = COALESCE(NEW.client_email, email), updated_at = now()
+    WHERE id = cid;
+  END IF;
+  NEW.client_id = cid;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+DROP TRIGGER IF EXISTS trg_auto_link_client ON public.agendamentos;
+CREATE TRIGGER trg_auto_link_client
+  BEFORE INSERT ON public.agendamentos
+  FOR EACH ROW EXECUTE FUNCTION public.auto_link_client();
