@@ -15,7 +15,7 @@ import {
 } from "@/lib/booking";
 import { PhoneInput } from "@/components/phone-input";
 import { isValidPhoneBR } from "@/lib/phone";
-import { CheckCircle2, ChevronLeft, ChevronRight, MapPin, Clock, ArrowLeft, User, X } from "lucide-react";
+import { CheckCircle2, ChevronLeft, ChevronRight, MapPin, Clock, ArrowLeft, User, X, MessageCircle } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ViewToggle, type ViewMode } from "@/components/view-toggle";
 
@@ -352,7 +352,26 @@ function BookingPage() {
       <footer className="text-center py-8 text-xs text-muted-foreground">
         Agendamento por <a href="/" className="font-bold text-sm hover:underline" style={{ color: "oklch(0.55 0.18 250)" }}>Agendaí</a>
       </footer>
+
+      {pro.phone && <WhatsAppFloat phone={pro.phone} />}
     </div>
+  );
+}
+
+function WhatsAppFloat({ phone }: { phone: string }) {
+  const digits = phone.replace(/\D/g, "");
+  const full = digits.startsWith("55") ? digits : `55${digits}`;
+  return (
+    <a
+      href={`https://wa.me/${full}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="fixed bottom-6 right-6 z-40 h-14 w-14 rounded-full grid place-items-center text-white shadow-lg hover:scale-110 transition-transform animate-fade-in-up"
+      style={{ backgroundColor: "#25D366" }}
+      aria-label="Fale conosco pelo WhatsApp"
+    >
+      <MessageCircle className="h-7 w-7" />
+    </a>
   );
 }
 
