@@ -117,7 +117,7 @@ export function ImageUpload({
               >
                 {uploading ? "Enviando..." : "Selecionar imagem"}
               </button>
-              <p className="text-xs text-muted-foreground mt-1">PNG, JPG ou WEBP — até 3 MB.</p>
+              <p className="text-xs text-muted-foreground mt-1">PNG, JPG ou WEBP — até 3 MB. Recomendado: 600×600.</p>
             </div>
           ) : (
             <input
