@@ -10,4 +10,6 @@ export const db = {
   horarios: "horarios",
   clientes: "clientes",
   planos: "planos",
+  depoimentos: "depoimentos",
+  galeria: "galeria",
 } as const;
