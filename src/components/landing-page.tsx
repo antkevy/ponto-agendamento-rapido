@@ -122,7 +122,7 @@ export function LandingPage(props: Props) {
     const root = document.documentElement;
     const had = root.classList.contains("dark");
     root.classList.toggle("dark", mode === "dark");
-    return () => root.classList.toggle("dark", had);
+    return () => { root.classList.toggle("dark", had); };
   }, [pro.theme_mode]);
 
   const [lightbox, setLightbox] = useState<LandingGaleria | null>(null);
