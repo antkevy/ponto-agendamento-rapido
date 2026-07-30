@@ -169,12 +169,10 @@ function BookingPage() {
           employees={employeesData?.employees ?? []}
           depoimentos={depoimentos ?? []}
           galeria={galeria ?? []}
+          faq={faq ?? []}
           clientCount={clientCount ?? 0}
-          brand={brand}
           onAgendar={() => setStep("service")}
-          onSelectService={(s) => { toggleService(s); setStep("service"); }}
-          galleryOpen={galleryOpen}
-          onGalleryOpen={setGalleryOpen}
+          onSelectService={(s) => { toggleService(s as Service); setStep("service"); }}
         />
       ) : (
         <>
@@ -192,7 +190,7 @@ function BookingPage() {
             </div>
           </header>
           <main className="max-w-2xl mx-auto px-4 py-6 sm:py-8">
-            {step !== "landing" && step !== "service" && step !== "done" && (
+            {step !== "service" && step !== "done" && (
               <button onClick={goBack} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4"><ArrowLeft className="h-4 w-4" /> Voltar</button>
             )}
             {step === "service" && (
