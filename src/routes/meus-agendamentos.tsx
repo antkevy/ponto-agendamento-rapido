@@ -121,7 +121,7 @@ function Page() {
   );
 }
 
-function AppointmentList({ data, isFetching, cancel }: { data: Row[]; isFetching: boolean; cancel: ReturnType<typeof useMutation> }) {
+function AppointmentList({ data, isFetching, cancel }: { data: Row[]; isFetching: boolean; cancel: { mutate: (id: string) => void; isPending: boolean } }) {
   const [historyOpen, setHistoryOpen] = useState(false);
 
   const now = new Date();
