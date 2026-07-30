@@ -18,10 +18,13 @@ import { PhoneInput } from "@/components/phone-input";
 import { isValidPhoneBR } from "@/lib/phone";
 import {
   CheckCircle2, ChevronLeft, ChevronRight, MapPin, Clock, ArrowLeft, User, X, MessageCircle,
-  Star, ChevronDown, Phone, Mail, Instagram, Facebook, Quote, Image as ImageIcon,
+  Star, ChevronDown, Phone, Mail, Quote, Image as ImageIcon,
   Calendar, Sparkles, ShieldCheck, Target,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { LandingPage, WhatsAppFloat } from "@/components/landing-page";
+
+const SITE = "https://agendaaibr.lovable.app";
 
 export const Route = createFileRoute("/p/$slug")({
   loader: async ({ params }) => {
@@ -30,28 +33,53 @@ export const Route = createFileRoute("/p/$slug")({
     if (!pro) throw notFound();
     return { pro };
   },
-  head: ({ loaderData }) => {
+  head: ({ params, loaderData }) => {
     if (!loaderData) return { meta: [{ title: "Página não encontrada — Agendaí" }, { name: "robots", content: "noindex" }] };
-    const p = loaderData.pro;
+    const p = loaderData.pro as any;
+    const url = `${SITE}/p/${params.slug}`;
+    const title = `${p.business_name}${p.category ? ` — ${p.category}` : ""} | Agende online`;
+    const description = (p.tagline || p.description || `Agende seu horário com ${p.business_name} online, 24h por dia.`).slice(0, 155);
+    const image = p.banner_url || p.logo_url || undefined;
     return {
       meta: [
-        { title: `${p.business_name} — Agende seu horário online` },
-        { name: "description", content: p.description || `Agende seu horário com ${p.business_name} online, 24h por dia.` },
-        { property: "og:title", content: p.business_name },
-        { property: "og:description", content: p.description || `Marque seu horário online com ${p.business_name}.` },
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
         { property: "og:type", content: "website" },
-        { property: "og:image", content: p.logo_url || undefined },
+        { property: "og:url", content: url },
+        { name: "twitter:card", content: "summary_large_image" },
+        ...(image ? [{ property: "og:image", content: image }, { name: "twitter:image", content: image }] : []),
+      ],
+      links: [{ rel: "canonical", href: url }],
+      scripts: [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "LocalBusiness",
+            name: p.business_name,
+            description,
+            url,
+            image: image ?? undefined,
+            telephone: p.phone ?? undefined,
+            email: p.email ?? undefined,
+            address: p.address ? { "@type": "PostalAddress", streetAddress: p.address, addressLocality: p.city ?? undefined, addressCountry: "BR" } : undefined,
+            geo: p.lat && p.lng ? { "@type": "GeoCoordinates", latitude: p.lat, longitude: p.lng } : undefined,
+            openingHours: p.opening_hours_display ?? undefined,
+          }),
+        },
       ],
     };
   },
   component: BookingPage,
 });
 
-type Service = { id: string; name: string; duration_minutes: number; price_cents: number; description: string | null; image_url: string | null; is_active: boolean };
-type Employee = { id: string; name: string; photo_url: string | null; specialty: string | null; experience_years: number | null; bio: string | null };
+type Service = { id: string; name: string; duration_minutes: number; price_cents: number; description: string | null; image_url: string | null; category: string | null; is_active: boolean };
+type Employee = { id: string; name: string; photo_url: string | null; specialty: string | null; experience_years: number | null; bio: string | null; services_done: number | null };
 type Plano = { id: string; name: string; description: string | null; price_cents: number; image_url: string | null };
-type Depoimento = { id: string; client_name: string; client_photo: string | null; comment: string; rating: number };
-type GaleriaItem = { id: string; image_url: string; caption: string | null; category: string };
+type Depoimento = { id: string; client_name: string; client_photo: string | null; comment: string; rating: number; created_at: string };
+type GaleriaItem = { id: string; image_url: string; caption: string | null; category: string | null };
 
 type Step = "landing" | "service" | "employee" | "when" | "form" | "done";
 
