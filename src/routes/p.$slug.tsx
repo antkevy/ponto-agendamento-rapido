@@ -100,9 +100,9 @@ function BookingPage() {
   const { data: depoimentos } = useQuery({
     queryKey: ["public-depoimentos", pro.id],
     queryFn: async () => {
-      const { data, error } = await supabase.from(db.depoimentos).select("*").eq("professional_id", pro.id).order("created_at", { ascending: false }).limit(10);
+      const { data, error } = await supabase.from(db.depoimentos).select("*").eq("professional_id", pro.id).eq("is_visible", true).order("rating", { ascending: false }).order("created_at", { ascending: false }).limit(12);
       if (error) throw error;
-      return data as Depoimento[];
+      return (data ?? []) as unknown as Depoimento[];
     },
   });
 
@@ -111,14 +111,23 @@ function BookingPage() {
     queryFn: async () => {
       const { data, error } = await supabase.from(db.galeria).select("*").eq("professional_id", pro.id).order("sort_order");
       if (error) throw error;
-      return data as GaleriaItem[];
+      return (data ?? []) as unknown as GaleriaItem[];
+    },
+  });
+
+  const { data: faq } = useQuery({
+    queryKey: ["public-faq", pro.id],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("faq").select("*").eq("professional_id", pro.id).order("sort_order");
+      if (error) throw error;
+      return (data ?? []) as unknown as Array<{ id: string; question: string; answer: string }>;
     },
   });
 
   const { data: clientCount } = useQuery({
     queryKey: ["public-client-count", pro.id],
     queryFn: async () => {
-      const { count } = await supabase.from(db.agendamentos).eq("professional_id", pro.id).select("*", { count: "exact", head: true });
+      const { count } = await supabase.from(db.agendamentos).select("*", { count: "exact", head: true }).eq("professional_id", pro.id);
       return count ?? 0;
     },
   });
