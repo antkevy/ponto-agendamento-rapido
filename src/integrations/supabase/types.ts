@@ -211,6 +211,50 @@ export type Database = {
           },
         ]
       }
+      depoimentos: {
+        Row: {
+          client_name: string
+          client_photo: string | null
+          comment: string
+          created_at: string
+          id: string
+          is_visible: boolean
+          professional_id: string
+          rating: number
+          updated_at: string
+        }
+        Insert: {
+          client_name: string
+          client_photo?: string | null
+          comment: string
+          created_at?: string
+          id?: string
+          is_visible?: boolean
+          professional_id: string
+          rating?: number
+          updated_at?: string
+        }
+        Update: {
+          client_name?: string
+          client_photo?: string | null
+          comment?: string
+          created_at?: string
+          id?: string
+          is_visible?: boolean
+          professional_id?: string
+          rating?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "depoimentos_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "profissionais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       disponibilidade_funcionario: {
         Row: {
           created_at: string
@@ -246,37 +290,122 @@ export type Database = {
           },
         ]
       }
+      faq: {
+        Row: {
+          answer: string
+          created_at: string
+          id: string
+          professional_id: string
+          question: string
+          sort_order: number
+        }
+        Insert: {
+          answer: string
+          created_at?: string
+          id?: string
+          professional_id: string
+          question: string
+          sort_order?: number
+        }
+        Update: {
+          answer?: string
+          created_at?: string
+          id?: string
+          professional_id?: string
+          question?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "faq_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "profissionais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       funcionarios: {
         Row: {
+          bio: string | null
           created_at: string
+          experience_years: number | null
           id: string
           is_active: boolean
           name: string
           photo_url: string | null
           professional_id: string
+          services_done: number
+          specialty: string | null
           updated_at: string
         }
         Insert: {
+          bio?: string | null
           created_at?: string
+          experience_years?: number | null
           id?: string
           is_active?: boolean
           name: string
           photo_url?: string | null
           professional_id: string
+          services_done?: number
+          specialty?: string | null
           updated_at?: string
         }
         Update: {
+          bio?: string | null
           created_at?: string
+          experience_years?: number | null
           id?: string
           is_active?: boolean
           name?: string
           photo_url?: string | null
           professional_id?: string
+          services_done?: number
+          specialty?: string | null
           updated_at?: string
         }
         Relationships: [
           {
             foreignKeyName: "employees_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "profissionais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      galeria: {
+        Row: {
+          caption: string | null
+          category: string | null
+          created_at: string
+          id: string
+          image_url: string
+          professional_id: string
+          sort_order: number
+        }
+        Insert: {
+          caption?: string | null
+          category?: string | null
+          created_at?: string
+          id?: string
+          image_url: string
+          professional_id: string
+          sort_order?: number
+        }
+        Update: {
+          caption?: string | null
+          category?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string
+          professional_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "galeria_professional_id_fkey"
             columns: ["professional_id"]
             isOneToOne: false
             referencedRelation: "profissionais"
@@ -366,65 +495,141 @@ export type Database = {
       profissionais: {
         Row: {
           address: string | null
+          banner_url: string | null
           brand_color: string
           business_name: string
+          button_style: string
+          category: string | null
+          city: string | null
+          corner_radius: string
           created_at: string
           description: string | null
+          differentials: string | null
+          email: string | null
+          facebook: string | null
           id: string
+          instagram: string | null
           lat: number | null
+          linkedin: string | null
           lng: number | null
           logo_url: string | null
+          mission: string | null
           msg_cancelled: string | null
           msg_confirmed: string | null
+          opening_hours_display: string | null
           owner_name: string | null
           phone: string | null
+          privacy_policy: string | null
+          secondary_color: string | null
+          show_employees: boolean
           slug: string
+          story: string | null
+          tagline: string | null
+          terms: string | null
+          theme_mode: string
+          tiktok: string | null
           timezone: string
           updated_at: string
           user_id: string
+          values_text: string | null
+          video_url: string | null
+          website: string | null
+          whatsapp: string | null
+          youtube: string | null
         }
         Insert: {
           address?: string | null
+          banner_url?: string | null
           brand_color?: string
           business_name: string
+          button_style?: string
+          category?: string | null
+          city?: string | null
+          corner_radius?: string
           created_at?: string
           description?: string | null
+          differentials?: string | null
+          email?: string | null
+          facebook?: string | null
           id?: string
+          instagram?: string | null
           lat?: number | null
+          linkedin?: string | null
           lng?: number | null
           logo_url?: string | null
+          mission?: string | null
           msg_cancelled?: string | null
           msg_confirmed?: string | null
+          opening_hours_display?: string | null
           owner_name?: string | null
           phone?: string | null
+          privacy_policy?: string | null
+          secondary_color?: string | null
+          show_employees?: boolean
           slug: string
+          story?: string | null
+          tagline?: string | null
+          terms?: string | null
+          theme_mode?: string
+          tiktok?: string | null
           timezone?: string
           updated_at?: string
           user_id: string
+          values_text?: string | null
+          video_url?: string | null
+          website?: string | null
+          whatsapp?: string | null
+          youtube?: string | null
         }
         Update: {
           address?: string | null
+          banner_url?: string | null
           brand_color?: string
           business_name?: string
+          button_style?: string
+          category?: string | null
+          city?: string | null
+          corner_radius?: string
           created_at?: string
           description?: string | null
+          differentials?: string | null
+          email?: string | null
+          facebook?: string | null
           id?: string
+          instagram?: string | null
           lat?: number | null
+          linkedin?: string | null
           lng?: number | null
           logo_url?: string | null
+          mission?: string | null
           msg_cancelled?: string | null
           msg_confirmed?: string | null
+          opening_hours_display?: string | null
           owner_name?: string | null
           phone?: string | null
+          privacy_policy?: string | null
+          secondary_color?: string | null
+          show_employees?: boolean
           slug?: string
+          story?: string | null
+          tagline?: string | null
+          terms?: string | null
+          theme_mode?: string
+          tiktok?: string | null
           timezone?: string
           updated_at?: string
           user_id?: string
+          values_text?: string | null
+          video_url?: string | null
+          website?: string | null
+          whatsapp?: string | null
+          youtube?: string | null
         }
         Relationships: []
       }
       servicos: {
         Row: {
+          category: string | null
           created_at: string
           description: string | null
           duration_minutes: number
@@ -437,6 +642,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          category?: string | null
           created_at?: string
           description?: string | null
           duration_minutes: number
@@ -449,6 +655,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          category?: string | null
           created_at?: string
           description?: string | null
           duration_minutes?: number
