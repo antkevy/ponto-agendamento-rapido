@@ -194,20 +194,14 @@
 @layer components {
   /*
    * Página pública de agendamento (/p/:slug).
-   * No tema claro, ícones e textos secundários (muted) podem sumir no fundo
-   * branco. Aplica um contorno preto bem fino só neles, e só no tema claro.
-   * No tema escuro o fundo já dá contraste, então nada muda.
+   * No tema claro, ícones pequenos na cor muted somem no fundo branco.
+   * Aplica uma sombra sutil externa (drop-shadow) só nos ícones SVG muted,
+   * e só no tema claro (a classe .dark fica no <html>, então o seletor
+   * escopa por ele). Texto e demais ícones não mudam.
    */
-  .booking-page:not(.dark) .text-muted-foreground,
-  .booking-page:not(.dark) [class*="text-muted-foreground/"] {
-    filter: drop-shadow(0.5px 0 0 oklch(0 0 0 / 0.55))
-            drop-shadow(-0.5px 0 0 oklch(0 0 0 / 0.55))
-            drop-shadow(0 0.5px 0 oklch(0 0 0 / 0.55))
-            drop-shadow(0 -0.5px 0 oklch(0 0 0 / 0.55));
-    text-shadow: 0.5px 0 0 oklch(0 0 0 / 0.55),
-                 -0.5px 0 0 oklch(0 0 0 / 0.55),
-                 0 0.5px 0 oklch(0 0 0 / 0.55),
-                 0 -0.5px 0 oklch(0 0 0 / 0.55);
+  html:not(.dark) .booking-page svg[class*="text-muted-foreground"],
+  html:not(.dark) .booking-page .text-muted-foreground svg {
+    filter: drop-shadow(0 0 0.4px oklch(0 0 0 / 0.35));
   }
 
   .card-elevated {
