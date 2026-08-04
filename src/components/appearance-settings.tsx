@@ -6,6 +6,7 @@ import {
   DARK_PRESET,
   LIGHT_PRESET,
   appearanceCssVars,
+  foregroundFor,
   loadAppearance,
   resetAppearance,
   saveAppearance,
@@ -44,7 +45,7 @@ function AppearancePreview({ colors }: { colors: Appearance }) {
             >
               <div className="flex items-center gap-3">
                 <div
-                  className="h-12 w-12 rounded-2xl grid place-items-center text-lg font-bold text-white shadow-md"
+                  className="h-12 w-12 rounded-2xl grid place-items-center text-lg font-bold text-brand-foreground shadow-md"
                   style={{ backgroundColor: "var(--brand)" }}
                 >
                   B
@@ -75,7 +76,7 @@ function AppearancePreview({ colors }: { colors: Appearance }) {
                 <div className="my-3 border-t border-[var(--border)]"></div>
                 <div className="flex items-center gap-2">
                   <div
-                    className="h-7 w-7 rounded-full grid place-items-center text-[10px] font-bold text-white"
+                    className="h-7 w-7 rounded-full grid place-items-center text-[10px] font-bold text-secondary-foreground"
                     style={{ backgroundColor: "var(--secondary)" }}
                   >
                     J
@@ -248,7 +249,7 @@ export function AppearanceSettings({
                     className="h-9 w-9 shrink-0 rounded-lg border border-border grid place-items-center"
                     style={{ backgroundColor: p.color }}
                   >
-                    {selected && <Check className="h-4 w-4 text-white" />}
+                    {selected && <Check className="h-4 w-4" style={{ color: foregroundFor(p.color) }} />}
                   </span>
                   <span className="text-sm font-medium">{p.name}</span>
                   {selected && <Check className="ml-auto h-4 w-4 ui-accent-text" />}

@@ -134,6 +134,25 @@ export function saveAppearance(mode: "light" | "dark", value: Appearance) {
 }
 
 /**
+ * Escolhe o texto com melhor contraste para uma cor de fundo (hex).
+ * Retorna o tom escuro do design system (#0F172A) para cores claras e branco
+ * para cores escuras, seguindo a luminância relativa (WCAG).
+ */
+export function foregroundFor(color: string): string {
+  if (!/^#[0-9a-fA-F]{6}$/.test(color)) return "#FFFFFF";
+  const hex = color.slice(1);
+  const toLin = (v: number) => {
+    const c = v / 255;
+    return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  };
+  const L =
+    0.2126 * toLin(parseInt(hex.slice(0, 2), 16)) +
+    0.7152 * toLin(parseInt(hex.slice(2, 4), 16)) +
+    0.0722 * toLin(parseInt(hex.slice(4, 6), 16));
+  return L > 0.35 ? "#0F172A" : "#FFFFFF";
+}
+
+/**
  * Aplica os tokens nas variáveis CSS. As cores escolhidas na Dashboard só
  * devem valer para a página pública de agendamento (/p/:slug) — por isso o
  * alvo padrão não é mais o <html>, e sim o elemento raiz da página de
@@ -152,6 +171,7 @@ export function applyAppearance(a: Appearance, target?: HTMLElement) {
   set("--ring", a.accent);
   set("--sidebar-ring", a.accent);
   set("--btn-color", a.button);
+  set("--btn-foreground", foregroundFor(a.button));
   set("--icon-color", a.icon);
   set("--link-color", a.link);
   set("--badge-color", a.badge);
@@ -175,6 +195,9 @@ export function applyAppearance(a: Appearance, target?: HTMLElement) {
   set("--sidebar-foreground", a.text);
   set("--sidebar-accent-foreground", a.text);
   set("--muted-foreground", a.textMuted);
+  set("--accent-foreground", foregroundFor(a.accent));
+  set("--primary-foreground", foregroundFor(a.primary));
+  set("--brand-foreground", foregroundFor(a.primary));
 }
 
 export function resetAppearance(mode: "light" | "dark", target?: HTMLElement) {
@@ -186,12 +209,12 @@ export function resetAppearance(mode: "light" | "dark", target?: HTMLElement) {
   if (typeof document !== "undefined") {
     const keys = [
       "--primary", "--brand", "--sidebar-primary", "--secondary", "--accent", "--ring",
-      "--sidebar-ring", "--btn-color", "--icon-color", "--link-color", "--badge-color",
+      "--sidebar-ring", "--btn-color", "--btn-foreground", "--icon-color", "--link-color", "--badge-color",
       "--card", "--popover", "--border", "--sidebar-border", "--input", "--background",
       "--surface", "--header-color", "--sidebar", "--input-bg", "--hover-color", "--muted",
       "--sidebar-accent", "--foreground", "--card-foreground", "--popover-foreground",
       "--secondary-foreground", "--sidebar-foreground", "--sidebar-accent-foreground",
-      "--muted-foreground",
+      "--muted-foreground", "--accent-foreground", "--primary-foreground", "--brand-foreground",
     ];
     const el = (target ?? document.documentElement) as HTMLElement;
     for (const k of keys) el.style.removeProperty(k);
@@ -215,6 +238,7 @@ export function appearanceCssVars(a: Appearance): React.CSSProperties {
     "--ring": a.accent,
     "--sidebar-ring": a.accent,
     "--btn-color": a.button,
+    "--btn-foreground": foregroundFor(a.button),
     "--icon-color": a.icon,
     "--link-color": a.link,
     "--badge-color": a.badge,
@@ -231,5 +255,8 @@ export function appearanceCssVars(a: Appearance): React.CSSProperties {
     "--foreground": a.text,
     "--card-foreground": a.text,
     "--muted-foreground": a.textMuted,
+    "--accent-foreground": foregroundFor(a.accent),
+    "--primary-foreground": foregroundFor(a.primary),
+    "--brand-foreground": foregroundFor(a.primary),
   } as React.CSSProperties;
 }

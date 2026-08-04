@@ -189,7 +189,7 @@ function BookingPage() {
           {pro.logo_url ? (
             <img src={pro.logo_url} alt="" className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl object-cover border border-border shrink-0" />
           ) : (
-            <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl grid place-items-center text-2xl font-bold text-white shrink-0 shadow-md" style={{ backgroundColor: brand }}>{pro.business_name.charAt(0).toUpperCase()}</div>
+            <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl grid place-items-center text-2xl font-bold text-brand-foreground shrink-0 shadow-md" style={{ backgroundColor: brand }}>{pro.business_name.charAt(0).toUpperCase()}</div>
           )}
           <div className="min-w-0 flex-1">
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground truncate leading-[1.1]">{pro.business_name}</h1>
@@ -274,10 +274,13 @@ function BookingPage() {
                       const selected = selectedServices.some((x) => x.id === s.id);
                       return (
                         <li key={s.id}>
-                          <button
+                          <div
+                            role="button"
+                            tabIndex={0}
                             onClick={() => toggleService(s)}
+                            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleService(s); } }}
                             data-selected={selected || undefined}
-                            className="w-full text-left card-elevated p-4 hover:border-accent transition-all hover:-translate-y-0.5 data-[selected]:border-accent data-[selected]:ring-2 data-[selected]:ring-accent/30"
+                            className="w-full text-left cursor-pointer card-elevated p-4 hover:border-accent transition-all hover:-translate-y-0.5 data-[selected]:border-accent data-[selected]:ring-2 data-[selected]:ring-accent/30"
                           >
                             <div className="flex items-start gap-3">
                               {s.image_url && <img src={s.image_url} alt={s.name} className="h-16 w-16 rounded-lg object-cover shrink-0 aspect-square" />}
@@ -298,7 +301,7 @@ function BookingPage() {
                                 className="btn-outline-brand !py-1 !px-2 text-xs shrink-0 mt-1"
                               >Ver mais</button>
                             </div>
-                          </button>
+                          </div>
                         </li>
                       );
                     })}
@@ -309,10 +312,13 @@ function BookingPage() {
                       const selected = selectedServices.some((x) => x.id === s.id);
                       return (
                         <li key={s.id}>
-                          <button
+                          <div
+                            role="button"
+                            tabIndex={0}
                             onClick={() => toggleService(s)}
+                            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleService(s); } }}
                             data-selected={selected || undefined}
-                            className="w-full h-full text-left card-elevated p-4 hover:border-accent transition-all hover:-translate-y-0.5 flex flex-col gap-2 data-[selected]:border-accent data-[selected]:ring-2 data-[selected]:ring-accent/30"
+                            className="w-full h-full text-left cursor-pointer card-elevated p-4 hover:border-accent transition-all hover:-translate-y-0.5 flex flex-col gap-2 data-[selected]:border-accent data-[selected]:ring-2 data-[selected]:ring-accent/30"
                           >
                             {s.image_url && <img src={s.image_url} alt={s.name} className="w-full aspect-square rounded-lg object-cover" />}
                             <div className="flex items-center gap-2">
@@ -325,9 +331,9 @@ function BookingPage() {
                             <button
                               type="button"
                               onClick={(e) => { e.stopPropagation(); setDetailService(s); }}
-                              className="btn-outline-brand !py-1.5 !px-3 text-xs w-full mt-auto"
-                            >Ver mais</button>
-                          </button>
+                                className="btn-outline-brand !py-1.5 !px-3 text-xs w-full mt-auto"
+                              >Ver mais</button>
+                          </div>
                         </li>
                       );
                     })}
