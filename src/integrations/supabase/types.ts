@@ -722,6 +722,10 @@ export type Database = {
         Args: { _contact: string; _id: string }
         Returns: boolean
       }
+      client_reschedule_appointment: {
+        Args: { _contact: string; _id: string; _starts_at: string }
+        Returns: boolean
+      }
       get_busy_slots: {
         Args: { _from: string; _professional_id: string; _to: string }
         Returns: {
@@ -740,6 +744,8 @@ export type Database = {
         Args: { _contact: string }
         Returns: {
           client_name: string
+          duration_minutes: number
+          employee_id: string | null
           ends_at: string
           id: string
           professional_business_name: string
