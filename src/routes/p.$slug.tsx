@@ -16,7 +16,8 @@ import {
 } from "@/lib/booking";
 import { PhoneInput } from "@/components/phone-input";
 import { isValidPhoneBR } from "@/lib/phone";
-import { CheckCircle2, ChevronLeft, ChevronRight, MapPin, Clock, ArrowLeft, User, X, MessageCircle, Gem } from "lucide-react";
+import { CheckCircle2, ChevronLeft, ChevronRight, MapPin, Clock, ArrowLeft, User, X, MessageCircle, Gem, ShieldCheck, CalendarCheck2, Calendar as CalendarIcon, Scissors, Mail, Pencil, Lock } from "lucide-react";
+import { UIButton, UICard, UICardHeader, UIInput, UITextarea, UINotice, UISummaryRow } from "@/components/ui-kit";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ViewToggle, type ViewMode } from "@/components/view-toggle";
 
@@ -671,7 +672,7 @@ function FormStep({ pro, selectedServices, employee, when, onDone, brand }: { pr
       </div>
 
       {/* Resumo do agendamento */}
-      <UICard className="p-5 sm:p-6 ui-stagger" style={undefined}>
+      <UICard className="p-5 sm:p-6 ui-stagger">
         <UICardHeader icon={CalendarCheck2} title="Resumo do agendamento" />
 
         <div className="flex items-start gap-4 pb-5 mb-5 border-b border-border">
@@ -699,7 +700,7 @@ function FormStep({ pro, selectedServices, employee, when, onDone, brand }: { pr
 
       {/* Seus dados */}
       <form onSubmit={(e) => { e.preventDefault(); create.mutate(); }} className="space-y-5">
-        <UICard className="p-5 sm:p-6 ui-stagger" >
+        <UICard className="p-5 sm:p-6 ui-stagger">
           <UICardHeader icon={User} title="Seus dados" />
           <div className="space-y-4">
             <UIInput label="Nome completo" icon={User} required value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" placeholder="Seu nome completo" />
