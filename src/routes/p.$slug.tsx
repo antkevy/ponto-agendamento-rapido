@@ -23,7 +23,11 @@ import { ViewToggle, type ViewMode } from "@/components/view-toggle";
 
 export const Route = createFileRoute("/p/$slug")({
   loader: async ({ params }) => {
-    const { data: pro, error } = await supabase.from(db.profissionais).select("*").eq("slug", params.slug).maybeSingle();
+    const { data: pro, error } = await supabase
+      .from(db.profissionais)
+      .select("id, slug, business_name, logo_url, brand_color, description, address, phone, lat, lng, timezone")
+      .eq("slug", params.slug)
+      .maybeSingle();
     if (error) throw error;
     if (!pro) throw notFound();
     return { pro };
