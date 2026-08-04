@@ -175,12 +175,8 @@ export function AuthLayout({
           </div>
         </header>
 
-        <main className="max-w-md mx-auto px-4 sm:px-8 pt-4 pb-16">
-          <div className="text-center animate-ui-slide-up">
-            <BrandLogo className="justify-center pointer-events-none" size="lg" />
-          </div>
-
-          <UICard glass className="mt-6 p-6 sm:p-8 animate-ui-scale-in">
+        <main className="max-w-md mx-auto px-4 sm:px-8 pt-2 pb-16">
+          <UICard glass className="mt-4 p-6 sm:p-8 animate-ui-scale-in">
             <UITitle size="lg" accent={accent}>{title}</UITitle>
             <p className="mt-3 text-sm sm:text-base text-muted-foreground leading-relaxed">{subtitle}</p>
             <div className="mt-7">{children}</div>
@@ -192,13 +188,14 @@ export function AuthLayout({
                 <span className="ui-icon-bubble h-10 w-10 grid place-items-center rounded-xl">
                   <b.icon className="h-5 w-5" />
                 </span>
-                <span className="text-[11px] sm:text-xs text-muted-foreground leading-tight inline-flex items-center gap-1">
-                  <Check className="h-3 w-3 shrink-0 ui-icon-color" strokeWidth={3} />
+                <span className="text-[11px] sm:text-xs text-muted-foreground leading-tight">
                   {b.label}
                 </span>
               </li>
             ))}
           </ul>
+        </main>
+
         </main>
       </div>
     </div>
