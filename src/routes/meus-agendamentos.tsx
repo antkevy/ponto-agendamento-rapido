@@ -85,11 +85,17 @@ function Page() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from(db.profissionais)
-        .select("brand_color, theme_colors")
+        .select("business_name, logo_url, description, brand_color, theme_colors")
         .eq("slug", proSlug!)
         .maybeSingle();
       if (error) throw error;
-      return data as { brand_color: string | null; theme_colors: ProfessionalTheme | null };
+      return data as {
+        business_name: string | null;
+        logo_url: string | null;
+        description: string | null;
+        brand_color: string | null;
+        theme_colors: ProfessionalTheme | null;
+      } | null;
     },
   });
 
@@ -148,9 +154,42 @@ function Page() {
       style={{ ["--brand" as string]: brand } as React.CSSProperties}
     >
       <header className="bg-transparent">
-        <div className="max-w-2xl mx-auto px-4 h-20 flex items-center justify-between">
-          <BrandLogo />
-          <div className="flex items-center gap-2">
+        <div className="max-w-2xl mx-auto px-4 h-20 flex items-center justify-between gap-3">
+          {proTheme ? (
+            <Link
+              to="/p/$slug"
+              params={{ slug: proSlug! }}
+              className="flex items-center gap-3 min-w-0"
+            >
+              {proTheme.logo_url ? (
+                <img
+                  src={proTheme.logo_url}
+                  alt=""
+                  className="h-10 w-10 sm:h-11 sm:w-11 rounded-xl object-cover border border-border shrink-0"
+                />
+              ) : (
+                <span
+                  className="h-10 w-10 sm:h-11 sm:w-11 rounded-xl grid place-items-center text-lg font-bold text-brand-foreground shrink-0 shadow-md"
+                  style={{ backgroundColor: brand }}
+                >
+                  {proTheme.business_name?.charAt(0).toUpperCase()}
+                </span>
+              )}
+              <span className="min-w-0">
+                <span className="block text-base font-bold tracking-tight text-foreground truncate">
+                  {proTheme.business_name}
+                </span>
+                {proTheme.description && (
+                  <span className="block text-xs text-muted-foreground truncate">
+                    {proTheme.description}
+                  </span>
+                )}
+              </span>
+            </Link>
+          ) : (
+            <BrandLogo />
+          )}
+          <div className="flex items-center gap-2 shrink-0">
             <ThemeToggle />
             <Link
               to="/"
