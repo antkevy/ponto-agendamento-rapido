@@ -52,7 +52,7 @@ function SignIn() {
           () => {},
           () => {},
         );
-      return toast.error(error.message);
+      return toast.error("Email ou senha inválidos.");
     }
     toast.success("Bem-vindo de volta!");
     router.navigate({ to: "/app" });
@@ -63,7 +63,7 @@ function SignIn() {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/entrar`,
     });
-    if (error) return toast.error(error.message);
+    if (error) return toast.error("Não foi possível enviar o link. Verifique o email digitado.");
     toast.success("Enviamos um link de recuperação para o seu email.");
   }
 

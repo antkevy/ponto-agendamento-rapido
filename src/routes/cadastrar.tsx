@@ -71,7 +71,14 @@ function SignUp() {
           () => {},
           () => {},
         );
-      toast.error(err instanceof Error ? err.message : "Erro ao criar conta.");
+      const raw = err instanceof Error ? err.message : "";
+      toast.error(
+        /already registered/i.test(raw)
+          ? "Este email já está cadastrado. Faça login."
+          : /rate limit/i.test(raw)
+            ? "Muitas tentativas. Aguarde alguns minutos e tente de novo."
+            : "Não foi possível criar a conta. Tente novamente.",
+      );
     } finally {
       setLoading(false);
     }
