@@ -11,8 +11,7 @@ export const Route = createFileRoute("/cadastrar")({
   component: SignUp,
 });
 
-const inputCls =
-  "w-full min-h-[48px] px-4 py-3 rounded-xl border border-border bg-white text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition";
+const inputCls = "ui-field-input";
 
 
 function SignUp() {
@@ -84,13 +83,13 @@ function SignUp() {
         <Field label="Senha (mínimo 6 caracteres)">
           <input type="password" required minLength={6} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Mínimo 6 caracteres" className={inputCls} />
         </Field>
-        <button type="submit" disabled={loading} className="btn-gradient w-full inline-flex items-center justify-center gap-2 disabled:opacity-60">
+        <button type="submit" disabled={loading} className="ui-ripple ui-btn-primary w-full inline-flex items-center justify-center gap-2 min-h-[56px] px-6 rounded-2xl font-semibold transition-all disabled:opacity-60">
           {loading ? "Criando..." : "Criar minha conta"}
         </button>
       </form>
       <p className="mt-6 text-sm text-muted-foreground text-center">
         Já tem conta?{" "}
-        <Link to="/entrar" className="font-semibold hover:underline" style={{ color: "oklch(0.55 0.18 250)" }}>Entrar</Link>
+        <Link to="/entrar" className="ui-link">Entrar</Link>
       </p>
     </AuthLayout>
   );
