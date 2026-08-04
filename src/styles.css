@@ -93,6 +93,19 @@
   --input: oklch(0.92 0.01 240);
   --ring: oklch(0.56 0.13 240);
 
+  /* Tokens configuráveis pela Dashboard (Aparência) */
+  --accent-strong: var(--accent);
+  --btn-color: var(--accent);
+  --btn-foreground: #ffffff;
+  --icon-color: var(--accent);
+  --link-color: var(--accent);
+  --badge-color: var(--accent);
+  --header-color: var(--card);
+  --input-bg: var(--card);
+  --hover-color: var(--muted);
+
+
+
   --sidebar: oklch(0.985 0.005 240);
   --sidebar-foreground: oklch(0.19 0.04 258);
   --sidebar-primary: oklch(0.36 0.09 240);
