@@ -23,6 +23,7 @@ export function UIButton({
 }: BtnProps) {
   return (
     <button
+      type={rest.type ?? "button"}
       {...rest}
       className={cn(
         "ui-ripple inline-flex items-center justify-center gap-2 font-semibold rounded-2xl transition-all",
