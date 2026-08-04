@@ -596,65 +596,82 @@ function WhenStep({ pro, selectedServices, employee, onPick, brand }: { pro: { i
         {selectedServices.map((s) => s.name).join(" + ")} · {combinedDuration} min{employee ? ` · com ${employee.name}` : ""}
       </p>
 
-      <div className="card-elevated p-4 mb-4">
-        <div className="flex items-center justify-between mb-3">
-          <button onClick={() => { const d = new Date(monthStart); d.setMonth(d.getMonth() - 1); if (d >= new Date(today.getFullYear(), today.getMonth(), 1)) setMonthStart(d); }} className="p-2 min-h-[44px] min-w-[44px] grid place-items-center rounded-md hover:bg-muted"><ChevronLeft className="h-4 w-4" /></button>
-          <span className="font-semibold capitalize">{monthStart.toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}</span>
-          <button onClick={() => { const d = new Date(monthStart); d.setMonth(d.getMonth() + 1); setMonthStart(d); }} className="p-2 min-h-[44px] min-w-[44px] grid place-items-center rounded-md hover:bg-muted"><ChevronRight className="h-4 w-4" /></button>
+      <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+        <div className="card-elevated p-4">
+          <div className="flex items-center justify-between mb-3">
+            <button onClick={() => { const d = new Date(monthStart); d.setMonth(d.getMonth() - 1); if (d >= new Date(today.getFullYear(), today.getMonth(), 1)) setMonthStart(d); }} className="p-2 min-h-[44px] min-w-[44px] grid place-items-center rounded-md hover:bg-muted"><ChevronLeft className="h-4 w-4" /></button>
+            <span className="font-semibold capitalize">{monthStart.toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}</span>
+            <button onClick={() => { const d = new Date(monthStart); d.setMonth(d.getMonth() + 1); setMonthStart(d); }} className="p-2 min-h-[44px] min-w-[44px] grid place-items-center rounded-md hover:bg-muted"><ChevronRight className="h-4 w-4" /></button>
+          </div>
+          <div className="grid grid-cols-7 gap-1 text-center text-xs text-muted-foreground mb-1">
+            {WEEKDAYS_PT_SHORT.map((w) => <span key={w}>{w}</span>)}
+          </div>
+          <div className="grid grid-cols-7 gap-1">
+            {daysGrid.map((d, i) => {
+              if (!d) return <div key={i} />;
+              const past = d < today;
+              const canSelect = !past && dayHasAvailability(d);
+              const selected = selectedDay && d.toDateString() === selectedDay.toDateString();
+              const isToday = d.toDateString() === today.toDateString();
+              return (
+                <button
+                  key={i}
+                  disabled={!canSelect}
+                  onClick={() => setSelectedDay(d)}
+                  data-selected={selected || undefined}
+                  data-today={isToday || undefined}
+                  className="aspect-square rounded-lg text-sm font-medium min-h-[44px] disabled:opacity-30 disabled:cursor-not-allowed hover:bg-accent/10 hover:text-accent transition-colors data-[today]:ring-1 data-[today]:ring-accent/40 data-[selected]:!bg-accent data-[selected]:!text-accent-foreground data-[selected]:ring-0"
+                >{d.getDate()}</button>
+              );
+            })}
+          </div>
         </div>
-        <div className="grid grid-cols-7 gap-1 text-center text-xs text-muted-foreground mb-1">
-          {WEEKDAYS_PT_SHORT.map((w) => <span key={w}>{w}</span>)}
-        </div>
-        <div className="grid grid-cols-7 gap-1">
-          {daysGrid.map((d, i) => {
-            if (!d) return <div key={i} />;
-            const past = d < today;
-            const canSelect = !past && dayHasAvailability(d);
-            const selected = selectedDay && d.toDateString() === selectedDay.toDateString();
-            const isToday = d.toDateString() === today.toDateString();
-            return (
-              <button
-                key={i}
-                disabled={!canSelect}
-                onClick={() => setSelectedDay(d)}
-                data-selected={selected || undefined}
-                data-today={isToday || undefined}
-                className="aspect-square rounded-lg text-sm font-medium min-h-[44px] disabled:opacity-30 disabled:cursor-not-allowed hover:bg-accent/10 hover:text-accent transition-colors data-[today]:ring-1 data-[today]:ring-accent/40 data-[selected]:!bg-accent data-[selected]:!text-accent-foreground data-[selected]:ring-0"
-              >{d.getDate()}</button>
-            );
-          })}
-        </div>
-      </div>
 
-      {selectedDay && (
-        <div className="animate-fade-in-up">
-          <h3 className="font-semibold mb-3 capitalize">{formatLongDate(selectedDay)}</h3>
-          {loadingBusy ? (
-            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">{Array.from({ length: 8 }).map((_, i) => <div key={i} className="skeleton h-11" />)}</div>
-          ) : slots.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nenhum horário livre nesse dia. Tente outro.</p>
+        <div className="animate-fade-in-up lg:min-h-[320px]">
+          {selectedDay ? (
+            <div className="card-elevated p-4 h-full">
+              <h3 className="font-semibold mb-3 capitalize">Horários · {formatLongDate(selectedDay)}</h3>
+              {loadingBusy ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">{Array.from({ length: 8 }).map((_, i) => <div key={i} className="skeleton h-11" />)}</div>
+              ) : slots.length === 0 ? (
+                <div className="h-full grid place-items-center text-center py-10">
+                  <p className="text-sm text-muted-foreground">Nenhum horário livre nesse dia. Tente outro.</p>
+                </div>
+              ) : (
+                <div className="space-y-5">
+                  {[{ label: "Manhã", from: 6, to: 12 }, { label: "Tarde", from: 12, to: 18 }, { label: "Noite", from: 18, to: 24 }].map(({ label, from, to }) => {
+                    const periodSlots = slots.filter((s) => { const h = s.getHours(); return h >= from && h < to; });
+                    if (periodSlots.length === 0) return null;
+                    return (
+                      <div key={label}>
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="h-px w-4 bg-border" />
+                          <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</h4>
+                          <span className="h-px flex-1 bg-border" />
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                          {periodSlots.map((s) => (
+                            <button key={s.toISOString()} onClick={() => onPick(s)} className="chip">
+                              {formatTime(s)}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           ) : (
-            <div className="space-y-4">
-              {[{ label: "Manhã", from: 6, to: 12 }, { label: "Tarde", from: 12, to: 18 }, { label: "Noite", from: 18, to: 24 }].map(({ label, from, to }) => {
-                const periodSlots = slots.filter((s) => { const h = s.getHours(); return h >= from && h < to; });
-                if (periodSlots.length === 0) return null;
-                return (
-                  <div key={label}>
-                    <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">{label}</h4>
-                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                      {periodSlots.map((s) => (
-                        <button key={s.toISOString()} onClick={() => onPick(s)} className="chip">
-                          {formatTime(s)}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
+            <div className="card-elevated p-4 h-full grid place-items-center text-center">
+              <div>
+                <CalendarIcon className="h-8 w-8 mx-auto text-muted-foreground/50 mb-2" />
+                <p className="text-sm text-muted-foreground">Selecione uma data no calendário para ver os horários disponíveis.</p>
+              </div>
             </div>
           )}
         </div>
-      )}
+      </div>
     </section>
   );
 }
@@ -713,66 +730,70 @@ function FormStep({ pro, selectedServices, employee, when, onDone, brand }: { pr
         </p>
       </div>
 
-      {/* Resumo do agendamento */}
-      <UICard className="p-5 sm:p-6 ui-stagger">
-        <UICardHeader icon={CalendarCheck2} title="Resumo do agendamento" />
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)] lg:items-start">
+        {/* Resumo do agendamento */}
+        <div className="lg:sticky lg:top-6">
+          <UICard className="p-5 sm:p-6 ui-stagger">
+            <UICardHeader icon={CalendarCheck2} title="Resumo do agendamento" />
 
-        <div className="flex items-start gap-4 pb-5 mb-5 border-b border-border">
-          {cover ? (
-            <img src={cover} alt={combinedName} loading="lazy" className="h-16 w-16 rounded-2xl object-cover shrink-0 border border-border" />
-          ) : (
-            <span className="ui-icon-bubble h-16 w-16 grid place-items-center rounded-2xl shrink-0">
-              <Scissors className="h-6 w-6" />
-            </span>
-          )}
-          <div className="min-w-0">
-            <p className="font-bold text-foreground leading-tight">{combinedName}</p>
-            <p className="mt-1 text-xl font-black tracking-tight ui-accent-text">{formatBRL(combinedPrice)}</p>
-            <p className="mt-1 text-xs text-muted-foreground">{combinedDuration} min</p>
-          </div>
+            <div className="flex items-start gap-4 pb-5 mb-5 border-b border-border">
+              {cover ? (
+                <img src={cover} alt={combinedName} loading="lazy" className="h-16 w-16 rounded-2xl object-cover shrink-0 border border-border" />
+              ) : (
+                <span className="ui-icon-bubble h-16 w-16 grid place-items-center rounded-2xl shrink-0">
+                  <Scissors className="h-6 w-6" />
+                </span>
+              )}
+              <div className="min-w-0">
+                <p className="font-bold text-foreground leading-tight">{combinedName}</p>
+                <p className="mt-1 text-xl font-black tracking-tight ui-accent-text">{formatBRL(combinedPrice)}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{combinedDuration} min</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <UISummaryRow icon={CalendarIcon}><span className="first-letter:uppercase">{formatLongDate(when)}</span></UISummaryRow>
+              <UISummaryRow icon={Clock}>{formatTime(when)}</UISummaryRow>
+              {employee && <UISummaryRow icon={User}>com {employee.name}</UISummaryRow>}
+              <UISummaryRow icon={MapPin} sub={pro.address || undefined}>{pro.business_name}</UISummaryRow>
+            </div>
+          </UICard>
         </div>
 
-        <div className="space-y-4">
-          <UISummaryRow icon={CalendarIcon}><span className="first-letter:uppercase">{formatLongDate(when)}</span></UISummaryRow>
-          <UISummaryRow icon={Clock}>{formatTime(when)}</UISummaryRow>
-          {employee && <UISummaryRow icon={User}>com {employee.name}</UISummaryRow>}
-          <UISummaryRow icon={MapPin} sub={pro.address || undefined}>{pro.business_name}</UISummaryRow>
-        </div>
-      </UICard>
+        {/* Seus dados */}
+        <form onSubmit={(e) => { e.preventDefault(); create.mutate(); }} className="space-y-5">
+          <UICard className="p-5 sm:p-6 ui-stagger">
+            <UICardHeader icon={User} title="Seus dados" />
+            <div className="space-y-4">
+              <UIInput label="Nome completo" icon={User} required value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" placeholder="Seu nome completo" />
+              <label className="block">
+                <span className="block text-sm font-semibold text-foreground mb-2">WhatsApp</span>
+                <span className="ui-field">
+                  <MessageCircle className="ui-field-icon" />
+                  <PhoneInput value={phone} onChange={setPhone} className="ui-field-input pl-11" />
+                </span>
+              </label>
+              <UIInput label="E-mail (opcional)" icon={Mail} type="email" inputMode="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" />
+              <UITextarea label="Observação (opcional)" icon={Pencil} rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Alguma preferência ou observação?" />
+            </div>
 
-      {/* Seus dados */}
-      <form onSubmit={(e) => { e.preventDefault(); create.mutate(); }} className="space-y-5">
-        <UICard className="p-5 sm:p-6 ui-stagger">
-          <UICardHeader icon={User} title="Seus dados" />
-          <div className="space-y-4">
-            <UIInput label="Nome completo" icon={User} required value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" placeholder="Seu nome completo" />
-            <label className="block">
-              <span className="block text-sm font-semibold text-foreground mb-2">WhatsApp</span>
-              <span className="ui-field">
-                <MessageCircle className="ui-field-icon" />
-                <PhoneInput value={phone} onChange={setPhone} className="ui-field-input pl-11" />
-              </span>
-            </label>
-            <UIInput label="E-mail (opcional)" icon={Mail} type="email" inputMode="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" />
-            <UITextarea label="Observação (opcional)" icon={Pencil} rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Alguma preferência ou observação?" />
-          </div>
+            <div className="mt-5">
+              <UINotice icon={ShieldCheck} title="Importante">
+                Você poderá cancelar ou reagendar até 24 horas antes do horário marcado.
+              </UINotice>
+            </div>
+          </UICard>
 
-          <div className="mt-5">
-            <UINotice icon={ShieldCheck} title="Importante">
-              Você poderá cancelar ou reagendar até 24 horas antes do horário marcado.
-            </UINotice>
-          </div>
-        </UICard>
+          <UIButton type="submit" size="lg" fullWidth disabled={create.isPending} icon={CalendarCheck2}>
+            {create.isPending ? "Confirmando..." : "Confirmar agendamento"}
+          </UIButton>
 
-        <UIButton type="submit" size="lg" fullWidth disabled={create.isPending} icon={CalendarCheck2}>
-          {create.isPending ? "Confirmando..." : "Confirmar agendamento"}
-        </UIButton>
-
-        <p className="text-center text-xs text-muted-foreground inline-flex items-start gap-1.5 justify-center w-full">
-          <Lock className="h-3.5 w-3.5 shrink-0 mt-px" />
-          <span>Ao confirmar, você concorda com nossos <span className="ui-link">Termos de Uso</span> e <span className="ui-link">Política de Privacidade</span>.</span>
-        </p>
-      </form>
+          <p className="text-center text-xs text-muted-foreground inline-flex items-start gap-1.5 justify-center w-full">
+            <Lock className="h-3.5 w-3.5 shrink-0 mt-px" />
+            <span>Ao confirmar, você concorda com nossos <span className="ui-link">Termos de Uso</span> e <span className="ui-link">Política de Privacidade</span>.</span>
+          </p>
+        </form>
+      </div>
     </section>
   );
 }
