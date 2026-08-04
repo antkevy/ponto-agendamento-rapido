@@ -195,8 +195,6 @@ export function AuthLayout({
             ))}
           </ul>
         </main>
-
-        </main>
       </div>
     </div>
   );
