@@ -12,6 +12,7 @@ import { PhoneInput } from "@/components/phone-input";
 import { isValidPhoneBR, onlyDigits } from "@/lib/phone";
 import { ImageUpload } from "@/components/image-upload";
 import { ExternalLink } from "lucide-react";
+import { AppearanceSettings } from "@/components/appearance-settings";
 
 export const Route = createFileRoute("/app/configuracoes")({
   head: () => ({ meta: [{ title: "Configurações — Agendaí" }] }),
@@ -132,6 +133,8 @@ function Page() {
           </div>
 
           <button disabled={save.isPending} className="btn-brand disabled:opacity-60">{save.isPending ? "Salvando..." : "Salvar alterações"}</button>
+
+          <div className="pt-2"><AppearanceSettings /></div>
         </form>
       )}
     </AppShell>
