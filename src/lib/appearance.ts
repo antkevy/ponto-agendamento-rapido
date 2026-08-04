@@ -1,10 +1,12 @@
 /**
  * Sistema de cores 100% configurável.
  *
- * Cada token abaixo é escrito em variáveis CSS globais no <html>, portanto
- * qualquer alteração feita na Dashboard (Aparência → Cores do Tema) reflete
- * automaticamente em todo o sistema, sem precisar mexer no código.
+ * As cores escolhidas na Dashboard (Aparência → Cores do Tema) são aplicadas
+ * SOMENTE na página pública de agendamento (/p/:slug), via variáveis CSS
+ * no elemento raiz dessa página. O restante do sistema usa os padrões.
  */
+
+import type React from "react";
 
 export type AppearanceKey =
   | "primary"
@@ -115,13 +117,17 @@ export function saveAppearance(mode: "light" | "dark", value: Appearance) {
   } catch {
     /* ignore */
   }
-  applyAppearance(value);
 }
 
-/** Aplica os tokens nas variáveis CSS globais. */
-export function applyAppearance(a: Appearance) {
+/**
+ * Aplica os tokens nas variáveis CSS. As cores escolhidas na Dashboard só
+ * devem valer para a página pública de agendamento (/p/:slug) — por isso o
+ * alvo padrão não é mais o <html>, e sim o elemento raiz da página de
+ * agendamento (via useBookingTheme). Passar target deixa o escopo explícito.
+ */
+export function applyAppearance(a: Appearance, target?: HTMLElement) {
   if (typeof document === "undefined") return;
-  const s = document.documentElement.style;
+  const s = (target ?? document.documentElement).style;
   const set = (name: string, value: string) => s.setProperty(name, value);
 
   set("--primary", a.primary);
@@ -157,7 +163,7 @@ export function applyAppearance(a: Appearance) {
   set("--muted-foreground", a.textMuted);
 }
 
-export function resetAppearance(mode: "light" | "dark") {
+export function resetAppearance(mode: "light" | "dark", target?: HTMLElement) {
   try {
     window.localStorage.removeItem(storageKey(mode));
   } catch {
@@ -173,6 +179,43 @@ export function resetAppearance(mode: "light" | "dark") {
       "--secondary-foreground", "--sidebar-foreground", "--sidebar-accent-foreground",
       "--muted-foreground",
     ];
-    for (const k of keys) document.documentElement.style.removeProperty(k);
+    const el = (target ?? document.documentElement) as HTMLElement;
+    for (const k of keys) el.style.removeProperty(k);
   }
+}
+
+/** Retorna true se o usuário já personalizou alguma cor do tema. */
+export function isCustomizedAppearance(a: Appearance, mode: "light" | "dark") {
+  const preset = mode === "dark" ? DARK_PRESET : LIGHT_PRESET;
+  return APPEARANCE_FIELDS.some((f) => a[f.key] !== preset[f.key]);
+}
+
+/** Converte a aparência em variáveis CSS para uso inline (preview e página). */
+export function appearanceCssVars(a: Appearance): React.CSSProperties {
+  return {
+    "--primary": a.primary,
+    "--brand": a.primary,
+    "--sidebar-primary": a.primary,
+    "--secondary": a.secondary,
+    "--accent": a.accent,
+    "--ring": a.accent,
+    "--sidebar-ring": a.accent,
+    "--btn-color": a.button,
+    "--icon-color": a.icon,
+    "--link-color": a.link,
+    "--badge-color": a.badge,
+    "--card": a.card,
+    "--popover": a.card,
+    "--border": a.border,
+    "--input": a.border,
+    "--background": a.background,
+    "--surface": a.background,
+    "--header-color": a.header,
+    "--input-bg": a.input,
+    "--hover-color": a.hover,
+    "--muted": a.hover,
+    "--foreground": a.text,
+    "--card-foreground": a.text,
+    "--muted-foreground": a.textMuted,
+  } as React.CSSProperties;
 }

@@ -1,9 +1,10 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { db } from "@/lib/db-tables";
+import { useBookingTheme } from "@/hooks/use-booking-theme";
 import {
   computeSlots,
   formatBRL,
@@ -54,7 +55,8 @@ type Step = "landing" | "service" | "employee" | "when" | "form" | "done";
 
 function BookingPage() {
   const { pro } = Route.useLoaderData();
-  const brand = pro.brand_color || "#0284C7";
+  const rootRef = useRef<HTMLDivElement>(null);
+  const brand = useBookingTheme(rootRef, pro.brand_color);
 
   const [step, setStep] = useState<Step>("landing");
   const [selectedServices, setSelectedServices] = useState<Service[]>([]);
@@ -149,10 +151,14 @@ function BookingPage() {
 
   return (
     <div
+      ref={rootRef}
       className="min-h-screen bg-page-gradient"
       style={{ ["--brand" as string]: brand } as React.CSSProperties}
     >
-      <header className="bg-transparent">
+      <header
+        className="bg-transparent"
+        style={{ backgroundColor: "color-mix(in oklab, var(--header-color) 55%, transparent)" }}
+      >
         <div className="max-w-2xl mx-auto px-4 py-8 sm:py-10 flex items-start gap-4">
           {pro.logo_url ? (
             <img src={pro.logo_url} alt="" className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl object-cover border border-border shrink-0" />
