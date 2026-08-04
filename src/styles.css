@@ -198,16 +198,16 @@
     border-radius: var(--radius-xl);
   }
   .btn-brand {
-    background-image: linear-gradient(180deg, oklch(0.62 0.14 240) 0%, var(--color-accent) 100%);
-    color: var(--color-accent-foreground);
+    background-image: linear-gradient(180deg, color-mix(in oklab, var(--btn-color) 82%, white) 0%, var(--btn-color) 100%);
+    color: var(--btn-foreground);
     font-weight: 600;
     border-radius: var(--radius-lg);
     padding: 0.75rem 1.25rem;
     min-height: 44px;
-    box-shadow: 0 6px 16px -8px oklch(0.45 0.14 240 / 0.5), inset 0 1px 0 oklch(1 0 0 / 0.2);
+    box-shadow: 0 6px 16px -8px color-mix(in oklab, var(--btn-color) 50%, transparent), inset 0 1px 0 oklch(1 0 0 / 0.2);
     transition: transform 200ms cubic-bezier(0.34, 1.4, 0.64, 1), filter 200ms ease, box-shadow 200ms ease;
   }
-  .btn-brand:hover { filter: brightness(1.06); box-shadow: 0 10px 22px -8px oklch(0.45 0.14 240 / 0.55), inset 0 1px 0 oklch(1 0 0 / 0.25); }
+  .btn-brand:hover { filter: brightness(1.06); box-shadow: 0 10px 22px -8px color-mix(in oklab, var(--btn-color) 55%, transparent), inset 0 1px 0 oklch(1 0 0 / 0.25); }
   .btn-brand:active { transform: scale(0.97); }
 
   .btn-outline-brand {
@@ -224,16 +224,16 @@
   .btn-outline-brand:active { transform: scale(0.97); }
 
   .btn-gradient {
-    background-image: linear-gradient(180deg, oklch(0.66 0.16 245) 0%, oklch(0.52 0.18 250) 100%);
-    color: #fff;
+    background-image: linear-gradient(180deg, color-mix(in oklab, var(--btn-color) 78%, white) 0%, var(--btn-color) 100%);
+    color: var(--btn-foreground);
     font-weight: 600;
     border-radius: 9999px;
     padding: 0.95rem 1.6rem;
     min-height: 52px;
-    box-shadow: 0 12px 28px -12px oklch(0.5 0.18 250 / 0.6), inset 0 1px 0 oklch(1 0 0 / 0.28);
+    box-shadow: 0 12px 28px -12px color-mix(in oklab, var(--btn-color) 60%, transparent), inset 0 1px 0 oklch(1 0 0 / 0.28);
     transition: transform 220ms cubic-bezier(0.34, 1.4, 0.64, 1), box-shadow 220ms ease, filter 220ms ease;
   }
-  .btn-gradient:hover { filter: brightness(1.06); box-shadow: 0 18px 34px -12px oklch(0.5 0.18 250 / 0.7), inset 0 1px 0 oklch(1 0 0 / 0.32); transform: translateY(-1px); }
+  .btn-gradient:hover { filter: brightness(1.06); box-shadow: 0 18px 34px -12px color-mix(in oklab, var(--btn-color) 70%, transparent), inset 0 1px 0 oklch(1 0 0 / 0.32); transform: translateY(-1px); }
   .btn-gradient:active { transform: scale(0.97); }
 
   .btn-pill-outline {
@@ -251,16 +251,16 @@
   .btn-pill-outline:active { transform: scale(0.97); }
 
   .btn-pill-solid {
-    background-image: linear-gradient(180deg, oklch(0.66 0.16 245) 0%, oklch(0.52 0.18 250) 100%);
-    color: #fff;
+    background-image: linear-gradient(180deg, color-mix(in oklab, var(--btn-color) 78%, white) 0%, var(--btn-color) 100%);
+    color: var(--btn-foreground);
     font-weight: 600;
     border-radius: 9999px;
     padding: 0.65rem 1.15rem;
     min-height: 44px;
-    box-shadow: 0 8px 18px -8px oklch(0.5 0.18 250 / 0.6), inset 0 1px 0 oklch(1 0 0 / 0.25);
+    box-shadow: 0 8px 18px -8px color-mix(in oklab, var(--btn-color) 60%, transparent), inset 0 1px 0 oklch(1 0 0 / 0.25);
     transition: filter 200ms ease, transform 200ms cubic-bezier(0.34, 1.4, 0.64, 1), box-shadow 200ms ease;
   }
-  .btn-pill-solid:hover { filter: brightness(1.06); color: #fff; box-shadow: 0 12px 24px -8px oklch(0.5 0.18 250 / 0.7), inset 0 1px 0 oklch(1 0 0 / 0.3); transform: translateY(-1px); }
+  .btn-pill-solid:hover { filter: brightness(1.06); color: var(--btn-foreground); box-shadow: 0 12px 24px -8px color-mix(in oklab, var(--btn-color) 70%, transparent), inset 0 1px 0 oklch(1 0 0 / 0.3); transform: translateY(-1px); }
   .btn-pill-solid:active { transform: scale(0.97); }
 
   .badge-pill {

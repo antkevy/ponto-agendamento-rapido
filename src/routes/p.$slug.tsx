@@ -437,7 +437,7 @@ function BookingPage() {
       </main>
 
       <footer className="text-center py-8 text-xs text-muted-foreground">
-        Agendamento por <a href="/" className="font-bold text-sm hover:underline" style={{ color: "oklch(0.55 0.18 250)" }}>Agendaí</a>
+        Agendamento por <a href="/" className="ui-link font-bold text-sm">Agendaí</a>
       </footer>
 
       {pro.phone && <WhatsAppFloat phone={pro.phone} />}
