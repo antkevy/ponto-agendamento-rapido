@@ -7,12 +7,16 @@ import { AuthLayout, Field } from "./entrar";
 import { slugify } from "@/lib/booking";
 
 export const Route = createFileRoute("/cadastrar")({
-  head: () => ({ meta: [{ title: "Criar conta — Agendaí" }, { name: "description", content: "Comece a receber agendamentos online em minutos." }] }),
+  head: () => ({
+    meta: [
+      { title: "Criar conta — Agendaí" },
+      { name: "description", content: "Comece a receber agendamentos online em minutos." },
+    ],
+  }),
   component: SignUp,
 });
 
 const inputCls = "ui-field-input";
-
 
 function SignUp() {
   const router = useRouter();
@@ -30,7 +34,10 @@ function SignUp() {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: { emailRedirectTo: window.location.origin + "/app", data: { full_name: ownerName } },
+        options: {
+          emailRedirectTo: window.location.origin + "/app",
+          data: { full_name: ownerName },
+        },
       });
       if (error) throw error;
       const user = data.user;
@@ -58,6 +65,12 @@ function SignUp() {
       toast.success("Conta criada! Bem-vindo ao Agendaí.");
       router.navigate({ to: "/app" });
     } catch (err) {
+      void supabase
+        .rpc("log_auth_event", { p_kind: "signup_failed", p_contact: email.trim().toLowerCase() })
+        .then(
+          () => {},
+          () => {},
+        );
       toast.error(err instanceof Error ? err.message : "Erro ao criar conta.");
     } finally {
       setLoading(false);
@@ -72,26 +85,61 @@ function SignUp() {
     >
       <form onSubmit={onSubmit} className="space-y-4">
         <Field label="Nome do seu negócio">
-          <input required value={businessName} onChange={(e) => setBusinessName(e.target.value)} placeholder="Ex.: Barbearia do João" className={inputCls} />
+          <input
+            required
+            value={businessName}
+            onChange={(e) => setBusinessName(e.target.value)}
+            placeholder="Ex.: Barbearia do João"
+            className={inputCls}
+          />
         </Field>
         <Field label="Seu nome">
-          <input required value={ownerName} onChange={(e) => setOwnerName(e.target.value)} placeholder="Seu nome completo" className={inputCls} />
+          <input
+            required
+            value={ownerName}
+            onChange={(e) => setOwnerName(e.target.value)}
+            placeholder="Seu nome completo"
+            className={inputCls}
+          />
         </Field>
         <Field label="Email">
-          <input type="email" required inputMode="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" className={inputCls} />
+          <input
+            type="email"
+            required
+            inputMode="email"
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="seu@email.com"
+            className={inputCls}
+          />
         </Field>
         <Field label="Senha (mínimo 6 caracteres)">
-          <input type="password" required minLength={6} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Mínimo 6 caracteres" className={inputCls} />
+          <input
+            type="password"
+            required
+            minLength={6}
+            autoComplete="new-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Mínimo 6 caracteres"
+            className={inputCls}
+          />
         </Field>
-        <button type="submit" disabled={loading} className="ui-ripple ui-btn-primary w-full inline-flex items-center justify-center gap-2 min-h-[56px] px-6 rounded-2xl font-semibold transition-all disabled:opacity-60">
+        <button
+          type="submit"
+          disabled={loading}
+          className="ui-ripple ui-btn-primary w-full inline-flex items-center justify-center gap-2 min-h-[56px] px-6 rounded-2xl font-semibold transition-all disabled:opacity-60"
+        >
           {loading ? "Criando..." : "Criar minha conta"}
         </button>
       </form>
       <p className="mt-6 text-sm text-muted-foreground text-center">
         Já tem conta?{" "}
-        <Link to="/entrar" className="ui-link">Entrar</Link>
+        <Link to="/entrar" className="ui-link">
+          Entrar
+        </Link>
       </p>
     </AuthLayout>
   );
 }
-

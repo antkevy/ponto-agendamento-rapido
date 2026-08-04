@@ -4,7 +4,15 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { BrandLogo } from "@/components/brand-logo";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { ArrowRight, Check, Lock, Mail, ShieldCheck, CalendarCheck2, Headphones } from "lucide-react";
+import {
+  ArrowRight,
+  Check,
+  Lock,
+  Mail,
+  ShieldCheck,
+  CalendarCheck2,
+  Headphones,
+} from "lucide-react";
 import { UIButton, UICard, UIInput, UIPasswordInput, UITitle } from "@/components/ui-kit";
 import authBg from "@/assets/auth-bg.jpg";
 
@@ -12,7 +20,10 @@ export const Route = createFileRoute("/entrar")({
   head: () => ({
     meta: [
       { title: "Entrar — Agendaí" },
-      { name: "description", content: "Acesse seu painel Agendaí e gerencie agendamentos, serviços e horários." },
+      {
+        name: "description",
+        content: "Acesse seu painel Agendaí e gerencie agendamentos, serviços e horários.",
+      },
       { property: "og:title", content: "Entrar no Agendaí" },
       { property: "og:description", content: "Acesse seu painel e gerencie sua agenda online." },
       { property: "og:type", content: "website" },
@@ -34,7 +45,15 @@ function SignIn() {
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
-    if (error) return toast.error(error.message);
+    if (error) {
+      void supabase
+        .rpc("log_auth_event", { p_kind: "login_failed", p_contact: email.trim().toLowerCase() })
+        .then(
+          () => {},
+          () => {},
+        );
+      return toast.error(error.message);
+    }
     toast.success("Bem-vindo de volta!");
     router.navigate({ to: "/app" });
   }
@@ -57,7 +76,11 @@ function SignIn() {
   }
 
   return (
-    <AuthLayout title="Bem-vindo de volta." accent="Entre e continue." subtitle="Acesse seu painel para gerenciar agendamentos, serviços e horários.">
+    <AuthLayout
+      title="Bem-vindo de volta."
+      accent="Entre e continue."
+      subtitle="Acesse seu painel para gerenciar agendamentos, serviços e horários."
+    >
       <form onSubmit={onSubmit} className="space-y-4">
         <UIInput
           label="E-mail"
@@ -96,7 +119,13 @@ function SignIn() {
         </div>
 
         <UIButton type="submit" size="lg" fullWidth disabled={loading}>
-          {loading ? "Entrando..." : (<>Entrar <ArrowRight className="h-5 w-5" /></>)}
+          {loading ? (
+            "Entrando..."
+          ) : (
+            <>
+              Entrar <ArrowRight className="h-5 w-5" />
+            </>
+          )}
         </UIButton>
       </form>
 
@@ -117,7 +146,9 @@ function SignIn() {
 
       <p className="mt-6 text-sm text-muted-foreground text-center">
         Ainda não possui conta?{" "}
-        <Link to="/cadastrar" className="ui-link">Cadastre-se gratuitamente</Link>
+        <Link to="/cadastrar" className="ui-link">
+          Cadastre-se gratuitamente
+        </Link>
       </p>
     </AuthLayout>
   );
@@ -126,10 +157,19 @@ function SignIn() {
 function GoogleGlyph() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-      <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5a5.6 5.6 0 0 1-2.4 3.7v3h3.9c2.3-2.1 3.5-5.2 3.5-8.9Z" />
-      <path fill="#34A853" d="M12 24c3.2 0 6-1.1 8-2.9l-3.9-3c-1.1.7-2.5 1.2-4.1 1.2-3.1 0-5.8-2.1-6.8-5H1.2v3.1A12 12 0 0 0 12 24Z" />
+      <path
+        fill="#4285F4"
+        d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5a5.6 5.6 0 0 1-2.4 3.7v3h3.9c2.3-2.1 3.5-5.2 3.5-8.9Z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 24c3.2 0 6-1.1 8-2.9l-3.9-3c-1.1.7-2.5 1.2-4.1 1.2-3.1 0-5.8-2.1-6.8-5H1.2v3.1A12 12 0 0 0 12 24Z"
+      />
       <path fill="#FBBC05" d="M5.2 14.3a7.2 7.2 0 0 1 0-4.6V6.6H1.2a12 12 0 0 0 0 10.8l4-3.1Z" />
-      <path fill="#EA4335" d="M12 4.8c1.8 0 3.3.6 4.6 1.8l3.4-3.4C18 1.2 15.2 0 12 0A12 12 0 0 0 1.2 6.6l4 3.1c1-2.9 3.7-4.9 6.8-4.9Z" />
+      <path
+        fill="#EA4335"
+        d="M12 4.8c1.8 0 3.3.6 4.6 1.8l3.4-3.4C18 1.2 15.2 0 12 0A12 12 0 0 0 1.2 6.6l4 3.1c1-2.9 3.7-4.9 6.8-4.9Z"
+      />
     </svg>
   );
 }
@@ -161,7 +201,11 @@ export function AuthLayout({
 }) {
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
-      <div className="ui-auth-bg" style={{ backgroundImage: `url(${authBg})` }} aria-hidden="true" />
+      <div
+        className="ui-auth-bg"
+        style={{ backgroundImage: `url(${authBg})` }}
+        aria-hidden="true"
+      />
       <div className="ui-auth-overlay" aria-hidden="true" />
 
       <div className="relative">
@@ -169,7 +213,10 @@ export function AuthLayout({
           <BrandLogo />
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <Link to="/" className="text-sm text-muted-foreground hover:text-foreground transition-colors max-sm:hidden">
+            <Link
+              to="/"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors max-sm:hidden"
+            >
               Voltar ao início
             </Link>
           </div>
@@ -177,14 +224,22 @@ export function AuthLayout({
 
         <main className="max-w-md mx-auto px-4 sm:px-8 pt-2 pb-16">
           <UICard glass className="mt-4 p-6 sm:p-8 animate-ui-scale-in">
-            <UITitle size="lg" accent={accent}>{title}</UITitle>
-            <p className="mt-3 text-sm sm:text-base text-muted-foreground leading-relaxed">{subtitle}</p>
+            <UITitle size="lg" accent={accent}>
+              {title}
+            </UITitle>
+            <p className="mt-3 text-sm sm:text-base text-muted-foreground leading-relaxed">
+              {subtitle}
+            </p>
             <div className="mt-7">{children}</div>
           </UICard>
 
           <ul className="mt-7 grid grid-cols-3 gap-2 text-center">
             {BENEFITS.map((b, i) => (
-              <li key={b.label} className="ui-stagger flex flex-col items-center gap-2" style={{ ["--i" as string]: i + 1 }}>
+              <li
+                key={b.label}
+                className="ui-stagger flex flex-col items-center gap-2"
+                style={{ ["--i" as string]: i + 1 }}
+              >
                 <span className="ui-icon-bubble h-10 w-10 grid place-items-center rounded-xl">
                   <b.icon className="h-5 w-5" />
                 </span>
