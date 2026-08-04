@@ -725,7 +725,7 @@ function FormStep({ pro, selectedServices, employee, when, onDone, brand }: { pr
     <section className="space-y-6">
       <header className="text-center animate-ui-slide-up">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] ui-accent-text mb-2">Último passo</p>
-        <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-foreground">Confirmar agendamento</h2>
+        <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">Confirmar agendamento</h2>
         <p className="mt-2 inline-flex items-center gap-1.5 text-sm text-muted-foreground">
           <ShieldCheck className="h-4 w-4 ui-icon-color" /> Ambiente seguro · dados usados só para o agendamento
         </p>
