@@ -18,8 +18,34 @@ import {
 } from "@/lib/booking";
 import { PhoneInput } from "@/components/phone-input";
 import { isValidPhoneBR } from "@/lib/phone";
-import { CheckCircle2, ChevronLeft, ChevronRight, MapPin, Clock, ArrowLeft, User, X, MessageCircle, Gem, ShieldCheck, CalendarCheck2, Calendar as CalendarIcon, Scissors, Mail, Pencil, Lock } from "lucide-react";
-import { UIButton, UICard, UICardHeader, UIInput, UITextarea, UINotice, UISummaryRow } from "@/components/ui-kit";
+import {
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  MapPin,
+  Clock,
+  ArrowLeft,
+  User,
+  X,
+  MessageCircle,
+  Gem,
+  ShieldCheck,
+  CalendarCheck2,
+  Calendar as CalendarIcon,
+  Scissors,
+  Mail,
+  Pencil,
+  Lock,
+} from "lucide-react";
+import {
+  UIButton,
+  UICard,
+  UICardHeader,
+  UIInput,
+  UITextarea,
+  UINotice,
+  UISummaryRow,
+} from "@/components/ui-kit";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ViewToggle, type ViewMode } from "@/components/view-toggle";
 
@@ -41,7 +67,8 @@ type PublicPro = {
 
 export const Route = createFileRoute("/p/$slug")({
   loader: async ({ params }) => {
-    const cols = "id, slug, business_name, logo_url, brand_color, description, address, phone, lat, lng, timezone";
+    const cols =
+      "id, slug, business_name, logo_url, brand_color, description, address, phone, lat, lng, timezone";
     // theme_colors só existe depois de aplicar a migração
     // 20260803100000_add_professional_theme_colors. Se a coluna ainda não
     // existir no banco, cai no fallback (página segue funcional, cores padrão).
@@ -51,7 +78,11 @@ export const Route = createFileRoute("/p/$slug")({
       .eq("slug", params.slug)
       .maybeSingle();
     if (error) {
-      const fb = await supabase.from(db.profissionais).select(cols).eq("slug", params.slug).maybeSingle();
+      const fb = await supabase
+        .from(db.profissionais)
+        .select(cols)
+        .eq("slug", params.slug)
+        .maybeSingle();
       if (fb.error) throw fb.error;
       if (!fb.data) throw notFound();
       return { pro: { ...fb.data, theme_colors: null } };
@@ -60,21 +91,42 @@ export const Route = createFileRoute("/p/$slug")({
     return { pro: data as PublicPro };
   },
   head: ({ loaderData }) => {
-    if (!loaderData) return { meta: [{ title: "Página não encontrada — Agendaí" }, { name: "robots", content: "noindex" }] };
+    if (!loaderData)
+      return {
+        meta: [
+          { title: "Página não encontrada — Agendaí" },
+          { name: "robots", content: "noindex" },
+        ],
+      };
     const p = loaderData.pro;
     return {
       meta: [
         { title: `Agendar com ${p.business_name} — Agendaí` },
-        { name: "description", content: p.description || `Agende seu horário com ${p.business_name} online, 24h por dia.` },
+        {
+          name: "description",
+          content:
+            p.description || `Agende seu horário com ${p.business_name} online, 24h por dia.`,
+        },
         { property: "og:title", content: `Agendar com ${p.business_name}` },
-        { property: "og:description", content: p.description || `Marque seu horário online com ${p.business_name}.` },
+        {
+          property: "og:description",
+          content: p.description || `Marque seu horário online com ${p.business_name}.`,
+        },
       ],
     };
   },
   component: BookingPage,
 });
 
-type Service = { id: string; name: string; duration_minutes: number; price_cents: number; description: string | null; image_url: string | null; is_active: boolean };
+type Service = {
+  id: string;
+  name: string;
+  duration_minutes: number;
+  price_cents: number;
+  description: string | null;
+  image_url: string | null;
+  is_active: boolean;
+};
 type Employee = { id: string; name: string; photo_url: string | null; is_active: boolean };
 
 type Step = "landing" | "service" | "employee" | "when" | "form" | "done";
@@ -102,7 +154,13 @@ function BookingPage() {
         .eq("is_active", true)
         .order("price_cents");
       if (error) throw error;
-      return data as Array<{ id: string; name: string; description: string | null; price_cents: number; image_url: string | null }>;
+      return data as Array<{
+        id: string;
+        name: string;
+        description: string | null;
+        price_cents: number;
+        image_url: string | null;
+      }>;
     },
   });
 
@@ -133,13 +191,20 @@ function BookingPage() {
         .order("name");
       if (error) throw error;
       const ids = (emps ?? []).map((e) => e.id);
-      if (ids.length === 0) return { employees: [] as Employee[], links: [] as Array<{ employee_id: string; service_id: string }> };
+      if (ids.length === 0)
+        return {
+          employees: [] as Employee[],
+          links: [] as Array<{ employee_id: string; service_id: string }>,
+        };
       const { data: links, error: linkErr } = await supabase
         .from(db.servicosFuncionario)
         .select("employee_id, service_id")
         .in("employee_id", ids);
       if (linkErr) throw linkErr;
-      return { employees: emps as Employee[], links: (links ?? []) as Array<{ employee_id: string; service_id: string }> };
+      return {
+        employees: emps as Employee[],
+        links: (links ?? []) as Array<{ employee_id: string; service_id: string }>,
+      };
     },
   });
 
@@ -172,7 +237,13 @@ function BookingPage() {
     else if (step === "when") setStep(hasAnyEmployees ? "employee" : "service");
     else if (step === "employee") setStep("service");
     else if (step === "service") setStep("landing");
-    else if (step === "done") { setSelectedServices([]); setEmployee(null); setWhen(null); setConfirmedId(null); setStep("landing"); }
+    else if (step === "done") {
+      setSelectedServices([]);
+      setEmployee(null);
+      setWhen(null);
+      setConfirmedId(null);
+      setStep("landing");
+    }
   }
 
   return (
@@ -187,16 +258,36 @@ function BookingPage() {
       >
         <div className="max-w-3xl mx-auto px-4 py-8 sm:py-10 flex items-start gap-4">
           {pro.logo_url ? (
-            <img src={pro.logo_url} alt="" className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl object-cover border border-border shrink-0" />
+            <img
+              src={pro.logo_url}
+              alt=""
+              className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl object-cover border border-border shrink-0"
+            />
           ) : (
-            <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl grid place-items-center text-2xl font-bold text-brand-foreground shrink-0 shadow-md" style={{ backgroundColor: brand }}>{pro.business_name.charAt(0).toUpperCase()}</div>
+            <div
+              className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl grid place-items-center text-2xl font-bold text-brand-foreground shrink-0 shadow-md"
+              style={{ backgroundColor: brand }}
+            >
+              {pro.business_name.charAt(0).toUpperCase()}
+            </div>
           )}
           <div className="min-w-0 flex-1">
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground truncate leading-[1.1]">{pro.business_name}</h1>
-            {pro.description && <p className="text-sm text-muted-foreground mt-1.5">{pro.description}</p>}
-            {(pro.lat && pro.lng) ? (
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground truncate leading-[1.1]">
+              {pro.business_name}
+            </h1>
+            {pro.description && (
+              <p className="text-sm text-muted-foreground mt-1.5">{pro.description}</p>
+            )}
+            {pro.lat && pro.lng ? (
               <div className="mt-1 space-y-1">
-                <a href={`https://www.google.com/maps?q=${pro.lat},${pro.lng}`} target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground inline-flex items-center gap-1 hover:text-accent transition-colors"><MapPin className="h-3 w-3" /> {pro.address || "Ver no mapa"}</a>
+                <a
+                  href={`https://www.google.com/maps?q=${pro.lat},${pro.lng}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-muted-foreground inline-flex items-center gap-1 hover:text-accent transition-colors"
+                >
+                  <MapPin className="h-3 w-3" /> {pro.address || "Ver no mapa"}
+                </a>
                 <div className="rounded-xl overflow-hidden border border-border h-32 w-full max-w-sm">
                   <iframe
                     title="Localização"
@@ -206,18 +297,29 @@ function BookingPage() {
                   />
                 </div>
               </div>
-            ) : pro.address && (
-              <a href={`https://www.google.com/maps/search/${encodeURIComponent(pro.address)}`} target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground mt-1 inline-flex items-center gap-1 hover:text-accent transition-colors"><MapPin className="h-3 w-3" /> {pro.address}</a>
+            ) : (
+              pro.address && (
+                <a
+                  href={`https://www.google.com/maps/search/${encodeURIComponent(pro.address)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-muted-foreground mt-1 inline-flex items-center gap-1 hover:text-accent transition-colors"
+                >
+                  <MapPin className="h-3 w-3" /> {pro.address}
+                </a>
+              )
             )}
           </div>
           <ThemeToggle className="shrink-0" />
         </div>
       </header>
 
-
       <main className="max-w-3xl mx-auto px-4 py-6 sm:py-8">
         {step !== "landing" && step !== "service" && step !== "done" && (
-          <button onClick={goBack} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4">
+          <button
+            onClick={goBack}
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4"
+          >
             <ArrowLeft className="h-4 w-4" /> Voltar
           </button>
         )}
@@ -231,27 +333,59 @@ function BookingPage() {
             )}
 
             {loadingPlanos ? (
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{[0, 1].map((i) => <div key={i} className="skeleton h-48" />)}</div>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {[0, 1].map((i) => (
+                  <div key={i} className="skeleton h-48" />
+                ))}
+              </div>
             ) : planos && planos.length > 0 ? (
               <div>
-                <h2 className="text-xl font-bold tracking-tight text-foreground mb-4 flex items-center gap-2"><Gem className="h-5 w-5" /> Nossos planos</h2>
+                <h2 className="text-xl font-bold tracking-tight text-foreground mb-4 flex items-center gap-2">
+                  <Gem className="h-5 w-5" /> Nossos planos
+                </h2>
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {planos.map((p) => (
-                    <div key={p.id} className="card-elevated p-5 flex flex-col gap-3 hover:-translate-y-0.5 transition-all">
-                      {p.image_url && <img src={p.image_url} alt={p.name} className="w-full aspect-video rounded-lg object-cover" />}
+                    <div
+                      key={p.id}
+                      className="card-elevated p-5 flex flex-col gap-3 hover:-translate-y-0.5 transition-all"
+                    >
+                      {p.image_url && (
+                        <img
+                          src={p.image_url}
+                          alt={p.name}
+                          className="w-full aspect-video rounded-lg object-cover"
+                        />
+                      )}
                       <p className="font-semibold text-lg">{p.name}</p>
-                      <p className="text-2xl font-black tracking-tight" style={{ color: brand }}>{formatBRL(p.price_cents)}</p>
-                      {p.description && <p className="text-sm text-muted-foreground leading-relaxed">{p.description}</p>}
+                      <p className="text-2xl font-black tracking-tight" style={{ color: brand }}>
+                        {formatBRL(p.price_cents)}
+                      </p>
+                      {p.description && (
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                          {p.description}
+                        </p>
+                      )}
                     </div>
                   ))}
                 </div>
               </div>
             ) : null}
 
-            <div className="text-center pb-4">
-              <button onClick={() => setStep("service")} className="btn-gradient text-lg px-10 py-4 inline-flex items-center gap-2">
+            <div className="text-center pb-4 space-y-3">
+              <button
+                onClick={() => setStep("service")}
+                className="btn-gradient text-lg px-10 py-4 inline-flex items-center gap-2"
+              >
                 Agendar serviço <ArrowLeft className="h-5 w-5 rotate-180" />
               </button>
+              <div>
+                <a
+                  href={`/meus-agendamentos?pro=${encodeURIComponent(pro.slug)}`}
+                  className="ui-link text-sm inline-flex items-center gap-1.5"
+                >
+                  <CalendarCheck2 className="h-4 w-4" /> Ver meus agendamentos
+                </a>
+              </div>
             </div>
           </section>
         )}
@@ -259,13 +393,23 @@ function BookingPage() {
         {step === "service" && (
           <section className="animate-fade-in-up">
             <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
-              <h2 className="text-xl font-bold tracking-tight text-foreground">1. Escolha os serviços</h2>
-              {(services ?? []).length > 0 && <ViewToggle value={serviceView} onChange={setServiceView} />}
+              <h2 className="text-xl font-bold tracking-tight text-foreground">
+                1. Escolha os serviços
+              </h2>
+              {(services ?? []).length > 0 && (
+                <ViewToggle value={serviceView} onChange={setServiceView} />
+              )}
             </div>
             {loadingServices ? (
-              <div className="space-y-3">{[0, 1, 2].map((i) => <div key={i} className="skeleton h-20" />)}</div>
+              <div className="space-y-3">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="skeleton h-20" />
+                ))}
+              </div>
             ) : (services ?? []).length === 0 ? (
-              <p className="text-sm text-muted-foreground">Este profissional ainda não cadastrou serviços.</p>
+              <p className="text-sm text-muted-foreground">
+                Este profissional ainda não cadastrou serviços.
+              </p>
             ) : (
               <>
                 {serviceView === "list" ? (
@@ -278,28 +422,54 @@ function BookingPage() {
                             role="button"
                             tabIndex={0}
                             onClick={() => toggleService(s)}
-                            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleService(s); } }}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                toggleService(s);
+                              }
+                            }}
                             data-selected={selected || undefined}
                             className="w-full text-left cursor-pointer card-elevated p-4 hover:border-accent transition-all hover:-translate-y-0.5 data-[selected]:border-accent data-[selected]:ring-2 data-[selected]:ring-accent/30"
                           >
                             <div className="flex items-start gap-3">
-                              {s.image_url && <img src={s.image_url} alt={s.name} className="h-16 w-16 rounded-lg object-cover shrink-0 aspect-square" />}
+                              {s.image_url && (
+                                <img
+                                  src={s.image_url}
+                                  alt={s.name}
+                                  className="h-16 w-16 rounded-lg object-cover shrink-0 aspect-square"
+                                />
+                              )}
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2">
-                                  {selected && <CheckCircle2 className="h-5 w-5 text-accent shrink-0" />}
+                                  {selected && (
+                                    <CheckCircle2 className="h-5 w-5 text-accent shrink-0" />
+                                  )}
                                   <p className="font-semibold">{s.name}</p>
                                 </div>
-                                {s.description && <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{s.description}</p>}
+                                {s.description && (
+                                  <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                                    {s.description}
+                                  </p>
+                                )}
                                 <div className="flex items-center gap-3 mt-2">
-                                  <span className="text-sm text-muted-foreground inline-flex items-center gap-1"><Clock className="h-3 w-3" /> {s.duration_minutes} min</span>
-                                  <span className="font-semibold text-primary">{formatBRL(s.price_cents)}</span>
+                                  <span className="text-sm text-muted-foreground inline-flex items-center gap-1">
+                                    <Clock className="h-3 w-3" /> {s.duration_minutes} min
+                                  </span>
+                                  <span className="font-semibold text-primary">
+                                    {formatBRL(s.price_cents)}
+                                  </span>
                                 </div>
                               </div>
                               <button
                                 type="button"
-                                onClick={(e) => { e.stopPropagation(); setDetailService(s); }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setDetailService(s);
+                                }}
                                 className="btn-outline-brand !py-1 !px-2 text-xs shrink-0 mt-1"
-                              >Ver mais</button>
+                              >
+                                Ver mais
+                              </button>
                             </div>
                           </div>
                         </li>
@@ -316,23 +486,49 @@ function BookingPage() {
                             role="button"
                             tabIndex={0}
                             onClick={() => toggleService(s)}
-                            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleService(s); } }}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                toggleService(s);
+                              }
+                            }}
                             data-selected={selected || undefined}
                             className="w-full h-full text-left cursor-pointer card-elevated p-4 hover:border-accent transition-all hover:-translate-y-0.5 flex flex-col gap-2 data-[selected]:border-accent data-[selected]:ring-2 data-[selected]:ring-accent/30"
                           >
-                            {s.image_url && <img src={s.image_url} alt={s.name} className="w-full aspect-square rounded-lg object-cover" />}
+                            {s.image_url && (
+                              <img
+                                src={s.image_url}
+                                alt={s.name}
+                                className="w-full aspect-square rounded-lg object-cover"
+                              />
+                            )}
                             <div className="flex items-center gap-2">
-                              {selected && <CheckCircle2 className="h-4 w-4 text-accent shrink-0" />}
+                              {selected && (
+                                <CheckCircle2 className="h-4 w-4 text-accent shrink-0" />
+                              )}
                               <p className="font-semibold truncate">{s.name}</p>
                             </div>
-                            <p className="text-xs text-muted-foreground inline-flex items-center gap-1"><Clock className="h-3 w-3" /> {s.duration_minutes} min</p>
-                            <p className="text-lg font-black tracking-tight text-primary">{formatBRL(s.price_cents)}</p>
-                            {s.description && <p className="text-xs text-muted-foreground line-clamp-2">{s.description}</p>}
+                            <p className="text-xs text-muted-foreground inline-flex items-center gap-1">
+                              <Clock className="h-3 w-3" /> {s.duration_minutes} min
+                            </p>
+                            <p className="text-lg font-black tracking-tight text-primary">
+                              {formatBRL(s.price_cents)}
+                            </p>
+                            {s.description && (
+                              <p className="text-xs text-muted-foreground line-clamp-2">
+                                {s.description}
+                              </p>
+                            )}
                             <button
                               type="button"
-                              onClick={(e) => { e.stopPropagation(); setDetailService(s); }}
-                                className="btn-outline-brand !py-1.5 !px-3 text-xs w-full mt-auto"
-                              >Ver mais</button>
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDetailService(s);
+                              }}
+                              className="btn-outline-brand !py-1.5 !px-3 text-xs w-full mt-auto"
+                            >
+                              Ver mais
+                            </button>
                           </div>
                         </li>
                       );
@@ -344,14 +540,22 @@ function BookingPage() {
                     {selectedServices.length === 0 ? (
                       <span className="text-muted-foreground">Nenhum serviço selecionado</span>
                     ) : (
-                      <span><strong>{selectedServices.length}</strong> serviço(s) · <strong>{formatBRL(selectedServices.reduce((a, s) => a + s.price_cents, 0))}</strong> total · {selectedServices.reduce((a, s) => a + s.duration_minutes, 0)} min</span>
+                      <span>
+                        <strong>{selectedServices.length}</strong> serviço(s) ·{" "}
+                        <strong>
+                          {formatBRL(selectedServices.reduce((a, s) => a + s.price_cents, 0))}
+                        </strong>{" "}
+                        total · {selectedServices.reduce((a, s) => a + s.duration_minutes, 0)} min
+                      </span>
                     )}
                   </div>
                   <button
                     disabled={selectedServices.length === 0}
                     onClick={proceedFromServices}
                     className="btn-brand disabled:opacity-50 w-full sm:w-auto"
-                  >Continuar</button>
+                  >
+                    Continuar
+                  </button>
                 </div>
               </>
             )}
@@ -360,20 +564,34 @@ function BookingPage() {
 
         {step === "employee" && selectedServices.length > 0 && (
           <section className="animate-fade-in-up">
-            <h2 className="text-xl font-bold tracking-tight text-foreground mb-4">2. Escolha o profissional</h2>
-            <p className="text-sm text-muted-foreground mb-4">{selectedServices.map((s) => s.name).join(" + ")} · {selectedServices.reduce((a, s) => a + s.duration_minutes, 0)} min</p>
+            <h2 className="text-xl font-bold tracking-tight text-foreground mb-4">
+              2. Escolha o profissional
+            </h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              {selectedServices.map((s) => s.name).join(" + ")} ·{" "}
+              {selectedServices.reduce((a, s) => a + s.duration_minutes, 0)} min
+            </p>
             {eligibleEmployees.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Nenhum profissional disponível para esses serviços no momento.</p>
+              <p className="text-sm text-muted-foreground">
+                Nenhum profissional disponível para esses serviços no momento.
+              </p>
             ) : (
               <ul className="grid gap-3 sm:grid-cols-2">
                 {eligibleEmployees.map((emp) => (
                   <li key={emp.id}>
                     <button
-                      onClick={() => { setEmployee(emp); setStep("when"); }}
+                      onClick={() => {
+                        setEmployee(emp);
+                        setStep("when");
+                      }}
                       className="w-full text-left card-elevated p-4 hover:border-accent transition-all hover:-translate-y-0.5 flex items-center gap-3"
                     >
                       {emp.photo_url ? (
-                        <img src={emp.photo_url} alt="" className="h-12 w-12 rounded-full object-cover border border-border shrink-0" />
+                        <img
+                          src={emp.photo_url}
+                          alt=""
+                          className="h-12 w-12 rounded-full object-cover border border-border shrink-0"
+                        />
                       ) : (
                         <div className="h-12 w-12 rounded-full grid place-items-center bg-secondary shrink-0">
                           <User className="h-5 w-5 text-muted-foreground" />
@@ -393,7 +611,10 @@ function BookingPage() {
             pro={pro}
             selectedServices={selectedServices}
             employee={employee}
-            onPick={(d) => { setWhen(d); setStep("form"); }}
+            onPick={(d) => {
+              setWhen(d);
+              setStep("form");
+            }}
             brand={brand}
           />
         )}
@@ -405,7 +626,10 @@ function BookingPage() {
             employee={employee}
             when={when}
             brand={brand}
-            onDone={(id) => { setConfirmedId(id); setStep("done"); }}
+            onDone={(id) => {
+              setConfirmedId(id);
+              setStep("done");
+            }}
           />
         )}
 
@@ -415,26 +639,65 @@ function BookingPage() {
             selectedServices={selectedServices}
             employee={employee}
             when={when}
-            onReset={() => { setSelectedServices([]); setEmployee(null); setWhen(null); setConfirmedId(null); setStep("service"); }}
+            onReset={() => {
+              setSelectedServices([]);
+              setEmployee(null);
+              setWhen(null);
+              setConfirmedId(null);
+              setStep("service");
+            }}
           />
         )}
 
         {detailService && (
-          <div className="fixed inset-0 z-50 bg-foreground/40 grid place-items-center p-4 animate-fade-in-up" onClick={() => setDetailService(null)}>
-            <div className="bg-background w-full max-w-sm rounded-2xl overflow-hidden shadow-2xl" onClick={(e) => e.stopPropagation()}>
-              {detailService.image_url && <img src={detailService.image_url} alt={detailService.name} className="w-full aspect-square object-cover" />}
+          <div
+            className="fixed inset-0 z-50 bg-foreground/40 grid place-items-center p-4 animate-fade-in-up"
+            onClick={() => setDetailService(null)}
+          >
+            <div
+              className="bg-background w-full max-w-sm rounded-2xl overflow-hidden shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {detailService.image_url && (
+                <img
+                  src={detailService.image_url}
+                  alt={detailService.name}
+                  className="w-full aspect-square object-cover"
+                />
+              )}
               <div className="p-5 space-y-3">
                 <div className="flex items-start justify-between gap-3">
                   <h3 className="text-xl font-bold tracking-tight">{detailService.name}</h3>
-                  <button onClick={() => setDetailService(null)} className="p-1 rounded-md hover:bg-muted shrink-0"><X className="h-5 w-5" /></button>
+                  <button
+                    onClick={() => setDetailService(null)}
+                    className="p-1 rounded-md hover:bg-muted shrink-0"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
                 </div>
                 <div className="flex items-center gap-4 text-sm">
-                  <span className="inline-flex items-center gap-1.5 text-muted-foreground"><Clock className="h-4 w-4" /> {detailService.duration_minutes} minutos</span>
-                  <span className="text-xl font-black text-primary">{formatBRL(detailService.price_cents)}</span>
+                  <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                    <Clock className="h-4 w-4" /> {detailService.duration_minutes} minutos
+                  </span>
+                  <span className="text-xl font-black text-primary">
+                    {formatBRL(detailService.price_cents)}
+                  </span>
                 </div>
-                {detailService.description && <p className="text-sm text-muted-foreground leading-relaxed">{detailService.description}</p>}
-                <button onClick={() => { toggleService(detailService); setDetailService(null); }} className="btn-gradient w-full">
-                  {selectedServices.some((x) => x.id === detailService.id) ? "Remover serviço" : "Adicionar este serviço"}
+                {detailService.description && (
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {detailService.description}
+                  </p>
+                )}
+                <button
+                  onClick={() => {
+                    toggleService(detailService);
+                    setDetailService(null);
+                  }}
+                  className="btn-gradient w-full"
+                >
+                  {selectedServices.some((x) => x.id === detailService.id)
+                    ? "Remover serviço"
+                    : "Adicionar este serviço"}
                 </button>
               </div>
             </div>
@@ -443,7 +706,10 @@ function BookingPage() {
       </main>
 
       <footer className="text-center py-8 text-xs text-muted-foreground">
-        Agendamento por <a href="/" className="ui-link font-bold text-sm">Agendaí</a>
+        Agendamento por{" "}
+        <a href="/" className="ui-link font-bold text-sm">
+          Agendaí
+        </a>
       </footer>
 
       {pro.phone && <WhatsAppFloat phone={pro.phone} />}
@@ -468,16 +734,39 @@ function WhatsAppFloat({ phone }: { phone: string }) {
   );
 }
 
-function WhenStep({ pro, selectedServices, employee, onPick, brand }: { pro: { id: string }; selectedServices: Service[]; employee: Employee | null; onPick: (d: Date) => void; brand: string }) {
-  const combinedDuration = useMemo(() => selectedServices.reduce((a, s) => a + s.duration_minutes, 0), [selectedServices]);
-  const [monthStart, setMonthStart] = useState(() => { const d = new Date(); d.setDate(1); d.setHours(0, 0, 0, 0); return d; });
+function WhenStep({
+  pro,
+  selectedServices,
+  employee,
+  onPick,
+  brand,
+}: {
+  pro: { id: string };
+  selectedServices: Service[];
+  employee: Employee | null;
+  onPick: (d: Date) => void;
+  brand: string;
+}) {
+  const combinedDuration = useMemo(
+    () => selectedServices.reduce((a, s) => a + s.duration_minutes, 0),
+    [selectedServices],
+  );
+  const [monthStart, setMonthStart] = useState(() => {
+    const d = new Date();
+    d.setDate(1);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  });
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
 
   // Professional-wide availability (fallback when employee has none).
   const { data: proAvail } = useQuery({
     queryKey: ["public-avail", pro.id],
     queryFn: async () => {
-      const { data, error } = await supabase.from(db.horarios).select("*").eq("professional_id", pro.id);
+      const { data, error } = await supabase
+        .from(db.horarios)
+        .select("*")
+        .eq("professional_id", pro.id);
       if (error) throw error;
       return data as AvailabilityRow[];
     },
@@ -504,7 +793,11 @@ function WhenStep({ pro, selectedServices, employee, onPick, brand }: { pro: { i
   }, [employee, empAvail, proAvail]);
 
   const rangeStart = monthStart;
-  const rangeEnd = useMemo(() => { const d = new Date(monthStart); d.setMonth(d.getMonth() + 1); return d; }, [monthStart]);
+  const rangeEnd = useMemo(() => {
+    const d = new Date(monthStart);
+    d.setMonth(d.getMonth() + 1);
+    return d;
+  }, [monthStart]);
 
   const { data: proBlocks } = useQuery({
     queryKey: ["public-blocks", pro.id, monthStart.toISOString()],
@@ -539,14 +832,24 @@ function WhenStep({ pro, selectedServices, employee, onPick, brand }: { pro: { i
     queryKey: ["public-busy", pro.id, employee?.id ?? "none", selectedDay?.toISOString()],
     enabled: !!selectedDay,
     queryFn: async () => {
-      const from = new Date(selectedDay!); from.setHours(0, 0, 0, 0);
-      const to = new Date(from); to.setDate(to.getDate() + 1);
+      const from = new Date(selectedDay!);
+      from.setHours(0, 0, 0, 0);
+      const to = new Date(from);
+      to.setDate(to.getDate() + 1);
       if (employee) {
-        const { data, error } = await supabase.rpc("get_employee_busy_slots", { _employee_id: employee.id, _from: from.toISOString(), _to: to.toISOString() });
+        const { data, error } = await supabase.rpc("get_employee_busy_slots", {
+          _employee_id: employee.id,
+          _from: from.toISOString(),
+          _to: to.toISOString(),
+        });
         if (error) throw error;
         return (data as BusySlot[]) ?? [];
       }
-      const { data, error } = await supabase.rpc("get_busy_slots", { _professional_id: pro.id, _from: from.toISOString(), _to: to.toISOString() });
+      const { data, error } = await supabase.rpc("get_busy_slots", {
+        _professional_id: pro.id,
+        _from: from.toISOString(),
+        _to: to.toISOString(),
+      });
       if (error) throw error;
       return (data as BusySlot[]) ?? [];
     },
@@ -557,13 +860,18 @@ function WhenStep({ pro, selectedServices, employee, onPick, brand }: { pro: { i
     const startWeekday = first.getDay();
     const cells: Array<Date | null> = [];
     for (let i = 0; i < startWeekday; i++) cells.push(null);
-    const end = new Date(monthStart); end.setMonth(end.getMonth() + 1);
+    const end = new Date(monthStart);
+    end.setMonth(end.getMonth() + 1);
     for (let d = new Date(first); d < end; d.setDate(d.getDate() + 1)) cells.push(new Date(d));
     while (cells.length % 7 !== 0) cells.push(null);
     return cells;
   }, [monthStart]);
 
-  const today = useMemo(() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; }, []);
+  const today = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
 
   const dayHasAvailability = (day: Date) => {
     if (!avail) return false;
@@ -591,20 +899,45 @@ function WhenStep({ pro, selectedServices, employee, onPick, brand }: { pro: { i
 
   return (
     <section className="animate-fade-in-up">
-      <h2 className="text-xl font-bold tracking-tight text-foreground mb-4">{employee ? "3" : "2"}. Escolha data e horário</h2>
+      <h2 className="text-xl font-bold tracking-tight text-foreground mb-4">
+        {employee ? "3" : "2"}. Escolha data e horário
+      </h2>
       <p className="text-sm text-muted-foreground mb-4">
-        {selectedServices.map((s) => s.name).join(" + ")} · {combinedDuration} min{employee ? ` · com ${employee.name}` : ""}
+        {selectedServices.map((s) => s.name).join(" + ")} · {combinedDuration} min
+        {employee ? ` · com ${employee.name}` : ""}
       </p>
 
       <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
         <div className="card-elevated p-4">
           <div className="flex items-center justify-between mb-3">
-            <button onClick={() => { const d = new Date(monthStart); d.setMonth(d.getMonth() - 1); if (d >= new Date(today.getFullYear(), today.getMonth(), 1)) setMonthStart(d); }} className="p-2 min-h-[44px] min-w-[44px] grid place-items-center rounded-md hover:bg-muted"><ChevronLeft className="h-4 w-4" /></button>
-            <span className="font-semibold capitalize">{monthStart.toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}</span>
-            <button onClick={() => { const d = new Date(monthStart); d.setMonth(d.getMonth() + 1); setMonthStart(d); }} className="p-2 min-h-[44px] min-w-[44px] grid place-items-center rounded-md hover:bg-muted"><ChevronRight className="h-4 w-4" /></button>
+            <button
+              onClick={() => {
+                const d = new Date(monthStart);
+                d.setMonth(d.getMonth() - 1);
+                if (d >= new Date(today.getFullYear(), today.getMonth(), 1)) setMonthStart(d);
+              }}
+              className="p-2 min-h-[44px] min-w-[44px] grid place-items-center rounded-md hover:bg-muted"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <span className="font-semibold capitalize">
+              {monthStart.toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}
+            </span>
+            <button
+              onClick={() => {
+                const d = new Date(monthStart);
+                d.setMonth(d.getMonth() + 1);
+                setMonthStart(d);
+              }}
+              className="p-2 min-h-[44px] min-w-[44px] grid place-items-center rounded-md hover:bg-muted"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
           </div>
           <div className="grid grid-cols-7 gap-1 text-center text-xs text-muted-foreground mb-1">
-            {WEEKDAYS_PT_SHORT.map((w) => <span key={w}>{w}</span>)}
+            {WEEKDAYS_PT_SHORT.map((w) => (
+              <span key={w}>{w}</span>
+            ))}
           </div>
           <div className="grid grid-cols-7 gap-1">
             {daysGrid.map((d, i) => {
@@ -621,7 +954,9 @@ function WhenStep({ pro, selectedServices, employee, onPick, brand }: { pro: { i
                   data-selected={selected || undefined}
                   data-today={isToday || undefined}
                   className="h-10 w-full rounded-lg text-sm font-medium disabled:opacity-30 disabled:cursor-not-allowed hover:bg-accent/10 hover:text-accent transition-colors data-[today]:ring-1 data-[today]:ring-accent/40 data-[selected]:!bg-accent data-[selected]:!text-accent-foreground data-[selected]:ring-0"
-                >{d.getDate()}</button>
+                >
+                  {d.getDate()}
+                </button>
               );
             })}
           </div>
@@ -630,28 +965,49 @@ function WhenStep({ pro, selectedServices, employee, onPick, brand }: { pro: { i
         <div className="animate-fade-in-up lg:min-h-[320px]">
           {selectedDay ? (
             <div className="card-elevated p-4 h-full">
-              <h3 className="font-semibold mb-3 capitalize">Horários · {formatLongDate(selectedDay)}</h3>
+              <h3 className="font-semibold mb-3 capitalize">
+                Horários · {formatLongDate(selectedDay)}
+              </h3>
               {loadingBusy ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">{Array.from({ length: 8 }).map((_, i) => <div key={i} className="skeleton h-11" />)}</div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <div key={i} className="skeleton h-11" />
+                  ))}
+                </div>
               ) : slots.length === 0 ? (
                 <div className="h-full grid place-items-center text-center py-10">
-                  <p className="text-sm text-muted-foreground">Nenhum horário livre nesse dia. Tente outro.</p>
+                  <p className="text-sm text-muted-foreground">
+                    Nenhum horário livre nesse dia. Tente outro.
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-5">
-                  {[{ label: "Manhã", from: 6, to: 12 }, { label: "Tarde", from: 12, to: 18 }, { label: "Noite", from: 18, to: 24 }].map(({ label, from, to }) => {
-                    const periodSlots = slots.filter((s) => { const h = s.getHours(); return h >= from && h < to; });
+                  {[
+                    { label: "Manhã", from: 6, to: 12 },
+                    { label: "Tarde", from: 12, to: 18 },
+                    { label: "Noite", from: 18, to: 24 },
+                  ].map(({ label, from, to }) => {
+                    const periodSlots = slots.filter((s) => {
+                      const h = s.getHours();
+                      return h >= from && h < to;
+                    });
                     if (periodSlots.length === 0) return null;
                     return (
                       <div key={label}>
                         <div className="flex items-center gap-2 mb-2">
                           <span className="h-px w-4 bg-border" />
-                          <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</h4>
+                          <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                            {label}
+                          </h4>
                           <span className="h-px flex-1 bg-border" />
                         </div>
                         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                           {periodSlots.map((s) => (
-                            <button key={s.toISOString()} onClick={() => onPick(s)} className="chip">
+                            <button
+                              key={s.toISOString()}
+                              onClick={() => onPick(s)}
+                              className="chip"
+                            >
                               {formatTime(s)}
                             </button>
                           ))}
@@ -666,7 +1022,9 @@ function WhenStep({ pro, selectedServices, employee, onPick, brand }: { pro: { i
             <div className="card-elevated p-4 h-full grid place-items-center text-center">
               <div>
                 <CalendarIcon className="h-8 w-8 mx-auto text-muted-foreground/50 mb-2" />
-                <p className="text-sm text-muted-foreground">Selecione uma data no calendário para ver os horários disponíveis.</p>
+                <p className="text-sm text-muted-foreground">
+                  Selecione uma data no calendário para ver os horários disponíveis.
+                </p>
               </div>
             </div>
           )}
@@ -676,47 +1034,70 @@ function WhenStep({ pro, selectedServices, employee, onPick, brand }: { pro: { i
   );
 }
 
-function FormStep({ pro, selectedServices, employee, when, onDone, brand }: { pro: { id: string; business_name: string; address?: string | null }; selectedServices: Service[]; employee: Employee | null; when: Date; onDone: (id: string) => void; brand: string }) {
+function FormStep({
+  pro,
+  selectedServices,
+  employee,
+  when,
+  onDone,
+  brand,
+}: {
+  pro: { id: string; business_name: string; address?: string | null };
+  selectedServices: Service[];
+  employee: Employee | null;
+  when: Date;
+  onDone: (id: string) => void;
+  brand: string;
+}) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [notes, setNotes] = useState("");
 
-  const combinedPrice = useMemo(() => selectedServices.reduce((a, s) => a + s.price_cents, 0), [selectedServices]);
-  const combinedDuration = useMemo(() => selectedServices.reduce((a, s) => a + s.duration_minutes, 0), [selectedServices]);
-  const combinedName = useMemo(() => selectedServices.map((s) => s.name).join(" + "), [selectedServices]);
+  const combinedPrice = useMemo(
+    () => selectedServices.reduce((a, s) => a + s.price_cents, 0),
+    [selectedServices],
+  );
+  const combinedDuration = useMemo(
+    () => selectedServices.reduce((a, s) => a + s.duration_minutes, 0),
+    [selectedServices],
+  );
+  const combinedName = useMemo(
+    () => selectedServices.map((s) => s.name).join(" + "),
+    [selectedServices],
+  );
   const cover = selectedServices.find((s) => s.image_url)?.image_url ?? null;
 
   const create = useMutation({
     mutationFn: async () => {
       if (!name.trim()) throw new Error("Informe seu nome.");
-      if (!isValidPhoneBR(phone)) throw new Error("Informe um WhatsApp válido no formato (XX) XXXXX-XXXX.");
+      if (!isValidPhoneBR(phone))
+        throw new Error("Informe um WhatsApp válido no formato (XX) XXXXX-XXXX.");
       const ends = new Date(when.getTime() + combinedDuration * 60 * 1000);
       const appointmentId = crypto.randomUUID();
-      const { error } = await supabase
-        .from(db.agendamentos)
-        .insert({
-          id: appointmentId,
-          professional_id: pro.id,
-          service_id: selectedServices[0].id,
-          employee_id: employee?.id ?? null,
-          starts_at: when.toISOString(),
-          ends_at: ends.toISOString(),
-          client_name: name.trim(),
-          client_phone: phone,
-          client_email: email.trim() || null,
-          notes: notes.trim() || null,
-          service_snapshot_name: combinedName,
-          service_snapshot_price_cents: combinedPrice,
-        });
+      const { error } = await supabase.from(db.agendamentos).insert({
+        id: appointmentId,
+        professional_id: pro.id,
+        service_id: selectedServices[0].id,
+        employee_id: employee?.id ?? null,
+        starts_at: when.toISOString(),
+        ends_at: ends.toISOString(),
+        client_name: name.trim(),
+        client_phone: phone,
+        client_email: email.trim() || null,
+        notes: notes.trim() || null,
+        service_snapshot_name: combinedName,
+        service_snapshot_price_cents: combinedPrice,
+      });
       if (error) throw error;
       return appointmentId;
     },
     onSuccess: (id) => onDone(id),
     onError: (e: Error) => {
-      const msg = e.message.includes("no_overlap_confirmed") || e.message.includes("exclusion")
-        ? "Esse horário acabou de ser reservado. Escolha outro."
-        : e.message;
+      const msg =
+        e.message.includes("no_overlap_confirmed") || e.message.includes("exclusion")
+          ? "Esse horário acabou de ser reservado. Escolha outro."
+          : e.message;
       toast.error(msg);
     },
   });
@@ -724,10 +1105,15 @@ function FormStep({ pro, selectedServices, employee, when, onDone, brand }: { pr
   return (
     <section className="space-y-6">
       <header className="text-center animate-ui-slide-up">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] ui-accent-text mb-2">Último passo</p>
-        <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">Confirmar agendamento</h2>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] ui-accent-text mb-2">
+          Último passo
+        </p>
+        <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
+          Confirmar agendamento
+        </h2>
         <p className="mt-2 inline-flex items-center gap-1.5 text-sm text-muted-foreground">
-          <ShieldCheck className="h-4 w-4 ui-icon-color" /> Ambiente seguro · dados usados só para o agendamento
+          <ShieldCheck className="h-4 w-4 ui-icon-color" /> Ambiente seguro · dados usados só para o
+          agendamento
         </p>
       </header>
 
@@ -741,7 +1127,12 @@ function FormStep({ pro, selectedServices, employee, when, onDone, brand }: { pr
 
               <div className="flex items-center gap-4 pb-5 mb-5 border-b border-border">
                 {cover ? (
-                  <img src={cover} alt={combinedName} loading="lazy" className="h-14 w-14 rounded-2xl object-cover shrink-0 border border-border" />
+                  <img
+                    src={cover}
+                    alt={combinedName}
+                    loading="lazy"
+                    className="h-14 w-14 rounded-2xl object-cover shrink-0 border border-border"
+                  />
                 ) : (
                   <span className="ui-icon-bubble h-14 w-14 grid place-items-center rounded-2xl shrink-0">
                     <Scissors className="h-6 w-6" />
@@ -749,31 +1140,56 @@ function FormStep({ pro, selectedServices, employee, when, onDone, brand }: { pr
                 )}
                 <div className="min-w-0">
                   <p className="font-bold text-foreground leading-tight">{combinedName}</p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">{combinedDuration} min de duração</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {combinedDuration} min de duração
+                  </p>
                 </div>
               </div>
 
               <div className="space-y-4">
-                <UISummaryRow icon={CalendarIcon}><span className="first-letter:uppercase">{formatLongDate(when)}</span></UISummaryRow>
+                <UISummaryRow icon={CalendarIcon}>
+                  <span className="first-letter:uppercase">{formatLongDate(when)}</span>
+                </UISummaryRow>
                 <UISummaryRow icon={Clock}>{formatTime(when)}</UISummaryRow>
                 {employee && <UISummaryRow icon={User}>com {employee.name}</UISummaryRow>}
-                <UISummaryRow icon={MapPin} sub={pro.address || undefined}>{pro.business_name}</UISummaryRow>
+                <UISummaryRow icon={MapPin} sub={pro.address || undefined}>
+                  {pro.business_name}
+                </UISummaryRow>
               </div>
 
               <div className="mt-5 pt-4 border-t border-border flex items-center justify-between gap-3">
                 <span className="text-sm font-semibold text-muted-foreground">Total</span>
-                <span className="text-2xl font-black tracking-tight" style={{ color: "var(--brand)" }}>{formatBRL(combinedPrice)}</span>
+                <span
+                  className="text-2xl font-black tracking-tight"
+                  style={{ color: "var(--brand)" }}
+                >
+                  {formatBRL(combinedPrice)}
+                </span>
               </div>
             </div>
           </UICard>
         </div>
 
         {/* Seus dados */}
-        <form onSubmit={(e) => { e.preventDefault(); create.mutate(); }} className="space-y-5">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            create.mutate();
+          }}
+          className="space-y-5"
+        >
           <UICard className="p-5 sm:p-6 ui-stagger">
             <UICardHeader icon={User} title="Seus dados" />
             <div className="space-y-4">
-              <UIInput label="Nome completo" icon={User} required value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" placeholder="Seu nome completo" />
+              <UIInput
+                label="Nome completo"
+                icon={User}
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                autoComplete="name"
+                placeholder="Seu nome completo"
+              />
               <label className="block">
                 <span className="block text-sm font-semibold text-foreground mb-2">WhatsApp</span>
                 <span className="ui-field">
@@ -781,8 +1197,24 @@ function FormStep({ pro, selectedServices, employee, when, onDone, brand }: { pr
                   <PhoneInput value={phone} onChange={setPhone} className="ui-field-input pl-11" />
                 </span>
               </label>
-              <UIInput label="E-mail (opcional)" icon={Mail} type="email" inputMode="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" />
-              <UITextarea label="Observação (opcional)" icon={Pencil} rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Alguma preferência ou observação?" />
+              <UIInput
+                label="E-mail (opcional)"
+                icon={Mail}
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="seu@email.com"
+              />
+              <UITextarea
+                label="Observação (opcional)"
+                icon={Pencil}
+                rows={3}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Alguma preferência ou observação?"
+              />
             </div>
 
             <div className="mt-5">
@@ -792,13 +1224,22 @@ function FormStep({ pro, selectedServices, employee, when, onDone, brand }: { pr
             </div>
           </UICard>
 
-          <UIButton type="submit" size="lg" fullWidth disabled={create.isPending} icon={CalendarCheck2}>
+          <UIButton
+            type="submit"
+            size="lg"
+            fullWidth
+            disabled={create.isPending}
+            icon={CalendarCheck2}
+          >
             {create.isPending ? "Confirmando..." : "Confirmar agendamento"}
           </UIButton>
 
           <p className="text-center text-xs text-muted-foreground inline-flex items-start gap-1.5 justify-center w-full">
             <Lock className="h-3.5 w-3.5 shrink-0 mt-px" />
-            <span>Ao confirmar, você concorda com nossos <span className="ui-link">Termos de Uso</span> e <span className="ui-link">Política de Privacidade</span>.</span>
+            <span>
+              Ao confirmar, você concorda com nossos <span className="ui-link">Termos de Uso</span>{" "}
+              e <span className="ui-link">Política de Privacidade</span>.
+            </span>
           </p>
         </form>
       </div>
@@ -806,16 +1247,35 @@ function FormStep({ pro, selectedServices, employee, when, onDone, brand }: { pr
   );
 }
 
-
-function DoneStep({ pro, selectedServices, employee, when, onReset }: { pro: { business_name: string }; selectedServices: Service[]; employee: Employee | null; when: Date; onReset: () => void }) {
-  const combinedName = useMemo(() => selectedServices.map((s) => s.name).join(" + "), [selectedServices]);
-  const combinedPrice = useMemo(() => selectedServices.reduce((a, s) => a + s.price_cents, 0), [selectedServices]);
+function DoneStep({
+  pro,
+  selectedServices,
+  employee,
+  when,
+  onReset,
+}: {
+  pro: { business_name: string; slug: string };
+  selectedServices: Service[];
+  employee: Employee | null;
+  when: Date;
+  onReset: () => void;
+}) {
+  const combinedName = useMemo(
+    () => selectedServices.map((s) => s.name).join(" + "),
+    [selectedServices],
+  );
+  const combinedPrice = useMemo(
+    () => selectedServices.reduce((a, s) => a + s.price_cents, 0),
+    [selectedServices],
+  );
   return (
     <section className="text-center py-8 animate-fade-in-up">
       <div className="mx-auto w-20 h-20 rounded-full bg-success/10 grid place-items-center animate-check-in">
         <CheckCircle2 className="h-10 w-10 text-success" />
       </div>
-      <h2 className="mt-6 text-3xl font-black tracking-tight text-foreground">Agendamento confirmado!</h2>
+      <h2 className="mt-6 text-3xl font-black tracking-tight text-foreground">
+        Agendamento confirmado!
+      </h2>
       <p className="mt-2 text-muted-foreground">{pro.business_name} está te esperando.</p>
       <div className="mt-6 card-elevated p-4 max-w-sm mx-auto text-left space-y-1">
         <p className="font-semibold">{combinedName}</p>
@@ -825,15 +1285,27 @@ function DoneStep({ pro, selectedServices, employee, when, onReset }: { pro: { b
         {employee && <p className="text-sm text-muted-foreground">com {employee.name}</p>}
       </div>
       <div className="mt-6 flex flex-col sm:flex-row justify-center gap-2">
-        <button onClick={onReset} className="btn-gradient inline-flex items-center justify-center">Fazer outro agendamento</button>
-        <a href="/meus-agendamentos" className="btn-pill-outline inline-flex items-center justify-center">Ver meus agendamentos</a>
+        <button onClick={onReset} className="btn-gradient inline-flex items-center justify-center">
+          Fazer outro agendamento
+        </button>
+        <a
+          href={`/meus-agendamentos?pro=${encodeURIComponent(pro.slug)}`}
+          className="btn-pill-outline inline-flex items-center justify-center"
+        >
+          Ver meus agendamentos
+        </a>
       </div>
-
     </section>
   );
 }
 
-const cls = "w-full min-h-[48px] px-3 py-2 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-ring mt-1";
+const cls =
+  "w-full min-h-[48px] px-3 py-2 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-ring mt-1";
 function F({ label, children }: { label: string; children: React.ReactNode }) {
-  return <label className="block"><span className="text-sm font-medium">{label}</span>{children}</label>;
+  return (
+    <label className="block">
+      <span className="text-sm font-medium">{label}</span>
+      {children}
+    </label>
+  );
 }

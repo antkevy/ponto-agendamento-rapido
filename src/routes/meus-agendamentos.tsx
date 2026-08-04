@@ -1,11 +1,13 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { db } from "@/lib/db-tables";
 import { BrandLogo } from "@/components/brand-logo";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { useBookingTheme } from "@/hooks/use-booking-theme";
+import type { ProfessionalTheme } from "@/lib/appearance";
 import {
   X,
   ArrowLeft,
@@ -30,6 +32,9 @@ import {
 } from "@/lib/booking";
 
 export const Route = createFileRoute("/meus-agendamentos")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    pro: typeof search.pro === "string" ? search.pro : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Meus agendamentos — Agendaí" },
@@ -67,11 +72,29 @@ function normalizeContact(raw: string, mode: Mode): string {
 }
 
 function Page() {
+  const { pro: proSlug } = useSearch({ from: "/meus-agendamentos" });
+  const rootRef = useRef<HTMLDivElement>(null);
   const [mode, setMode] = useState<Mode>("phone");
   const [contact, setContact] = useState("");
   const [submitted, setSubmitted] = useState<string | null>(null);
   const [rescheduling, setRescheduling] = useState<Row | null>(null);
   const qc = useQueryClient();
+
+  const { data: proTheme } = useQuery({
+    queryKey: ["meus-appts-pro", proSlug],
+    enabled: !!proSlug,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from(db.profissionais)
+        .select("brand_color, theme_colors")
+        .eq("slug", proSlug!)
+        .maybeSingle();
+      if (error) throw error;
+      return data as { brand_color: string | null; theme_colors: ProfessionalTheme | null };
+    },
+  });
+
+  const brand = useBookingTheme(rootRef, proTheme?.brand_color, proTheme?.theme_colors ?? null);
 
   const { data, isFetching } = useQuery({
     queryKey: ["client-appts", submitted],
@@ -120,7 +143,11 @@ function Page() {
   });
 
   return (
-    <div className="min-h-screen bg-page-gradient">
+    <div
+      ref={rootRef}
+      className="min-h-screen bg-page-gradient"
+      style={{ ["--brand" as string]: brand } as React.CSSProperties}
+    >
       <header className="bg-transparent">
         <div className="max-w-2xl mx-auto px-4 h-20 flex items-center justify-between">
           <BrandLogo />
@@ -138,7 +165,7 @@ function Page() {
 
       <main className="max-w-2xl mx-auto px-4 py-8">
         <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-foreground leading-[1.05]">
-          Meus <span style={{ color: "oklch(0.55 0.18 250)" }}>agendamentos.</span>
+          Meus <span style={{ color: brand }}>agendamentos.</span>
         </h1>
         <p className="text-muted-foreground mt-3 mb-6">
           Escolha como você quer buscar seus agendamentos.
@@ -182,7 +209,7 @@ function Page() {
             }
             setSubmitted(normalizeContact(contact, mode));
           }}
-          className="bg-card border border-border rounded-2xl p-4 flex flex-col sm:flex-row gap-3 shadow-[0_20px_60px_-30px_oklch(0.55_0.18_250_/_0.25)]"
+          className="bg-card border border-border rounded-2xl p-4 flex flex-col sm:flex-row gap-3 shadow-[0_20px_60px_-30px_var(--brand)]"
         >
           {mode === "phone" ? (
             <PhoneInput
