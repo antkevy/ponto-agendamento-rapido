@@ -150,6 +150,18 @@
   --input: oklch(0.30 0.02 258);
   --ring: oklch(0.68 0.15 240);
 
+  --accent-strong: var(--accent);
+  --btn-color: var(--accent);
+  --btn-foreground: #ffffff;
+  --icon-color: var(--accent);
+  --link-color: var(--accent);
+  --badge-color: var(--accent);
+  --header-color: oklch(0.22 0.025 258);
+  --input-bg: oklch(0.24 0.025 258);
+  --hover-color: oklch(0.27 0.025 258);
+
+
+
   --sidebar: oklch(0.18 0.02 258);
   --sidebar-foreground: oklch(0.97 0.005 240);
   --sidebar-primary: oklch(0.72 0.13 240);
