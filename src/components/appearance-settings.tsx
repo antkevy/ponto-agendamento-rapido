@@ -170,25 +170,30 @@ export function AppearanceSettings({
     }, 500);
   }
 
-  function commit(next: Appearance, message?: string) {
-    const nextLight = mode === "light" ? next : light;
-    const nextDark = mode === "dark" ? next : dark;
-    (mode === "light" ? setLight : setDark)(next);
-    saveAppearance(mode, next);
-    notifyChange();
-    persistToDb(nextLight, nextDark);
-    if (message) toast.success(message);
-  }
-
   function applyPreset(hex: string) {
-    const next: Appearance = { ...colors, primary: hex, accent: hex, button: hex, icon: hex, link: hex, badge: hex };
-    commit(next, "Identidade visual atualizada.");
+    // A cor da marca vale para os DOIS temas (claro e escuro). Assim, trocar o
+    // tema na página pública mantém a cor escolhida — antes ela só era gravada
+    // no modo ativo e o outro voltava ao padrão.
+    const branded: Partial<Appearance> = { primary: hex, accent: hex, button: hex, icon: hex, link: hex, badge: hex };
+    const lightNext: Appearance = { ...light, ...branded };
+    const darkNext: Appearance = { ...dark, ...branded };
+    setLight(lightNext);
+    setDark(darkNext);
+    saveAppearance("light", lightNext);
+    saveAppearance("dark", darkNext);
+    notifyChange();
+    persistToDb(lightNext, darkNext);
+    toast.success("Identidade visual atualizada.");
   }
 
   function reset() {
-    const next = mode === "dark" ? DARK_PRESET : LIGHT_PRESET;
-    resetAppearance(mode);
-    commit(next, "Cores restauradas para o padrão.");
+    resetAppearance("light");
+    resetAppearance("dark");
+    setLight(LIGHT_PRESET);
+    setDark(DARK_PRESET);
+    notifyChange();
+    persistToDb(LIGHT_PRESET, DARK_PRESET);
+    toast.success("Cores restauradas para o padrão.");
   }
 
   const activePreset = COLOR_PRESETS.find((p) => PRESET_KEYS.every((k) => colors[k] === p.color));
