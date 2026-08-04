@@ -178,7 +178,7 @@ function BookingPage() {
   return (
     <div
       ref={rootRef}
-      className="min-h-screen bg-booking-gradient"
+      className="booking-page min-h-screen bg-booking-gradient"
       style={{ ["--brand" as string]: brand } as React.CSSProperties}
     >
       <header

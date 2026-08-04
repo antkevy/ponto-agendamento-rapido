@@ -192,6 +192,24 @@
 }
 
 @layer components {
+  /*
+   * Página pública de agendamento (/p/:slug).
+   * No tema claro, ícones e textos secundários (muted) podem sumir no fundo
+   * branco. Aplica um contorno preto bem fino só neles, e só no tema claro.
+   * No tema escuro o fundo já dá contraste, então nada muda.
+   */
+  .booking-page:not(.dark) .text-muted-foreground,
+  .booking-page:not(.dark) [class*="text-muted-foreground/"] {
+    filter: drop-shadow(0.5px 0 0 oklch(0 0 0 / 0.55))
+            drop-shadow(-0.5px 0 0 oklch(0 0 0 / 0.55))
+            drop-shadow(0 0.5px 0 oklch(0 0 0 / 0.55))
+            drop-shadow(0 -0.5px 0 oklch(0 0 0 / 0.55));
+    text-shadow: 0.5px 0 0 oklch(0 0 0 / 0.55),
+                 -0.5px 0 0 oklch(0 0 0 / 0.55),
+                 0 0.5px 0 oklch(0 0 0 / 0.55),
+                 0 -0.5px 0 oklch(0 0 0 / 0.55);
+  }
+
   .card-elevated {
     background: var(--card);
     border: 1px solid var(--border);
