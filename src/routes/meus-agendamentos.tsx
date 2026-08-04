@@ -19,8 +19,7 @@ import {
   Clock,
   CalendarCheck2,
 } from "lucide-react";
-import { PhoneInput } from "@/components/phone-input";
-import { isValidPhoneBR } from "@/lib/phone";
+import { normalizeBRNumber, onlyDigits, formatPhoneBRTolerant } from "@/lib/phone";
 import {
   computeSlots,
   formatLongDate,
@@ -199,25 +198,33 @@ function Page() {
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            if (mode === "phone" && !isValidPhoneBR(contact)) {
-              toast.error("Informe um WhatsApp válido no formato (XX) XXXXX-XXXX.");
+            if (mode === "phone") {
+              const digits = normalizeBRNumber(contact);
+              if (digits.length < 10 || digits.length > 11) {
+                toast.error("Informe um WhatsApp válido no formato (XX) XXXXX-XXXX.");
+                return;
+              }
+              setSubmitted(digits);
               return;
             }
-            if (mode === "email" && !contact.includes("@")) {
+            if (!contact.includes("@")) {
               toast.error("Informe um email válido.");
               return;
             }
-            setSubmitted(normalizeContact(contact, mode));
+            setSubmitted(normalizeContact(contact, "email"));
           }}
           className="bg-card border border-border rounded-2xl p-4 flex flex-col sm:flex-row gap-3 shadow-[0_20px_60px_-30px_var(--brand)]"
         >
           {mode === "phone" ? (
-            <PhoneInput
-              value={contact}
-              onChange={setContact}
-              placeholder="(11) 91234-5678"
-              className="flex-1 min-h-[48px] px-4 py-3 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-ring"
+            <input
               required
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              value={formatPhoneBRTolerant(contact)}
+              onChange={(e) => setContact(onlyDigits(e.target.value).slice(0, 13))}
+              placeholder="(88) 9216-53120"
+              className="flex-1 min-h-[48px] px-4 py-3 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-ring"
             />
           ) : (
             <input

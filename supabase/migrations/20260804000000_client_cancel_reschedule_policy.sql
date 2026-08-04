@@ -165,7 +165,7 @@ BEGIN
     RETURN QUERY
       SELECT a.id, a.professional_id, a.employee_id, p.business_name, p.slug,
              a.service_snapshot_name, a.starts_at, a.ends_at,
-             EXTRACT(EPOCH FROM (a.ends_at - a.starts_at)) / 60, a.status, a.client_name
+             (EXTRACT(EPOCH FROM (a.ends_at - a.starts_at)) / 60)::int, a.status, a.client_name
       FROM public.agendamentos a
       JOIN public.profissionais p ON p.id = a.professional_id
       WHERE lower(a.client_email) = lower(contact_norm)
@@ -178,7 +178,7 @@ BEGIN
     RETURN QUERY
       SELECT a.id, a.professional_id, a.employee_id, p.business_name, p.slug,
              a.service_snapshot_name, a.starts_at, a.ends_at,
-             EXTRACT(EPOCH FROM (a.ends_at - a.starts_at)) / 60, a.status, a.client_name
+             (EXTRACT(EPOCH FROM (a.ends_at - a.starts_at)) / 60)::int, a.status, a.client_name
       FROM public.agendamentos a
       JOIN public.profissionais p ON p.id = a.professional_id
       WHERE regexp_replace(a.client_phone, '\D', '', 'g') = contact_norm
