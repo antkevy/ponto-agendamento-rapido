@@ -14,16 +14,742 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      agendamentos: {
+        Row: {
+          client_email: string | null
+          client_id: string | null
+          client_name: string
+          client_phone: string
+          created_at: string
+          employee_id: string | null
+          ends_at: string
+          id: string
+          notes: string | null
+          professional_id: string
+          service_id: string
+          service_snapshot_name: string
+          service_snapshot_price_cents: number
+          starts_at: string
+          status: Database["public"]["Enums"]["appointment_status"]
+          updated_at: string
+        }
+        Insert: {
+          client_email?: string | null
+          client_id?: string | null
+          client_name: string
+          client_phone: string
+          created_at?: string
+          employee_id?: string | null
+          ends_at: string
+          id?: string
+          notes?: string | null
+          professional_id: string
+          service_id: string
+          service_snapshot_name: string
+          service_snapshot_price_cents?: number
+          starts_at: string
+          status?: Database["public"]["Enums"]["appointment_status"]
+          updated_at?: string
+        }
+        Update: {
+          client_email?: string | null
+          client_id?: string | null
+          client_name?: string
+          client_phone?: string
+          created_at?: string
+          employee_id?: string | null
+          ends_at?: string
+          id?: string
+          notes?: string | null
+          professional_id?: string
+          service_id?: string
+          service_snapshot_name?: string
+          service_snapshot_price_cents?: number
+          starts_at?: string
+          status?: Database["public"]["Enums"]["appointment_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agendamentos_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "profissionais"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "servicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bloqueios: {
+        Row: {
+          created_at: string
+          ends_at: string
+          id: string
+          professional_id: string
+          reason: string | null
+          starts_at: string
+        }
+        Insert: {
+          created_at?: string
+          ends_at: string
+          id?: string
+          professional_id: string
+          reason?: string | null
+          starts_at: string
+        }
+        Update: {
+          created_at?: string
+          ends_at?: string
+          id?: string
+          professional_id?: string
+          reason?: string | null
+          starts_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blocks_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "profissionais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bloqueios_funcionario: {
+        Row: {
+          created_at: string
+          employee_id: string
+          ends_at: string
+          id: string
+          reason: string | null
+          starts_at: string
+        }
+        Insert: {
+          created_at?: string
+          employee_id: string
+          ends_at: string
+          id?: string
+          reason?: string | null
+          starts_at: string
+        }
+        Update: {
+          created_at?: string
+          employee_id?: string
+          ends_at?: string
+          id?: string
+          reason?: string | null
+          starts_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_blocks_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clientes: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string
+          professional_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone: string
+          professional_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string
+          professional_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clientes_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "profissionais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      depoimentos: {
+        Row: {
+          client_name: string
+          client_photo: string | null
+          comment: string
+          created_at: string
+          id: string
+          is_visible: boolean
+          professional_id: string
+          rating: number
+          updated_at: string
+        }
+        Insert: {
+          client_name: string
+          client_photo?: string | null
+          comment: string
+          created_at?: string
+          id?: string
+          is_visible?: boolean
+          professional_id: string
+          rating?: number
+          updated_at?: string
+        }
+        Update: {
+          client_name?: string
+          client_photo?: string | null
+          comment?: string
+          created_at?: string
+          id?: string
+          is_visible?: boolean
+          professional_id?: string
+          rating?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "depoimentos_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "profissionais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      disponibilidade_funcionario: {
+        Row: {
+          created_at: string
+          employee_id: string
+          end_time: string
+          id: string
+          start_time: string
+          weekday: number
+        }
+        Insert: {
+          created_at?: string
+          employee_id: string
+          end_time: string
+          id?: string
+          start_time: string
+          weekday: number
+        }
+        Update: {
+          created_at?: string
+          employee_id?: string
+          end_time?: string
+          id?: string
+          start_time?: string
+          weekday?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_availability_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      faq: {
+        Row: {
+          answer: string
+          created_at: string
+          id: string
+          professional_id: string
+          question: string
+          sort_order: number
+        }
+        Insert: {
+          answer: string
+          created_at?: string
+          id?: string
+          professional_id: string
+          question: string
+          sort_order?: number
+        }
+        Update: {
+          answer?: string
+          created_at?: string
+          id?: string
+          professional_id?: string
+          question?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "faq_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "profissionais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      funcionarios: {
+        Row: {
+          bio: string | null
+          created_at: string
+          experience_years: number | null
+          id: string
+          is_active: boolean
+          name: string
+          photo_url: string | null
+          professional_id: string
+          services_done: number
+          specialty: string | null
+          updated_at: string
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string
+          experience_years?: number | null
+          id?: string
+          is_active?: boolean
+          name: string
+          photo_url?: string | null
+          professional_id: string
+          services_done?: number
+          specialty?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string
+          experience_years?: number | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          photo_url?: string | null
+          professional_id?: string
+          services_done?: number
+          specialty?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employees_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "profissionais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      galeria: {
+        Row: {
+          caption: string | null
+          category: string | null
+          created_at: string
+          id: string
+          image_url: string
+          professional_id: string
+          sort_order: number
+        }
+        Insert: {
+          caption?: string | null
+          category?: string | null
+          created_at?: string
+          id?: string
+          image_url: string
+          professional_id: string
+          sort_order?: number
+        }
+        Update: {
+          caption?: string | null
+          category?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string
+          professional_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "galeria_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "profissionais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      horarios: {
+        Row: {
+          created_at: string
+          end_time: string
+          id: string
+          professional_id: string
+          start_time: string
+          weekday: number
+        }
+        Insert: {
+          created_at?: string
+          end_time: string
+          id?: string
+          professional_id: string
+          start_time: string
+          weekday: number
+        }
+        Update: {
+          created_at?: string
+          end_time?: string
+          id?: string
+          professional_id?: string
+          start_time?: string
+          weekday?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "availability_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "profissionais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      planos: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          name: string
+          price_cents: number
+          professional_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name: string
+          price_cents?: number
+          professional_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name?: string
+          price_cents?: number
+          professional_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "planos_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "profissionais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profissionais: {
+        Row: {
+          address: string | null
+          banner_url: string | null
+          brand_color: string
+          business_name: string
+          button_style: string
+          category: string | null
+          city: string | null
+          corner_radius: string
+          created_at: string
+          description: string | null
+          differentials: string | null
+          email: string | null
+          facebook: string | null
+          id: string
+          instagram: string | null
+          lat: number | null
+          linkedin: string | null
+          lng: number | null
+          logo_url: string | null
+          mission: string | null
+          msg_cancelled: string | null
+          msg_confirmed: string | null
+          opening_hours_display: string | null
+          owner_name: string | null
+          phone: string | null
+          privacy_policy: string | null
+          secondary_color: string | null
+          show_employees: boolean
+          slug: string
+          story: string | null
+          tagline: string | null
+          terms: string | null
+          theme_mode: string
+          tiktok: string | null
+          timezone: string
+          updated_at: string
+          user_id: string
+          values_text: string | null
+          video_url: string | null
+          website: string | null
+          whatsapp: string | null
+          youtube: string | null
+        }
+        Insert: {
+          address?: string | null
+          banner_url?: string | null
+          brand_color?: string
+          business_name: string
+          button_style?: string
+          category?: string | null
+          city?: string | null
+          corner_radius?: string
+          created_at?: string
+          description?: string | null
+          differentials?: string | null
+          email?: string | null
+          facebook?: string | null
+          id?: string
+          instagram?: string | null
+          lat?: number | null
+          linkedin?: string | null
+          lng?: number | null
+          logo_url?: string | null
+          mission?: string | null
+          msg_cancelled?: string | null
+          msg_confirmed?: string | null
+          opening_hours_display?: string | null
+          owner_name?: string | null
+          phone?: string | null
+          privacy_policy?: string | null
+          secondary_color?: string | null
+          show_employees?: boolean
+          slug: string
+          story?: string | null
+          tagline?: string | null
+          terms?: string | null
+          theme_mode?: string
+          tiktok?: string | null
+          timezone?: string
+          updated_at?: string
+          user_id: string
+          values_text?: string | null
+          video_url?: string | null
+          website?: string | null
+          whatsapp?: string | null
+          youtube?: string | null
+        }
+        Update: {
+          address?: string | null
+          banner_url?: string | null
+          brand_color?: string
+          business_name?: string
+          button_style?: string
+          category?: string | null
+          city?: string | null
+          corner_radius?: string
+          created_at?: string
+          description?: string | null
+          differentials?: string | null
+          email?: string | null
+          facebook?: string | null
+          id?: string
+          instagram?: string | null
+          lat?: number | null
+          linkedin?: string | null
+          lng?: number | null
+          logo_url?: string | null
+          mission?: string | null
+          msg_cancelled?: string | null
+          msg_confirmed?: string | null
+          opening_hours_display?: string | null
+          owner_name?: string | null
+          phone?: string | null
+          privacy_policy?: string | null
+          secondary_color?: string | null
+          show_employees?: boolean
+          slug?: string
+          story?: string | null
+          tagline?: string | null
+          terms?: string | null
+          theme_mode?: string
+          tiktok?: string | null
+          timezone?: string
+          updated_at?: string
+          user_id?: string
+          values_text?: string | null
+          video_url?: string | null
+          website?: string | null
+          whatsapp?: string | null
+          youtube?: string | null
+        }
+        Relationships: []
+      }
+      servicos: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          duration_minutes: number
+          id: string
+          image_url: string | null
+          is_active: boolean
+          name: string
+          price_cents: number
+          professional_id: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          duration_minutes: number
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name: string
+          price_cents?: number
+          professional_id: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name?: string
+          price_cents?: number
+          professional_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "services_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "profissionais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      servicos_funcionario: {
+        Row: {
+          created_at: string
+          employee_id: string
+          service_id: string
+        }
+        Insert: {
+          created_at?: string
+          employee_id: string
+          service_id: string
+        }
+        Update: {
+          created_at?: string
+          employee_id?: string
+          service_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_services_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_services_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "servicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      client_cancel_appointment: {
+        Args: { _contact: string; _id: string }
+        Returns: boolean
+      }
+      get_busy_slots: {
+        Args: { _from: string; _professional_id: string; _to: string }
+        Returns: {
+          ends_at: string
+          starts_at: string
+        }[]
+      }
+      get_employee_busy_slots: {
+        Args: { _employee_id: string; _from: string; _to: string }
+        Returns: {
+          ends_at: string
+          starts_at: string
+        }[]
+      }
+      lookup_client_appointments: {
+        Args: { _contact: string }
+        Returns: {
+          client_name: string
+          ends_at: string
+          id: string
+          professional_business_name: string
+          professional_id: string
+          professional_slug: string
+          service_name: string
+          starts_at: string
+          status: Database["public"]["Enums"]["appointment_status"]
+        }[]
+      }
     }
     Enums: {
-      [_ in never]: never
+      appointment_status: "confirmed" | "cancelled" | "completed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +876,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      appointment_status: ["confirmed", "cancelled", "completed"],
+    },
   },
 } as const
