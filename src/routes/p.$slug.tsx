@@ -185,7 +185,7 @@ function BookingPage() {
         className="bg-transparent"
         style={{ backgroundColor: "color-mix(in oklab, var(--header-color) 55%, transparent)" }}
       >
-        <div className="max-w-2xl mx-auto px-4 py-8 sm:py-10 flex items-start gap-4">
+        <div className="max-w-3xl mx-auto px-4 py-8 sm:py-10 flex items-start gap-4">
           {pro.logo_url ? (
             <img src={pro.logo_url} alt="" className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl object-cover border border-border shrink-0" />
           ) : (
@@ -215,7 +215,7 @@ function BookingPage() {
       </header>
 
 
-      <main className="max-w-2xl mx-auto px-4 py-6 sm:py-8">
+      <main className="max-w-3xl mx-auto px-4 py-6 sm:py-8">
         {step !== "landing" && step !== "service" && step !== "done" && (
           <button onClick={goBack} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4">
             <ArrowLeft className="h-4 w-4" /> Voltar
@@ -620,7 +620,7 @@ function WhenStep({ pro, selectedServices, employee, onPick, brand }: { pro: { i
                   onClick={() => setSelectedDay(d)}
                   data-selected={selected || undefined}
                   data-today={isToday || undefined}
-                  className="aspect-square rounded-lg text-sm font-medium min-h-[44px] disabled:opacity-30 disabled:cursor-not-allowed hover:bg-accent/10 hover:text-accent transition-colors data-[today]:ring-1 data-[today]:ring-accent/40 data-[selected]:!bg-accent data-[selected]:!text-accent-foreground data-[selected]:ring-0"
+                  className="h-10 w-full rounded-lg text-sm font-medium disabled:opacity-30 disabled:cursor-not-allowed hover:bg-accent/10 hover:text-accent transition-colors data-[today]:ring-1 data-[today]:ring-accent/40 data-[selected]:!bg-accent data-[selected]:!text-accent-foreground data-[selected]:ring-0"
                 >{d.getDate()}</button>
               );
             })}
@@ -722,40 +722,48 @@ function FormStep({ pro, selectedServices, employee, when, onDone, brand }: { pr
   });
 
   return (
-    <section className="space-y-5">
-      <div className="text-center animate-ui-slide-up">
-        <h2 className="text-xl sm:text-2xl font-black tracking-tight text-foreground">Confirmar agendamento</h2>
-        <p className="mt-1 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-          <ShieldCheck className="h-3.5 w-3.5 ui-icon-color" /> Ambiente seguro
+    <section className="space-y-6">
+      <header className="text-center animate-ui-slide-up">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] ui-accent-text mb-2">Último passo</p>
+        <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-foreground">Confirmar agendamento</h2>
+        <p className="mt-2 inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+          <ShieldCheck className="h-4 w-4 ui-icon-color" /> Ambiente seguro · dados usados só para o agendamento
         </p>
-      </div>
+      </header>
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)] lg:items-start">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-start">
         {/* Resumo do agendamento */}
         <div className="lg:sticky lg:top-6">
-          <UICard className="p-5 sm:p-6 ui-stagger">
-            <UICardHeader icon={CalendarCheck2} title="Resumo do agendamento" />
+          <UICard className="overflow-hidden ui-stagger">
+            <div className="h-1.5" style={{ background: "var(--brand)" }} />
+            <div className="p-5 sm:p-6">
+              <UICardHeader icon={CalendarCheck2} title="Resumo do agendamento" />
 
-            <div className="flex items-start gap-4 pb-5 mb-5 border-b border-border">
-              {cover ? (
-                <img src={cover} alt={combinedName} loading="lazy" className="h-16 w-16 rounded-2xl object-cover shrink-0 border border-border" />
-              ) : (
-                <span className="ui-icon-bubble h-16 w-16 grid place-items-center rounded-2xl shrink-0">
-                  <Scissors className="h-6 w-6" />
-                </span>
-              )}
-              <div className="min-w-0">
-                <p className="font-bold text-foreground leading-tight">{combinedName}</p>
-                <p className="mt-1 text-xl font-black tracking-tight ui-accent-text">{formatBRL(combinedPrice)}</p>
-                <p className="mt-1 text-xs text-muted-foreground">{combinedDuration} min</p>
+              <div className="flex items-center gap-4 pb-5 mb-5 border-b border-border">
+                {cover ? (
+                  <img src={cover} alt={combinedName} loading="lazy" className="h-14 w-14 rounded-2xl object-cover shrink-0 border border-border" />
+                ) : (
+                  <span className="ui-icon-bubble h-14 w-14 grid place-items-center rounded-2xl shrink-0">
+                    <Scissors className="h-6 w-6" />
+                  </span>
+                )}
+                <div className="min-w-0">
+                  <p className="font-bold text-foreground leading-tight">{combinedName}</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">{combinedDuration} min de duração</p>
+                </div>
               </div>
-            </div>
 
-            <div className="space-y-4">
-              <UISummaryRow icon={CalendarIcon}><span className="first-letter:uppercase">{formatLongDate(when)}</span></UISummaryRow>
-              <UISummaryRow icon={Clock}>{formatTime(when)}</UISummaryRow>
-              {employee && <UISummaryRow icon={User}>com {employee.name}</UISummaryRow>}
-              <UISummaryRow icon={MapPin} sub={pro.address || undefined}>{pro.business_name}</UISummaryRow>
+              <div className="space-y-4">
+                <UISummaryRow icon={CalendarIcon}><span className="first-letter:uppercase">{formatLongDate(when)}</span></UISummaryRow>
+                <UISummaryRow icon={Clock}>{formatTime(when)}</UISummaryRow>
+                {employee && <UISummaryRow icon={User}>com {employee.name}</UISummaryRow>}
+                <UISummaryRow icon={MapPin} sub={pro.address || undefined}>{pro.business_name}</UISummaryRow>
+              </div>
+
+              <div className="mt-5 pt-4 border-t border-border flex items-center justify-between gap-3">
+                <span className="text-sm font-semibold text-muted-foreground">Total</span>
+                <span className="text-2xl font-black tracking-tight" style={{ color: "var(--brand)" }}>{formatBRL(combinedPrice)}</span>
+              </div>
             </div>
           </UICard>
         </div>
