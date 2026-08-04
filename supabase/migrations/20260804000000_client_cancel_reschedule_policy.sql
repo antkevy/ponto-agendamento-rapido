@@ -145,7 +145,7 @@ RETURNS TABLE(
   status public.appointment_status,
   client_name TEXT
 )
-LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = public
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public
 AS $$
 DECLARE
   contact_norm TEXT := btrim(_contact);

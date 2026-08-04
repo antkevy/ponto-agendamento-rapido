@@ -21,7 +21,9 @@ RETURNS TABLE(
   status public.appointment_status,
   client_name TEXT
 )
-LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = public
+-- A função não pode ser STABLE: o rate-limit faz DELETE no contador, e o
+-- PostgREST roda funções STABLE em transação read-only (erro 25006 no site).
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public
 AS $$
 DECLARE
   contact_norm TEXT := btrim(_contact);
