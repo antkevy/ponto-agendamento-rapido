@@ -296,7 +296,149 @@
     animation: skeleton-pulse 1.4s ease-in-out infinite;
     border-radius: var(--radius-md);
   }
+
+  /* ====================== UI Kit (100% tokenizado) ====================== */
+
+  .ui-card {
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: 1.25rem;
+    box-shadow: 0 1px 2px oklch(0 0 0 / 0.04), 0 18px 40px -30px oklch(0 0 0 / 0.45);
+  }
+
+  .ui-card-glass {
+    background: color-mix(in oklab, var(--color-card) 82%, transparent);
+    border: 1px solid color-mix(in oklab, var(--color-border) 80%, transparent);
+    border-radius: 1.5rem;
+    backdrop-filter: blur(22px) saturate(140%);
+    box-shadow: 0 30px 80px -40px oklch(0 0 0 / 0.7), inset 0 1px 0 oklch(1 0 0 / 0.06);
+  }
+
+  .ui-icon-bubble {
+    background: color-mix(in oklab, var(--icon-color) 16%, transparent);
+    color: var(--icon-color);
+    border: 1px solid color-mix(in oklab, var(--icon-color) 26%, transparent);
+  }
+  .ui-icon-color { color: var(--icon-color); }
+  .ui-accent-text { color: var(--accent-strong); }
+  .ui-link { color: var(--link-color); font-weight: 600; transition: opacity 160ms ease; }
+  .ui-link:hover { opacity: 0.8; text-decoration: underline; }
+
+  .ui-btn-primary {
+    background-image: linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--btn-color) 82%, white) 0%,
+      var(--btn-color) 100%
+    );
+    color: var(--btn-foreground);
+    box-shadow: 0 14px 30px -14px color-mix(in oklab, var(--btn-color) 75%, transparent),
+      inset 0 1px 0 oklch(1 0 0 / 0.28);
+  }
+  .ui-btn-primary:hover { filter: brightness(1.07); transform: translateY(-1px); }
+  .ui-btn-primary:active { transform: scale(0.98); }
+
+  .ui-btn-outline {
+    background: var(--input-bg);
+    color: var(--color-foreground);
+    border: 1px solid var(--color-border);
+  }
+  .ui-btn-outline:hover { background: var(--hover-color); border-color: color-mix(in oklab, var(--accent-strong) 55%, var(--color-border)); }
+  .ui-btn-outline:active { transform: scale(0.98); }
+
+  .ui-btn-ghost { background: transparent; color: var(--color-foreground); }
+  .ui-btn-ghost:hover { background: var(--hover-color); }
+
+  .ui-ripple { position: relative; overflow: hidden; isolation: isolate; }
+  .ui-ripple::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, oklch(1 0 0 / 0.45) 10%, transparent 60%);
+    opacity: 0;
+    transform: scale(0.2);
+    pointer-events: none;
+  }
+  .ui-ripple:active::after { animation: ui-ripple 550ms ease-out; }
+
+  .ui-field { position: relative; display: block; }
+  .ui-field-icon {
+    position: absolute;
+    left: 0.9rem;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 1.15rem;
+    width: 1.15rem;
+    color: var(--icon-color);
+    pointer-events: none;
+    transition: opacity 180ms ease;
+  }
+  .ui-field-icon-top { top: 1.35rem; transform: none; }
+  .ui-field-input {
+    width: 100%;
+    min-height: 52px;
+    padding: 0.75rem 1rem;
+    border-radius: 1rem;
+    background: var(--input-bg);
+    color: var(--color-foreground);
+    border: 1px solid var(--color-border);
+    transition: border-color 180ms ease, box-shadow 200ms ease, background-color 180ms ease, transform 180ms ease;
+  }
+  .ui-field-input::placeholder { color: color-mix(in oklab, var(--color-muted-foreground) 90%, transparent); }
+  .ui-field-input:hover { border-color: color-mix(in oklab, var(--accent-strong) 40%, var(--color-border)); }
+  .ui-field-input:focus {
+    outline: none;
+    border-color: var(--accent-strong);
+    box-shadow: 0 0 0 4px color-mix(in oklab, var(--accent-strong) 22%, transparent);
+  }
+  .ui-field-trailing { position: absolute; right: 0.65rem; top: 50%; transform: translateY(-50%); }
+
+  .ui-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.8rem;
+    border-radius: 9999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--badge-color);
+    background: color-mix(in oklab, var(--badge-color) 15%, transparent);
+    border: 1px solid color-mix(in oklab, var(--badge-color) 30%, transparent);
+  }
+
+  .ui-notice {
+    display: flex;
+    gap: 0.75rem;
+    padding: 1rem 1.1rem;
+    border-radius: 1rem;
+    background: color-mix(in oklab, var(--accent-strong) 10%, var(--color-card));
+    border: 1px solid color-mix(in oklab, var(--accent-strong) 25%, transparent);
+  }
+
+  .ui-header {
+    background: var(--header-color);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .ui-auth-bg {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    filter: blur(6px) saturate(115%);
+    transform: scale(1.08);
+  }
+  .ui-auth-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--color-background) 62%, transparent) 0%,
+      color-mix(in oklab, var(--color-background) 88%, transparent) 45%,
+      var(--color-background) 100%
+    );
+  }
 }
+
 
 @keyframes skeleton-pulse {
   0% { background-position: 200% 0; }
