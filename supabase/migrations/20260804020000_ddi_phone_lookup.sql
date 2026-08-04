@@ -1,7 +1,7 @@
 -- Busca por telefone tolerante a DDI (+55) + correção de cast da duração.
 --
--- O agendamento é salvo com o número brasileiro SEM DDI (ex.: 88921653120).
--- Quando o cliente busca com o DDI (ex.: 5588921653120) a comparação exata
+-- O agendamento é salvo com o número brasileiro SEM DDI (ex.: 11912345678).
+-- Quando o cliente busca com o DDI (ex.: 5511912345678) a comparação exata
 -- de dígitos falhava. Esta migração normaliza o contato: remove um "55"
 -- inicial quando o número tem 12-13 dígitos. Também corrige o retorno da
 -- duração (numeric -> int) que impedia a função de executar.

@@ -223,7 +223,7 @@ function Page() {
               autoComplete="tel"
               value={formatPhoneBRTolerant(contact)}
               onChange={(e) => setContact(onlyDigits(e.target.value).slice(0, 13))}
-              placeholder="(88) 9216-53120"
+              placeholder="(11) 91234-5678"
               className="flex-1 min-h-[48px] px-4 py-3 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-ring"
             />
           ) : (
