@@ -616,7 +616,7 @@ function WhenStep({ pro, selectedServices, employee, onPick, brand }: { pro: { i
   );
 }
 
-function FormStep({ pro, selectedServices, employee, when, onDone, brand }: { pro: { id: string }; selectedServices: Service[]; employee: Employee | null; when: Date; onDone: (id: string) => void; brand: string }) {
+function FormStep({ pro, selectedServices, employee, when, onDone, brand }: { pro: { id: string; business_name: string; address?: string | null }; selectedServices: Service[]; employee: Employee | null; when: Date; onDone: (id: string) => void; brand: string }) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -625,6 +625,7 @@ function FormStep({ pro, selectedServices, employee, when, onDone, brand }: { pr
   const combinedPrice = useMemo(() => selectedServices.reduce((a, s) => a + s.price_cents, 0), [selectedServices]);
   const combinedDuration = useMemo(() => selectedServices.reduce((a, s) => a + s.duration_minutes, 0), [selectedServices]);
   const combinedName = useMemo(() => selectedServices.map((s) => s.name).join(" + "), [selectedServices]);
+  const cover = selectedServices.find((s) => s.image_url)?.image_url ?? null;
 
   const create = useMutation({
     mutationFn: async () => {
@@ -661,26 +662,78 @@ function FormStep({ pro, selectedServices, employee, when, onDone, brand }: { pr
   });
 
   return (
-    <section className="animate-fade-in-up">
-      <h2 className="text-xl font-bold tracking-tight text-foreground mb-4">{employee ? "4" : "3"}. Seus dados</h2>
-      <div className="card-elevated p-4 mb-4 text-sm">
-        <p><strong>{combinedName}</strong> · {formatBRL(combinedPrice)}</p>
-        <p className="text-muted-foreground capitalize">{formatLongDate(when)} às {formatTime(when)}</p>
-        {employee && <p className="text-muted-foreground mt-1">com {employee.name}</p>}
+    <section className="space-y-5">
+      <div className="text-center animate-ui-slide-up">
+        <h2 className="text-xl sm:text-2xl font-black tracking-tight text-foreground">Confirmar agendamento</h2>
+        <p className="mt-1 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+          <ShieldCheck className="h-3.5 w-3.5 ui-icon-color" /> Ambiente seguro
+        </p>
       </div>
-      <form onSubmit={(e) => { e.preventDefault(); create.mutate(); }} className="space-y-3">
-        <F label="Nome completo"><input required value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" placeholder="Seu nome completo" className={cls} /></F>
-        <F label="WhatsApp"><PhoneInput value={phone} onChange={setPhone} className={cls} /></F>
-        <F label="Email (opcional)"><input type="email" inputMode="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" className={cls} /></F>
-        <F label="Observação (opcional)"><textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Alguma observação?" className={cls} /></F>
-        <button disabled={create.isPending} className="btn-gradient w-full inline-flex items-center justify-center disabled:opacity-60">
-          {create.isPending ? "Confirmando..." : "Confirmar agendamento"}
-        </button>
 
+      {/* Resumo do agendamento */}
+      <UICard className="p-5 sm:p-6 ui-stagger" style={undefined}>
+        <UICardHeader icon={CalendarCheck2} title="Resumo do agendamento" />
+
+        <div className="flex items-start gap-4 pb-5 mb-5 border-b border-border">
+          {cover ? (
+            <img src={cover} alt={combinedName} loading="lazy" className="h-16 w-16 rounded-2xl object-cover shrink-0 border border-border" />
+          ) : (
+            <span className="ui-icon-bubble h-16 w-16 grid place-items-center rounded-2xl shrink-0">
+              <Scissors className="h-6 w-6" />
+            </span>
+          )}
+          <div className="min-w-0">
+            <p className="font-bold text-foreground leading-tight">{combinedName}</p>
+            <p className="mt-1 text-xl font-black tracking-tight ui-accent-text">{formatBRL(combinedPrice)}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{combinedDuration} min</p>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <UISummaryRow icon={CalendarIcon}><span className="capitalize">{formatLongDate(when)}</span></UISummaryRow>
+          <UISummaryRow icon={Clock}>{formatTime(when)}</UISummaryRow>
+          {employee && <UISummaryRow icon={User}>com {employee.name}</UISummaryRow>}
+          <UISummaryRow icon={MapPin} sub={pro.address || undefined}>{pro.business_name}</UISummaryRow>
+        </div>
+      </UICard>
+
+      {/* Seus dados */}
+      <form onSubmit={(e) => { e.preventDefault(); create.mutate(); }} className="space-y-5">
+        <UICard className="p-5 sm:p-6 ui-stagger" >
+          <UICardHeader icon={User} title="Seus dados" />
+          <div className="space-y-4">
+            <UIInput label="Nome completo" icon={User} required value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" placeholder="Seu nome completo" />
+            <label className="block">
+              <span className="block text-sm font-semibold text-foreground mb-2">WhatsApp</span>
+              <span className="ui-field">
+                <MessageCircle className="ui-field-icon" />
+                <PhoneInput value={phone} onChange={setPhone} className="ui-field-input pl-11" />
+              </span>
+            </label>
+            <UIInput label="E-mail (opcional)" icon={Mail} type="email" inputMode="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" />
+            <UITextarea label="Observação (opcional)" icon={Pencil} rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Alguma preferência ou observação?" />
+          </div>
+
+          <div className="mt-5">
+            <UINotice icon={ShieldCheck} title="Importante">
+              Você poderá cancelar ou reagendar até 24 horas antes do horário marcado.
+            </UINotice>
+          </div>
+        </UICard>
+
+        <UIButton type="submit" size="lg" fullWidth disabled={create.isPending} icon={CalendarCheck2}>
+          {create.isPending ? "Confirmando..." : "Confirmar agendamento"}
+        </UIButton>
+
+        <p className="text-center text-xs text-muted-foreground inline-flex items-start gap-1.5 justify-center w-full">
+          <Lock className="h-3.5 w-3.5 shrink-0 mt-px" />
+          <span>Ao confirmar, você concorda com nossos <span className="ui-link">Termos de Uso</span> e <span className="ui-link">Política de Privacidade</span>.</span>
+        </p>
       </form>
     </section>
   );
 }
+
 
 function DoneStep({ pro, selectedServices, employee, when, onReset }: { pro: { business_name: string }; selectedServices: Service[]; employee: Employee | null; when: Date; onReset: () => void }) {
   const combinedName = useMemo(() => selectedServices.map((s) => s.name).join(" + "), [selectedServices]);
