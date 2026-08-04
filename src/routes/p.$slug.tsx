@@ -691,7 +691,7 @@ function FormStep({ pro, selectedServices, employee, when, onDone, brand }: { pr
         </div>
 
         <div className="space-y-4">
-          <UISummaryRow icon={CalendarIcon}><span className="capitalize">{formatLongDate(when)}</span></UISummaryRow>
+          <UISummaryRow icon={CalendarIcon}><span className="first-letter:uppercase">{formatLongDate(when)}</span></UISummaryRow>
           <UISummaryRow icon={Clock}>{formatTime(when)}</UISummaryRow>
           {employee && <UISummaryRow icon={User}>com {employee.name}</UISummaryRow>}
           <UISummaryRow icon={MapPin} sub={pro.address || undefined}>{pro.business_name}</UISummaryRow>
