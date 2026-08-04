@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { db } from "@/lib/db-tables";
 import { useBookingTheme } from "@/hooks/use-booking-theme";
+import type { ProfessionalTheme } from "@/lib/appearance";
 import {
   computeSlots,
   formatBRL,
@@ -22,16 +23,41 @@ import { UIButton, UICard, UICardHeader, UIInput, UITextarea, UINotice, UISummar
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ViewToggle, type ViewMode } from "@/components/view-toggle";
 
+/** Dados públicos de um profissional carregados pelo /p/:slug. */
+type PublicPro = {
+  id: string;
+  slug: string;
+  business_name: string;
+  logo_url: string | null;
+  brand_color: string;
+  description: string | null;
+  address: string | null;
+  phone: string | null;
+  lat: number | null;
+  lng: number | null;
+  timezone: string;
+  theme_colors: ProfessionalTheme | null;
+};
+
 export const Route = createFileRoute("/p/$slug")({
   loader: async ({ params }) => {
-    const { data: pro, error } = await supabase
+    const cols = "id, slug, business_name, logo_url, brand_color, description, address, phone, lat, lng, timezone";
+    // theme_colors só existe depois de aplicar a migração
+    // 20260803100000_add_professional_theme_colors. Se a coluna ainda não
+    // existir no banco, cai no fallback (página segue funcional, cores padrão).
+    const { data, error } = await supabase
       .from(db.profissionais)
-      .select("id, slug, business_name, logo_url, brand_color, description, address, phone, lat, lng, timezone")
+      .select(`${cols}, theme_colors`)
       .eq("slug", params.slug)
       .maybeSingle();
-    if (error) throw error;
-    if (!pro) throw notFound();
-    return { pro };
+    if (error) {
+      const fb = await supabase.from(db.profissionais).select(cols).eq("slug", params.slug).maybeSingle();
+      if (fb.error) throw fb.error;
+      if (!fb.data) throw notFound();
+      return { pro: { ...fb.data, theme_colors: null } };
+    }
+    if (!data) throw notFound();
+    return { pro: data as PublicPro };
   },
   head: ({ loaderData }) => {
     if (!loaderData) return { meta: [{ title: "Página não encontrada — Agendaí" }, { name: "robots", content: "noindex" }] };
@@ -56,7 +82,7 @@ type Step = "landing" | "service" | "employee" | "when" | "form" | "done";
 function BookingPage() {
   const { pro } = Route.useLoaderData();
   const rootRef = useRef<HTMLDivElement>(null);
-  const brand = useBookingTheme(rootRef, pro.brand_color);
+  const brand = useBookingTheme(rootRef, pro.brand_color, pro.theme_colors);
 
   const [step, setStep] = useState<Step>("landing");
   const [selectedServices, setSelectedServices] = useState<Service[]>([]);
@@ -152,7 +178,7 @@ function BookingPage() {
   return (
     <div
       ref={rootRef}
-      className="min-h-screen bg-page-gradient"
+      className="min-h-screen bg-booking-gradient"
       style={{ ["--brand" as string]: brand } as React.CSSProperties}
     >
       <header

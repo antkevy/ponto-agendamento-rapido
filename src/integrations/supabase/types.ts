@@ -526,6 +526,7 @@ export type Database = {
           story: string | null
           tagline: string | null
           terms: string | null
+          theme_colors: Json | null
           theme_mode: string
           tiktok: string | null
           timezone: string
@@ -570,6 +571,7 @@ export type Database = {
           story?: string | null
           tagline?: string | null
           terms?: string | null
+          theme_colors?: Json | null
           theme_mode?: string
           tiktok?: string | null
           timezone?: string
@@ -614,6 +616,7 @@ export type Database = {
           story?: string | null
           tagline?: string | null
           terms?: string | null
+          theme_colors?: Json | null
           theme_mode?: string
           tiktok?: string | null
           timezone?: string

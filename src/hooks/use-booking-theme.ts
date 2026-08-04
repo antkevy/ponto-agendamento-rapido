@@ -5,11 +5,12 @@ import {
   LIGHT_PRESET,
   loadAppearance,
   type Appearance,
+  type ProfessionalTheme,
 } from "@/lib/appearance";
 
 /**
  * Cor efetiva de marca da página de agendamento.
- * - Se o dono personalizou as cores do tema (Aparência), usa a Cor Primária.
+ * - Se há cores personalizadas (banco ou localStorage), usa a Cor Primária.
  * - Caso contrário, usa o brand_color salvo no banco (o que os visitantes veem).
  */
 function effectiveBrand(brandColor: string | null | undefined, a?: Appearance): string {
@@ -30,12 +31,17 @@ function effectiveBrand(brandColor: string | null | undefined, a?: Appearance): 
  * página pública de agendamento (/p/:slug). Nada disso toca o <html>, então
  * o painel e as demais páginas continuam com as cores padrão.
  *
- * Reage à troca de tema (claro/escuro) e a mudanças nas cores (mesma aba ou
- * outras abas via evento storage). Limpa as variáveis ao desmontar.
+ * As variáveis vivem apenas no elemento raiz: quando a página desmonta, elas
+ * desaparecem junto. Reage à troca de tema (claro/escuro) e a mudanças nas
+ * cores (mesma aba via evento, outras abas via evento storage).
+ *
+ * @param savedTheme cores salvas no banco (profissionais.theme_colors); têm
+ *   prioridade sobre o localStorage do dono para que visitantes vejam o mesmo.
  */
 export function useBookingTheme(
   rootRef: RefObject<HTMLElement | null>,
   brandColor: string | null | undefined,
+  savedTheme?: ProfessionalTheme | null,
 ): string {
   const [brand, setBrand] = useState<string>(() => brandColor || "#0284C7");
 
@@ -45,11 +51,10 @@ export function useBookingTheme(
 
     const sync = () => {
       const mode = document.documentElement.classList.contains("dark") ? "dark" : "light";
-      const a = loadAppearance(mode);
+      const a = loadAppearance(mode, savedTheme?.[mode]);
       applyAppearance(a, el);
       const b = effectiveBrand(brandColor, a);
       el.style.setProperty("--brand", b);
-      el.style.setProperty("--brand-foreground", "#ffffff");
       setBrand(b);
     };
 
@@ -64,7 +69,7 @@ export function useBookingTheme(
       window.removeEventListener("storage", sync);
       window.removeEventListener("agendai-appearance-change", sync);
     };
-  }, [rootRef, brandColor]);
+  }, [rootRef, brandColor, savedTheme]);
 
   return brand;
 }

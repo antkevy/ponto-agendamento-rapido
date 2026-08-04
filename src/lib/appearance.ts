@@ -27,6 +27,15 @@ export type AppearanceKey =
 
 export type Appearance = Record<AppearanceKey, string>;
 
+/**
+ * Cores do tema persistidas por profissional (coluna profissionais.theme_colors).
+ * Visíveis para todos os visitantes da página pública de agendamento (/p/:slug).
+ */
+export type ProfessionalTheme = {
+  light?: Appearance;
+  dark?: Appearance;
+};
+
 export const APPEARANCE_FIELDS: Array<{ key: AppearanceKey; label: string; hint: string }> = [
   { key: "primary", label: "Cor Primária", hint: "Identidade principal da marca" },
   { key: "secondary", label: "Cor Secundária", hint: "Superfícies de apoio" },
@@ -99,16 +108,21 @@ export function storageKey(mode: "light" | "dark") {
   return mode === "dark" ? KEY_DARK : KEY_LIGHT;
 }
 
-export function loadAppearance(mode: "light" | "dark"): Appearance {
+export function loadAppearance(mode: "light" | "dark", saved?: Appearance | null): Appearance {
   const base = mode === "dark" ? DARK_PRESET : LIGHT_PRESET;
-  if (typeof window === "undefined") return base;
-  try {
-    const raw = window.localStorage.getItem(storageKey(mode));
-    if (!raw) return base;
-    return { ...base, ...(JSON.parse(raw) as Partial<Appearance>) };
-  } catch {
-    return base;
+  let merged = base;
+  if (typeof window !== "undefined") {
+    try {
+      const raw = window.localStorage.getItem(storageKey(mode));
+      if (raw) merged = { ...merged, ...(JSON.parse(raw) as Partial<Appearance>) };
+    } catch {
+      /* ignore */
+    }
   }
+  // As cores salvas no banco (visíveis para o público) têm prioridade sobre o
+  // ajuste local do dono, para que todos vejam o mesmo visual.
+  if (saved) merged = { ...merged, ...saved };
+  return merged;
 }
 
 export function saveAppearance(mode: "light" | "dark", value: Appearance) {

@@ -13,6 +13,7 @@ import { isValidPhoneBR, onlyDigits } from "@/lib/phone";
 import { ImageUpload } from "@/components/image-upload";
 import { ExternalLink } from "lucide-react";
 import { AppearanceSettings } from "@/components/appearance-settings";
+import type { ProfessionalTheme } from "@/lib/appearance";
 
 export const Route = createFileRoute("/app/configuracoes")({
   head: () => ({ meta: [{ title: "Configurações — Agendaí" }] }),
@@ -134,7 +135,7 @@ function Page() {
 
           <button disabled={save.isPending} className="btn-brand disabled:opacity-60">{save.isPending ? "Salvando..." : "Salvar alterações"}</button>
 
-          <div className="pt-2"><AppearanceSettings /></div>
+          <div className="pt-2"><AppearanceSettings proId={pro.id} initialTheme={pro.theme_colors as ProfessionalTheme | null} /></div>
         </form>
       )}
     </AppShell>
