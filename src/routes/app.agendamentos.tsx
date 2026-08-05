@@ -7,7 +7,14 @@ import { OnboardingCard } from "@/components/onboarding-card";
 import { useMyProfessional } from "@/hooks/use-my-professional";
 import { supabase } from "@/integrations/supabase/client";
 import { db } from "@/lib/db-tables";
-import { formatBRL, formatLongDate, formatTime } from "@/lib/booking";
+import {
+  formatBRL,
+  formatLongDate,
+  formatTime,
+  computeSlots,
+  WEEKDAYS_PT_SHORT,
+} from "@/lib/booking";
+import type { AvailabilityRow, Block, BusySlot } from "@/lib/booking";
 import { cn } from "@/lib/utils";
 import {
   X,
@@ -24,10 +31,11 @@ import {
   User,
   Users,
   MessageCircle,
-  Clock,
   Pencil,
   Calendar,
   Info,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { displayPhoneBR, isValidPhoneBR } from "@/lib/phone";
 import { ViewToggle, type ViewMode } from "@/components/view-toggle";
@@ -524,7 +532,7 @@ function NewAppointmentForm({
   const [clientName, setClientName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
-  const [startsAt, setStartsAt] = useState("");
+  const [slot, setSlot] = useState<Date | null>(null);
   const [notes, setNotes] = useState("");
 
   const { data: services, isLoading: servicesLoading } = useQuery({
@@ -588,17 +596,13 @@ function NewAppointmentForm({
   const selected = (services ?? []).find((s) => s.id === serviceId);
   const selectedClient =
     clientMode === "existing" ? clientOptions.find((c) => c.key === clientKey) : null;
-  const when = startsAt ? new Date(startsAt) : null;
+  const when = slot;
   const finalNamePreview =
     clientMode === "existing" ? (selectedClient?.name ?? "") : clientName.trim();
   const endTimeLabel =
     selected && when
       ? formatTime(new Date(when.getTime() + selected.duration_minutes * 60000))
       : "—";
-
-  const nowInput = new Date();
-  const pad = (n: number) => String(n).padStart(2, "0");
-  const minInput = `${nowInput.getFullYear()}-${pad(nowInput.getMonth() + 1)}-${pad(nowInput.getDate())}T${pad(nowInput.getHours())}:${pad(nowInput.getMinutes())}`;
 
   const summaryCard = selected ? (
     <div className="ui-card p-4 sm:p-5 space-y-3">
@@ -645,11 +649,11 @@ function NewAppointmentForm({
           toast.error("Telefone incompleto. Use (XX) XXXXX-XXXX.");
           return;
         }
-        const start = new Date(startsAt);
-        if (!start.getTime() || start.getTime() <= Date.now()) {
-          toast.error("Escolha uma data e horário futuros.");
+        if (!slot) {
+          toast.error("Escolha uma data e horário disponíveis.");
           return;
         }
+        const start = slot;
         const ends = new Date(start.getTime() + selected!.duration_minutes * 60000);
         onSubmit({
           service_id: serviceId,
@@ -684,7 +688,10 @@ function NewAppointmentForm({
               <select
                 required
                 value={serviceId}
-                onChange={(e) => setServiceId(e.target.value)}
+                onChange={(e) => {
+                  setServiceId(e.target.value);
+                  setSlot(null);
+                }}
                 className="ui-field-input pl-11"
               >
                 <option value="">Selecione um serviço...</option>
@@ -829,22 +836,17 @@ function NewAppointmentForm({
 
           <section className="space-y-3">
             <SectionLabel>Data e hora</SectionLabel>
-            <span className="ui-field">
-              <Clock className="ui-field-icon" />
-              <input
-                required
-                type="datetime-local"
-                value={startsAt}
-                min={minInput}
-                onChange={(e) => setStartsAt(e.target.value)}
-                className="ui-field-input pl-11"
-              />
-            </span>
-            <p className="text-xs text-muted-foreground">
-              {selected
-                ? `${selected.duration_minutes} min de duração · término às ${endTimeLabel}`
-                : "Escolha um serviço para ver a duração."}
-            </p>
+            <AvailabilityPicker
+              proId={proId}
+              durationMinutes={selected?.duration_minutes ?? 0}
+              selectedSlot={slot}
+              onPick={setSlot}
+            />
+            {selected && (
+              <p className="text-xs text-muted-foreground">
+                {selected.duration_minutes} min de duração · término às {endTimeLabel}
+              </p>
+            )}
           </section>
 
           <UITextarea
@@ -879,5 +881,257 @@ function NewAppointmentForm({
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{children}</p>
+  );
+}
+
+function AvailabilityPicker({
+  proId,
+  durationMinutes,
+  selectedSlot,
+  onPick,
+}: {
+  proId: string;
+  durationMinutes: number;
+  selectedSlot: Date | null;
+  onPick: (d: Date | null) => void;
+}) {
+  const [monthStart, setMonthStart] = useState(() => {
+    const d = new Date();
+    d.setDate(1);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  });
+  const [selectedDay, setSelectedDay] = useState<Date | null>(() =>
+    selectedSlot ? new Date(selectedSlot) : null,
+  );
+
+  const { data: proAvail, isLoading: loadingAvail } = useQuery({
+    queryKey: ["appt-avail", proId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from(db.horarios)
+        .select("*")
+        .eq("professional_id", proId);
+      if (error) throw error;
+      return data as AvailabilityRow[];
+    },
+  });
+
+  const rangeStart = monthStart;
+  const rangeEnd = useMemo(() => {
+    const d = new Date(monthStart);
+    d.setMonth(d.getMonth() + 1);
+    return d;
+  }, [monthStart]);
+
+  const { data: proBlocks } = useQuery({
+    queryKey: ["appt-blocks", proId, monthStart.toISOString()],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from(db.bloqueios)
+        .select("starts_at,ends_at")
+        .eq("professional_id", proId)
+        .lt("starts_at", rangeEnd.toISOString())
+        .gt("ends_at", rangeStart.toISOString());
+      if (error) throw error;
+      return data as Block[];
+    },
+  });
+
+  const { data: busy, isLoading: loadingBusy } = useQuery({
+    queryKey: ["appt-busy", proId, selectedDay?.toISOString()],
+    enabled: !!selectedDay,
+    queryFn: async () => {
+      const from = new Date(selectedDay!);
+      from.setHours(0, 0, 0, 0);
+      const to = new Date(from);
+      to.setDate(to.getDate() + 1);
+      const { data, error } = await supabase.rpc("get_busy_slots", {
+        _professional_id: proId,
+        _from: from.toISOString(),
+        _to: to.toISOString(),
+      });
+      if (error) throw error;
+      return (data as BusySlot[]) ?? [];
+    },
+  });
+
+  const today = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
+
+  const daysGrid = useMemo(() => {
+    const first = new Date(monthStart);
+    const startWeekday = first.getDay();
+    const cells: Array<Date | null> = [];
+    for (let i = 0; i < startWeekday; i++) cells.push(null);
+    const end = new Date(monthStart);
+    end.setMonth(end.getMonth() + 1);
+    for (let d = new Date(first); d < end; d.setDate(d.getDate() + 1)) cells.push(new Date(d));
+    while (cells.length % 7 !== 0) cells.push(null);
+    return cells;
+  }, [monthStart]);
+
+  const dayHasAvailability = (day: Date) =>
+    !!proAvail && proAvail.some((r) => r.weekday === day.getDay());
+
+  const canGoPrev = monthStart > new Date(today.getFullYear(), today.getMonth(), 1);
+
+  const slots = useMemo(() => {
+    if (!selectedDay || !proAvail || !proBlocks || !busy) return [];
+    if (durationMinutes <= 0) return [];
+    return computeSlots({
+      day: selectedDay,
+      serviceDurationMinutes: durationMinutes,
+      availability: proAvail,
+      blocks: proBlocks,
+      busy,
+    });
+  }, [selectedDay, proAvail, proBlocks, busy, durationMinutes]);
+
+  if (durationMinutes <= 0) {
+    return (
+      <p className="text-sm text-muted-foreground">
+        Escolha um serviço para ver os horários disponíveis.
+      </p>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {loadingAvail ? (
+        <div className="skeleton h-40" />
+      ) : !proAvail || proAvail.length === 0 ? (
+        <UINotice icon={Info} title="Sem horários de funcionamento">
+          Defina os horários na aba Serviços → Horários para poder agendar.
+        </UINotice>
+      ) : (
+        <>
+          <div className="card-elevated p-4">
+            <div className="flex items-center justify-between mb-3">
+              <button
+                type="button"
+                onClick={() => {
+                  const d = new Date(monthStart);
+                  d.setMonth(d.getMonth() - 1);
+                  setMonthStart(d);
+                }}
+                disabled={!canGoPrev}
+                aria-label="Mês anterior"
+                className="p-2 min-h-[44px] min-w-[44px] grid place-items-center rounded-md hover:bg-muted disabled:opacity-40"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <span className="font-semibold capitalize">
+                {monthStart.toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  const d = new Date(monthStart);
+                  d.setMonth(d.getMonth() + 1);
+                  setMonthStart(d);
+                }}
+                aria-label="Próximo mês"
+                className="p-2 min-h-[44px] min-w-[44px] grid place-items-center rounded-md hover:bg-muted"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="grid grid-cols-7 gap-1 text-center text-xs text-muted-foreground mb-1">
+              {WEEKDAYS_PT_SHORT.map((w) => (
+                <span key={w}>{w}</span>
+              ))}
+            </div>
+            <div className="grid grid-cols-7 gap-1">
+              {daysGrid.map((d, i) => {
+                if (!d) return <div key={i} />;
+                const past = d < today;
+                const canSelect = !past && dayHasAvailability(d);
+                const selected = selectedDay && d.toDateString() === selectedDay.toDateString();
+                const isToday = d.toDateString() === today.toDateString();
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    disabled={!canSelect}
+                    onClick={() => {
+                      setSelectedDay(d);
+                      onPick(null);
+                    }}
+                    data-selected={selected || undefined}
+                    data-today={isToday || undefined}
+                    className="h-10 w-full rounded-lg text-sm font-medium disabled:opacity-30 disabled:cursor-not-allowed hover:bg-accent/10 hover:text-accent transition-colors data-[today]:ring-1 data-[today]:ring-accent/40 data-[selected]:!bg-accent data-[selected]:!text-accent-foreground data-[selected]:ring-0"
+                  >
+                    {d.getDate()}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div>
+            {!selectedDay ? (
+              <p className="text-sm text-muted-foreground">
+                Selecione uma data no calendário para ver os horários disponíveis.
+              </p>
+            ) : loadingBusy ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="skeleton h-10" />
+                ))}
+              </div>
+            ) : slots.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Nenhum horário livre nesse dia. Tente outro.
+              </p>
+            ) : (
+              <div className="space-y-5">
+                {[
+                  { label: "Manhã", from: 6, to: 12 },
+                  { label: "Tarde", from: 12, to: 18 },
+                  { label: "Noite", from: 18, to: 24 },
+                ].map(({ label, from, to }) => {
+                  const periodSlots = slots.filter((s) => {
+                    const h = s.getHours();
+                    return h >= from && h < to;
+                  });
+                  if (periodSlots.length === 0) return null;
+                  return (
+                    <div key={label}>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="h-px w-4 bg-border" />
+                        <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                          {label}
+                        </h4>
+                        <span className="h-px flex-1 bg-border" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                        {periodSlots.map((s) => (
+                          <button
+                            key={s.toISOString()}
+                            type="button"
+                            onClick={() => {
+                              setSelectedDay(s);
+                              onPick(s);
+                            }}
+                            data-selected={selectedSlot?.getTime() === s.getTime()}
+                            className="chip"
+                          >
+                            {formatTime(s)}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </>
+      )}
+    </div>
   );
 }
