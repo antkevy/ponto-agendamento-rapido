@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { OnboardingCard } from "@/components/onboarding-card";
@@ -45,7 +45,7 @@ function Page() {
   const [creating, setCreating] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const { data: clientes } = useQuery({
+  const { data: clientes, isLoading: clientesLoading } = useQuery({
     queryKey: ["clientes", pro?.id],
     enabled: !!pro?.id,
     queryFn: async () => {
@@ -59,11 +59,40 @@ function Page() {
     },
   });
 
-  const { data: appts } = useQuery({
-    queryKey: ["cliente-appts", expandedId, clientes],
-    enabled: !!expandedId && !!clientes,
+  const { data: fallback, isLoading: fallbackLoading } = useQuery({
+    queryKey: ["clientes-fallback", pro?.id],
+    enabled: !!pro?.id && !!clientes && clientes.length === 0,
     queryFn: async () => {
-      const c = clientes!.find((x) => x.id === expandedId);
+      const { data, error } = await supabase
+        .from(db.agendamentos)
+        .select("client_name, client_phone, client_email")
+        .eq("professional_id", pro!.id)
+        .order("starts_at", { ascending: false })
+        .limit(2000);
+      if (error) throw error;
+      const seen = new Set<string>();
+      const rows: Cliente[] = [];
+      for (const a of data ?? []) {
+        const key = a.client_phone;
+        if (key && !seen.has(key)) {
+          seen.add(key);
+          rows.push({ id: `fallback-${key}`, name: a.client_name, phone: key, email: a.client_email, notes: null, created_at: "" });
+        }
+      }
+      return rows.sort((x, y) => x.name.localeCompare(y.name));
+    },
+  });
+
+  const list = useMemo<Cliente[]>(() => {
+    if (clientes && clientes.length > 0) return clientes;
+    return fallback ?? [];
+  }, [clientes, fallback]);
+
+  const { data: appts } = useQuery({
+    queryKey: ["cliente-appts", expandedId, list],
+    enabled: !!expandedId && list.length > 0,
+    queryFn: async () => {
+      const c = list.find((x) => x.id === expandedId);
       if (!c) return [];
       const { data, error } = await supabase
         .from(db.agendamentos)
@@ -81,8 +110,9 @@ function Page() {
       const phone = onlyDigits(v.phone);
       if (!isValidPhoneBR(phone)) throw new Error("Telefone incompleto. Use (XX) XXXXX-XXXX.");
       const payload = { name: v.name.trim(), phone, email: v.email.trim() || null, notes: v.notes.trim() || null };
-      if (v.id) {
-        const { error } = await supabase.from(db.clientes).update(payload).eq("id", v.id);
+      const realId = v.id && !v.id.startsWith("fallback-") ? v.id : undefined;
+      if (realId) {
+        const { error } = await supabase.from(db.clientes).update(payload).eq("id", realId);
         if (error) throw error;
       } else {
         const { error } = await supabase.from(db.clientes).insert({ professional_id: pro!.id, ...payload });
@@ -98,6 +128,7 @@ function Page() {
 
   const remove = useMutation({
     mutationFn: async (id: string) => {
+      if (id.startsWith("fallback-")) throw new Error("Cliente vindo dos agendamentos não pode ser removido.");
       const { error } = await supabase.from(db.clientes).delete().eq("id", id);
       if (error) throw error;
     },
@@ -105,9 +136,11 @@ function Page() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const filtered = (clientes ?? []).filter((c) =>
+  const filtered = list.filter((c) =>
     !search || c.name.toLowerCase().includes(search.toLowerCase()) || c.phone.includes(search)
   );
+
+  const listLoading = clientesLoading || (clientes?.length === 0 && fallbackLoading);
 
   return (
     <AppShell title="Clientes">
@@ -125,6 +158,10 @@ function Page() {
           {creating && !editing && <ClienteForm onSubmit={(v) => save.mutate(v)} saving={save.isPending} onCancel={() => setCreating(false)} />}
           {editing && <ClienteForm initial={editing} onSubmit={(v) => save.mutate(v)} saving={save.isPending} onCancel={() => { setEditing(null); setCreating(false); }} />}
 
+          {clientes && clientes.length === 0 && fallback && fallback.length > 0 && (
+            <p className="text-xs text-muted-foreground mb-3">Mostrando clientes a partir dos agendamentos. Eles serão salvos automaticamente ao editar.</p>
+          )}
+
           {}
 
           {view === "grid" ? (
@@ -140,12 +177,12 @@ function Page() {
                     </div>
                     <div className="flex gap-1 shrink-0 max-sm:sr-only group-hover:flex">
                       <span onClick={(e) => { e.stopPropagation(); setEditing(c); }} className="text-primary p-1.5 min-h-[36px] min-w-[36px] grid place-items-center rounded-md hover:bg-muted"><Pencil className="h-3.5 w-3.5" /></span>
-                      <span onClick={(e) => { e.stopPropagation(); if (confirm("Remover este cliente?")) remove.mutate(c.id); }} className="text-destructive p-1.5 min-h-[36px] min-w-[36px] grid place-items-center rounded-md hover:bg-muted"><Trash2 className="h-3.5 w-3.5" /></span>
+                      {!c.id.startsWith("fallback-") && <span onClick={(e) => { e.stopPropagation(); if (confirm("Remover este cliente?")) remove.mutate(c.id); }} className="text-destructive p-1.5 min-h-[36px] min-w-[36px] grid place-items-center rounded-md hover:bg-muted"><Trash2 className="h-3.5 w-3.5" /></span>}
                     </div>
                   </div>
                 </div>
               ))}
-              {filtered.length === 0 && <p className="text-sm text-muted-foreground col-span-full">Nenhum cliente encontrado.</p>}
+              {filtered.length === 0 && !listLoading && <p className="text-sm text-muted-foreground col-span-full">Nenhum cliente encontrado.</p>}
             </div>
           ) : (
             <div className="space-y-2">
@@ -171,7 +208,7 @@ function Page() {
                         {c.notes && <p className="text-sm text-muted-foreground">{c.notes}</p>}
                         <div className="flex gap-2">
                           <button onClick={() => setEditing(c)} className="btn-outline-brand inline-flex items-center gap-1 text-sm !py-2"><Pencil className="h-4 w-4" /> Editar</button>
-                          <button onClick={() => { if (confirm("Remover este cliente?")) remove.mutate(c.id); }} className="btn-outline-brand inline-flex items-center gap-1 text-sm !py-2 text-destructive"><Trash2 className="h-4 w-4" /> Remover</button>
+                          {!c.id.startsWith("fallback-") && <button onClick={() => { if (confirm("Remover este cliente?")) remove.mutate(c.id); }} className="btn-outline-brand inline-flex items-center gap-1 text-sm !py-2 text-destructive"><Trash2 className="h-4 w-4" /> Remover</button>}
                         </div>
                         <div className="border-t border-border pt-3">
                           <h4 className="text-sm font-medium mb-2 flex items-center gap-1"><Calendar className="h-3.5 w-3.5" /> Histórico de agendamentos</h4>
@@ -205,7 +242,7 @@ function Page() {
                   </div>
                 );
               })}
-              {filtered.length === 0 && <p className="text-sm text-muted-foreground">Nenhum cliente encontrado.</p>}
+              {filtered.length === 0 && !listLoading && <p className="text-sm text-muted-foreground">Nenhum cliente encontrado.</p>}
             </div>
           )}
         </>
