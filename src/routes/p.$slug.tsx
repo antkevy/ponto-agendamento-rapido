@@ -4,6 +4,7 @@ import { useMemo, useRef, useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { db } from "@/lib/db-tables";
+import { cn } from "@/lib/utils";
 import { useBookingTheme } from "@/hooks/use-booking-theme";
 import type { ProfessionalTheme } from "@/lib/appearance";
 import {
@@ -36,9 +37,17 @@ import {
   ShieldCheck,
   CalendarCheck2,
   Calendar as CalendarIcon,
+  CalendarX,
   Mail,
   Pencil,
   Lock,
+  BellRing,
+  Check,
+  MousePointerClick,
+  ShoppingBag,
+  Star,
+  Undo2,
+  Zap,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -68,6 +77,44 @@ const BENEFITS: Array<{ icon: LucideIcon; title: string; text: string }> = [
   { icon: Clock, title: "Horários reais", text: "Só aparece o que está mesmo disponível" },
   { icon: BadgeCheck, title: "Confirmação na hora", text: "Você recebe o resumo do seu horário" },
   { icon: ShieldCheck, title: "Seus dados seguros", text: "Usamos suas informações só no contato" },
+];
+
+/** Passos "Como funciona" exibidos no landing da página pública. */
+const HOW_IT_WORKS: Array<{ icon: LucideIcon; title: string; text: string }> = [
+  {
+    icon: MousePointerClick,
+    title: "Escolha o serviço",
+    text: "Selecione os serviços que você precisa, no seu ritmo.",
+  },
+  {
+    icon: CalendarCheck2,
+    title: "Escolha data e horário",
+    text: "Veja apenas horários reais e livres, sem precisar ligar.",
+  },
+  {
+    icon: BadgeCheck,
+    title: "Confirme na hora",
+    text: "Preencha seus dados e receba a confirmação imediata.",
+  },
+];
+
+/** Prova social exibida no landing (genérica da plataforma). */
+const REVIEWS: Array<{ name: string; role: string; quote: string }> = [
+  {
+    name: "Mariana",
+    role: "Cliente Agendaí",
+    quote: "Agendei em menos de um minuto e o horário estava certinho.",
+  },
+  {
+    name: "Carlos",
+    role: "Cliente Agendaí",
+    quote: "Adoro escolher o melhor horário sem precisar esperar resposta.",
+  },
+  {
+    name: "Fernanda",
+    role: "Cliente Agendaí",
+    quote: "Recebi a confirmação na hora e o lembrete do agendamento.",
+  },
 ];
 
 /** Dados públicos de um profissional carregados pelo /p/:slug. */
@@ -159,7 +206,7 @@ function BookingPage() {
 
   const [step, setStep] = useState<Step>("landing");
   const [selectedServices, setSelectedServices] = useState<Service[]>([]);
-  const [serviceView, setServiceView] = useState<ViewMode>("list");
+  const [serviceView, setServiceView] = useState<ViewMode>("grid");
   const [detailService, setDetailService] = useState<Service | null>(null);
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [when, setWhen] = useState<Date | null>(null);
@@ -348,6 +395,8 @@ function BookingPage() {
           </button>
         )}
 
+        {step !== "landing" && <BookingStepper step={step} hasEmployees={hasAnyEmployees} />}
+
         {step === "landing" && (
           <section className="space-y-8 sm:space-y-10">
             {/* Hero */}
@@ -441,6 +490,90 @@ function BookingPage() {
               </div>
             ) : null}
 
+            {/* Como funciona */}
+            <div>
+              <h3 className="flex items-center gap-2 text-lg sm:text-2xl font-black tracking-tight text-foreground mb-5">
+                <MousePointerClick className="h-5 w-5 ui-icon-color" /> Como funciona
+              </h3>
+              <div className="relative grid gap-4 sm:grid-cols-3">
+                <div
+                  aria-hidden
+                  className="hidden sm:block absolute top-7 left-[16%] right-[16%] border-t-2 border-dashed border-border"
+                />
+                {HOW_IT_WORKS.map((s, i) => (
+                  <div
+                    key={s.title}
+                    className="ui-card p-5 relative ui-stagger"
+                    style={{ ["--i" as string]: i }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="ui-icon-bubble h-12 w-12 grid place-items-center rounded-2xl">
+                        <s.icon className="h-6 w-6" />
+                      </span>
+                      <span className="text-xs font-black tracking-wider ui-accent-text">
+                        ETAPA {i + 1}
+                      </span>
+                    </div>
+                    <h4 className="mt-4 text-lg font-bold tracking-tight text-foreground">
+                      {s.title}
+                    </h4>
+                    <p className="mt-1 text-sm text-muted-foreground leading-relaxed">{s.text}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Prova social */}
+            <div>
+              <h3 className="text-center text-lg sm:text-2xl font-black tracking-tight text-foreground">
+                Quem já agendou, <span className="ui-accent-text">recomenda.</span>
+              </h3>
+              <div className="mt-6 grid gap-3 sm:gap-4 sm:grid-cols-3">
+                {REVIEWS.map((r, i) => (
+                  <figure
+                    key={r.name}
+                    className="ui-card p-5 flex flex-col ui-stagger"
+                    style={{ ["--i" as string]: i }}
+                  >
+                    <div className="flex gap-0.5 mb-3">
+                      {Array.from({ length: 5 }).map((_, j) => (
+                        <Star key={j} className="h-4 w-4 fill-current ui-accent-text" />
+                      ))}
+                    </div>
+                    <blockquote className="text-sm text-foreground leading-relaxed flex-1">
+                      "{r.quote}"
+                    </blockquote>
+                    <figcaption className="mt-4 pt-3 border-t border-border flex items-center gap-2.5">
+                      <span
+                        className="h-8 w-8 rounded-full grid place-items-center text-xs font-bold text-brand-foreground shrink-0"
+                        style={{ backgroundColor: "var(--brand)" }}
+                      >
+                        {r.name.charAt(0)}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-foreground">{r.name}</p>
+                        <p className="text-xs text-muted-foreground">{r.role}</p>
+                      </div>
+                    </figcaption>
+                  </figure>
+                ))}
+              </div>
+              <div className="mt-5 flex flex-wrap justify-center gap-2">
+                <span className="ui-badge">
+                  <ShieldCheck className="h-3.5 w-3.5" /> Dados seguros
+                </span>
+                <span className="ui-badge">
+                  <Zap className="h-3.5 w-3.5" /> Confirmação imediata
+                </span>
+                <span className="ui-badge">
+                  <BellRing className="h-3.5 w-3.5" /> Lembrete automático
+                </span>
+                <span className="ui-badge">
+                  <Undo2 className="h-3.5 w-3.5" /> Cancelamento grátis até 24h
+                </span>
+              </div>
+            </div>
+
             {/* CTA final */}
             <div className="ui-card p-5 sm:p-6 flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
               <span className="ui-icon-bubble h-14 w-14 grid place-items-center rounded-2xl shrink-0">
@@ -473,7 +606,7 @@ function BookingPage() {
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <h2 className="text-xl sm:text-2xl font-black tracking-tight text-foreground">
-                    1. Escolha os serviços
+                    Escolha os serviços
                   </h2>
                   <p className="text-sm text-muted-foreground mt-1">
                     Selecione um ou mais serviços para continuar.
@@ -519,49 +652,54 @@ function BookingPage() {
                             className="ui-card ui-ripple w-full text-left cursor-pointer p-4 transition-all hover:-translate-y-0.5 active:scale-[0.99] data-[selected]:border-accent data-[selected]:ring-2 data-[selected]:ring-accent/30"
                           >
                             <div className="flex items-center gap-3.5">
-                              {s.image_url ? (
-                                <img
-                                  src={s.image_url}
-                                  alt={s.name}
-                                  loading="lazy"
-                                  className="h-16 w-16 rounded-2xl object-cover shrink-0 aspect-square border border-border"
-                                />
-                              ) : (
-                                <span className="ui-icon-bubble h-16 w-16 grid place-items-center rounded-2xl shrink-0">
-                                  <Tag className="h-6 w-6" />
-                                </span>
-                              )}
+                              <div className="relative shrink-0">
+                                {s.image_url ? (
+                                  <img
+                                    src={s.image_url}
+                                    alt={s.name}
+                                    loading="lazy"
+                                    className="h-16 w-16 rounded-2xl object-cover aspect-square border border-border"
+                                  />
+                                ) : (
+                                  <span className="ui-icon-bubble h-16 w-16 grid place-items-center rounded-2xl">
+                                    <Tag className="h-6 w-6" />
+                                  </span>
+                                )}
+                                {selected && (
+                                  <span
+                                    className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full grid place-items-center text-white shadow"
+                                    style={{ backgroundColor: "var(--accent)" }}
+                                  >
+                                    <Check className="h-3 w-3" />
+                                  </span>
+                                )}
+                              </div>
                               <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2">
-                                  {selected && (
-                                    <CheckCircle2 className="h-5 w-5 ui-accent-text shrink-0" />
-                                  )}
-                                  <p className="font-bold text-foreground truncate">{s.name}</p>
-                                </div>
+                                <p className="font-bold text-foreground truncate">{s.name}</p>
                                 {s.description && (
                                   <p className="text-sm text-muted-foreground mt-0.5 line-clamp-1">
                                     {s.description}
                                   </p>
                                 )}
-                                <div className="flex items-center gap-3 mt-2 flex-wrap">
-                                  <span className="text-xs text-muted-foreground inline-flex items-center gap-1">
-                                    <Clock className="h-3.5 w-3.5" /> {s.duration_minutes} min
-                                  </span>
-                                  <span className="font-black tracking-tight ui-accent-text">
-                                    {formatBRL(s.price_cents)}
-                                  </span>
-                                </div>
+                                <p className="text-xs text-muted-foreground inline-flex items-center gap-1 mt-2">
+                                  <Clock className="h-3.5 w-3.5" /> {s.duration_minutes} min
+                                </p>
                               </div>
-                              <UIButton
-                                variant="outline"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setDetailService(s);
-                                }}
-                                className="!min-h-[38px] !px-3 text-xs shrink-0"
-                              >
-                                Ver mais
-                              </UIButton>
+                              <div className="shrink-0 text-right">
+                                <p className="text-base font-black tracking-tight ui-accent-text">
+                                  {formatBRL(s.price_cents)}
+                                </p>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setDetailService(s);
+                                  }}
+                                  className="mt-1 inline-flex items-center gap-0.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
+                                >
+                                  Ver detalhes <ChevronRight className="h-3.5 w-3.5" />
+                                </button>
+                              </div>
                             </div>
                           </div>
                         </li>
@@ -585,42 +723,56 @@ function BookingPage() {
                               }
                             }}
                             data-selected={selected || undefined}
-                            className="ui-card ui-ripple w-full h-full text-left cursor-pointer p-3.5 transition-all hover:-translate-y-0.5 active:scale-[0.99] flex flex-col gap-2 data-[selected]:border-accent data-[selected]:ring-2 data-[selected]:ring-accent/30"
+                            className="ui-card ui-ripple w-full h-full text-left cursor-pointer overflow-hidden transition-all hover:-translate-y-1 active:scale-[0.99] flex flex-col data-[selected]:border-accent data-[selected]:ring-2 data-[selected]:ring-accent/30"
                           >
-                            {s.image_url ? (
-                              <img
-                                src={s.image_url}
-                                alt={s.name}
-                                loading="lazy"
-                                className="w-full aspect-square rounded-xl object-cover"
-                              />
-                            ) : (
-                              <span className="ui-icon-bubble w-full aspect-square grid place-items-center rounded-xl">
-                                <Tag className="h-7 w-7" />
-                              </span>
-                            )}
-                            <div className="flex items-center gap-1.5">
-                              {selected && (
-                                <CheckCircle2 className="h-4 w-4 ui-accent-text shrink-0" />
+                            <div className="relative">
+                              {s.image_url ? (
+                                <img
+                                  src={s.image_url}
+                                  alt={s.name}
+                                  loading="lazy"
+                                  className="w-full aspect-[4/3] object-cover"
+                                />
+                              ) : (
+                                <span className="w-full aspect-[4/3] grid place-items-center bg-secondary text-muted-foreground">
+                                  <Tag className="h-8 w-8" />
+                                </span>
                               )}
-                              <p className="font-bold truncate text-sm">{s.name}</p>
+                              <span className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-full bg-background/90 backdrop-blur px-2.5 py-1 text-[11px] font-bold text-foreground border border-border">
+                                <Clock className="h-3 w-3" /> {s.duration_minutes} min
+                              </span>
+                              {selected && (
+                                <span
+                                  className="absolute top-2 right-2 h-7 w-7 rounded-full grid place-items-center text-white shadow-lg animate-check-in"
+                                  style={{ backgroundColor: "var(--accent)" }}
+                                >
+                                  <Check className="h-4 w-4" />
+                                </span>
+                              )}
                             </div>
-                            <p className="text-xs text-muted-foreground inline-flex items-center gap-1">
-                              <Clock className="h-3 w-3" /> {s.duration_minutes} min
-                            </p>
-                            <p className="text-lg font-black tracking-tight ui-accent-text">
-                              {formatBRL(s.price_cents)}
-                            </p>
-                            <UIButton
-                              variant="outline"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setDetailService(s);
-                              }}
-                              className="!min-h-[36px] w-full text-xs mt-auto"
-                            >
-                              Ver mais
-                            </UIButton>
+                            <div className="p-3.5 flex flex-col gap-1.5 flex-1">
+                              <p className="font-bold truncate text-sm text-foreground">{s.name}</p>
+                              <div className="flex items-center justify-between gap-2">
+                                <p className="text-lg font-black tracking-tight ui-accent-text">
+                                  {formatBRL(s.price_cents)}
+                                </p>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setDetailService(s);
+                                  }}
+                                  className="inline-flex items-center gap-0.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                                >
+                                  Ver mais <ChevronRight className="h-3.5 w-3.5" />
+                                </button>
+                              </div>
+                              {s.description && (
+                                <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                                  {s.description}
+                                </p>
+                              )}
+                            </div>
                           </div>
                         </li>
                       );
@@ -681,7 +833,7 @@ function BookingPage() {
         {step === "employee" && selectedServices.length > 0 && (
           <section className="animate-fade-in-up">
             <h2 className="text-xl font-bold tracking-tight text-foreground mb-4">
-              2. Escolha o profissional
+              Escolha o profissional
             </h2>
             <p className="text-sm text-muted-foreground mb-4">
               {selectedServices.map((s) => s.name).join(" + ")} ·{" "}
@@ -857,7 +1009,7 @@ function WhenStep({
   onPick,
   brand,
 }: {
-  pro: { id: string };
+  pro: { id: string; business_name: string; address?: string | null };
   selectedServices: Service[];
   employee: Employee | null;
   onPick: (d: Date) => void;
@@ -1015,136 +1167,160 @@ function WhenStep({
 
   return (
     <section className="animate-fade-in-up">
-      <h2 className="text-xl font-bold tracking-tight text-foreground mb-4">
-        {employee ? "3" : "2"}. Escolha data e horário
-      </h2>
-      <p className="text-sm text-muted-foreground mb-4">
-        {selectedServices.map((s) => s.name).join(" + ")} · {combinedDuration} min
-        {employee ? ` · com ${employee.name}` : ""}
-      </p>
-
-      <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
-        <div className="card-elevated p-4">
-          <div className="flex items-center justify-between mb-3">
-            <button
-              onClick={() => {
-                const d = new Date(monthStart);
-                d.setMonth(d.getMonth() - 1);
-                if (d >= new Date(today.getFullYear(), today.getMonth(), 1)) setMonthStart(d);
-              }}
-              className="p-2 min-h-[44px] min-w-[44px] grid place-items-center rounded-md hover:bg-muted"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <span className="font-semibold capitalize">
-              {monthStart.toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}
-            </span>
-            <button
-              onClick={() => {
-                const d = new Date(monthStart);
-                d.setMonth(d.getMonth() + 1);
-                setMonthStart(d);
-              }}
-              className="p-2 min-h-[44px] min-w-[44px] grid place-items-center rounded-md hover:bg-muted"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
-          <div className="grid grid-cols-7 gap-1 text-center text-xs text-muted-foreground mb-1">
-            {WEEKDAYS_PT_SHORT.map((w) => (
-              <span key={w}>{w}</span>
-            ))}
-          </div>
-          <div className="grid grid-cols-7 gap-1">
-            {daysGrid.map((d, i) => {
-              if (!d) return <div key={i} />;
-              const past = d < today;
-              const canSelect = !past && dayHasAvailability(d);
-              const selected = selectedDay && d.toDateString() === selectedDay.toDateString();
-              const isToday = d.toDateString() === today.toDateString();
-              return (
-                <button
-                  key={i}
-                  disabled={!canSelect}
-                  onClick={() => setSelectedDay(d)}
-                  data-selected={selected || undefined}
-                  data-today={isToday || undefined}
-                  className="h-10 w-full rounded-lg text-sm font-medium disabled:opacity-30 disabled:cursor-not-allowed hover:bg-accent/10 hover:text-accent transition-colors data-[today]:ring-1 data-[today]:ring-accent/40 data-[selected]:!bg-accent data-[selected]:!text-accent-foreground data-[selected]:ring-0"
-                >
-                  {d.getDate()}
-                </button>
-              );
-            })}
-          </div>
+      <div className="flex items-start justify-between gap-3 mb-4 flex-wrap">
+        <div className="min-w-0">
+          <h2 className="text-xl font-bold tracking-tight text-foreground">
+            Escolha data e horário
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            {selectedServices.map((s) => s.name).join(" + ")} · {combinedDuration} min
+            {employee ? ` · com ${employee.name}` : ""}
+          </p>
         </div>
+        <span className="ui-badge shrink-0">
+          <Clock className="h-3.5 w-3.5" /> {combinedDuration} min no total
+        </span>
+      </div>
 
-        <div className="animate-fade-in-up lg:min-h-[320px]">
-          {selectedDay ? (
-            <div className="card-elevated p-4 h-full">
-              <h3 className="font-semibold mb-3 capitalize">
-                Horários · {formatLongDate(selectedDay)}
-              </h3>
-              {loadingBusy ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {Array.from({ length: 8 }).map((_, i) => (
-                    <div key={i} className="skeleton h-11" />
-                  ))}
-                </div>
-              ) : slots.length === 0 ? (
-                <div className="h-full grid place-items-center text-center py-10">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,3fr)] lg:items-start">
+        <div className="grid gap-4 sm:grid-cols-2 lg:items-start">
+          <div className="card-elevated p-4">
+            <div className="flex items-center justify-between mb-3">
+              <button
+                onClick={() => {
+                  const d = new Date(monthStart);
+                  d.setMonth(d.getMonth() - 1);
+                  if (d >= new Date(today.getFullYear(), today.getMonth(), 1)) setMonthStart(d);
+                }}
+                className="p-2 min-h-[44px] min-w-[44px] grid place-items-center rounded-md hover:bg-muted"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <span className="font-semibold capitalize">
+                {monthStart.toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}
+              </span>
+              <button
+                onClick={() => {
+                  const d = new Date(monthStart);
+                  d.setMonth(d.getMonth() + 1);
+                  setMonthStart(d);
+                }}
+                className="p-2 min-h-[44px] min-w-[44px] grid place-items-center rounded-md hover:bg-muted"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="grid grid-cols-7 gap-1 text-center text-xs text-muted-foreground mb-1">
+              {WEEKDAYS_PT_SHORT.map((w) => (
+                <span key={w}>{w}</span>
+              ))}
+            </div>
+            <div className="grid grid-cols-7 gap-1">
+              {daysGrid.map((d, i) => {
+                if (!d) return <div key={i} />;
+                const past = d < today;
+                const canSelect = !past && dayHasAvailability(d);
+                const selected = selectedDay && d.toDateString() === selectedDay.toDateString();
+                const isToday = d.toDateString() === today.toDateString();
+                return (
+                  <button
+                    key={i}
+                    disabled={!canSelect}
+                    onClick={() => setSelectedDay(d)}
+                    data-selected={selected || undefined}
+                    data-today={isToday || undefined}
+                    className="h-10 w-full rounded-lg text-sm font-medium disabled:opacity-30 disabled:cursor-not-allowed hover:bg-accent/10 hover:text-accent transition-colors data-[today]:ring-1 data-[today]:ring-accent/40 data-[selected]:!bg-accent data-[selected]:!text-accent-foreground data-[selected]:ring-0"
+                  >
+                    {d.getDate()}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="animate-fade-in-up lg:min-h-[320px]">
+            {selectedDay ? (
+              <div className="card-elevated p-4 h-full">
+                <h3 className="font-semibold mb-3 capitalize flex items-center justify-between gap-2 flex-wrap">
+                  <span>Horários · {formatLongDate(selectedDay)}</span>
+                  {!loadingBusy && slots.length > 0 && (
+                    <span className="inline-flex items-center gap-1 text-xs font-semibold ui-accent-text">
+                      <CheckCircle2 className="h-3.5 w-3.5" /> {slots.length} disponíveis
+                    </span>
+                  )}
+                </h3>
+                {loadingBusy ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {Array.from({ length: 8 }).map((_, i) => (
+                      <div key={i} className="skeleton h-11" />
+                    ))}
+                  </div>
+                ) : slots.length === 0 ? (
+                  <div className="h-full grid place-items-center text-center py-10">
+                    <div>
+                      <CalendarX className="h-8 w-8 mx-auto text-muted-foreground/50 mb-2" />
+                      <p className="text-sm text-muted-foreground">
+                        Nenhum horário livre nesse dia. Tente outro.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-5">
+                    {[
+                      { label: "Manhã", from: 6, to: 12 },
+                      { label: "Tarde", from: 12, to: 18 },
+                      { label: "Noite", from: 18, to: 24 },
+                    ].map(({ label, from, to }) => {
+                      const periodSlots = slots.filter((s) => {
+                        const h = s.getHours();
+                        return h >= from && h < to;
+                      });
+                      if (periodSlots.length === 0) return null;
+                      return (
+                        <div key={label}>
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="h-px w-4 bg-border" />
+                            <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                              {label}
+                            </h4>
+                            <span className="h-px flex-1 bg-border" />
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                            {periodSlots.map((s) => (
+                              <button
+                                key={s.toISOString()}
+                                onClick={() => onPick(s)}
+                                className="chip"
+                              >
+                                {formatTime(s)}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="card-elevated p-4 h-full grid place-items-center text-center">
+                <div>
+                  <CalendarIcon className="h-8 w-8 mx-auto text-muted-foreground/50 mb-2" />
                   <p className="text-sm text-muted-foreground">
-                    Nenhum horário livre nesse dia. Tente outro.
+                    Selecione uma data no calendário para ver os horários disponíveis.
                   </p>
                 </div>
-              ) : (
-                <div className="space-y-5">
-                  {[
-                    { label: "Manhã", from: 6, to: 12 },
-                    { label: "Tarde", from: 12, to: 18 },
-                    { label: "Noite", from: 18, to: 24 },
-                  ].map(({ label, from, to }) => {
-                    const periodSlots = slots.filter((s) => {
-                      const h = s.getHours();
-                      return h >= from && h < to;
-                    });
-                    if (periodSlots.length === 0) return null;
-                    return (
-                      <div key={label}>
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="h-px w-4 bg-border" />
-                          <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                            {label}
-                          </h4>
-                          <span className="h-px flex-1 bg-border" />
-                        </div>
-                        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                          {periodSlots.map((s) => (
-                            <button
-                              key={s.toISOString()}
-                              onClick={() => onPick(s)}
-                              className="chip"
-                            >
-                              {formatTime(s)}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="card-elevated p-4 h-full grid place-items-center text-center">
-              <div>
-                <CalendarIcon className="h-8 w-8 mx-auto text-muted-foreground/50 mb-2" />
-                <p className="text-sm text-muted-foreground">
-                  Selecione uma data no calendário para ver os horários disponíveis.
-                </p>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
+
+        <OrderSummary
+          services={selectedServices}
+          employee={employee}
+          businessName={pro.business_name}
+          address={pro.address ?? null}
+        />
       </div>
     </section>
   );
@@ -1182,7 +1358,6 @@ function FormStep({
     () => selectedServices.map((s) => s.name).join(" + "),
     [selectedServices],
   );
-  const cover = selectedServices.find((s) => s.image_url)?.image_url ?? null;
 
   const create = useMutation({
     mutationFn: async () => {
@@ -1234,56 +1409,15 @@ function FormStep({
       </header>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-start">
-        {/* Resumo do agendamento */}
+        {/* Resumo do pedido */}
         <div className="lg:sticky lg:top-6">
-          <UICard className="overflow-hidden ui-stagger">
-            <div className="h-1.5" style={{ background: "var(--brand)" }} />
-            <div className="p-5 sm:p-6">
-              <UICardHeader icon={CalendarCheck2} title="Resumo do agendamento" />
-
-              <div className="flex items-center gap-4 pb-5 mb-5 border-b border-border">
-                {cover ? (
-                  <img
-                    src={cover}
-                    alt={combinedName}
-                    loading="lazy"
-                    className="h-14 w-14 rounded-2xl object-cover shrink-0 border border-border"
-                  />
-                ) : (
-                  <span className="ui-icon-bubble h-14 w-14 grid place-items-center rounded-2xl shrink-0">
-                    <Tag className="h-6 w-6" />
-                  </span>
-                )}
-                <div className="min-w-0">
-                  <p className="font-bold text-foreground leading-tight">{combinedName}</p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    {combinedDuration} min de duração
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <UISummaryRow icon={CalendarIcon}>
-                  <span className="first-letter:uppercase">{formatLongDate(when)}</span>
-                </UISummaryRow>
-                <UISummaryRow icon={Clock}>{formatTime(when)}</UISummaryRow>
-                {employee && <UISummaryRow icon={User}>com {employee.name}</UISummaryRow>}
-                <UISummaryRow icon={MapPin} sub={pro.address || undefined}>
-                  {pro.business_name}
-                </UISummaryRow>
-              </div>
-
-              <div className="mt-5 pt-4 border-t border-border flex items-center justify-between gap-3">
-                <span className="text-sm font-semibold text-muted-foreground">Total</span>
-                <span
-                  className="text-2xl font-black tracking-tight"
-                  style={{ color: "var(--brand)" }}
-                >
-                  {formatBRL(combinedPrice)}
-                </span>
-              </div>
-            </div>
-          </UICard>
+          <OrderSummary
+            services={selectedServices}
+            employee={employee}
+            when={when}
+            businessName={pro.business_name}
+            address={pro.address ?? null}
+          />
         </div>
 
         {/* Seus dados */}
@@ -1423,5 +1557,187 @@ function F({ label, children }: { label: string; children: React.ReactNode }) {
       <span className="text-sm font-medium">{label}</span>
       {children}
     </label>
+  );
+}
+
+/** Resumo fixo do pedido durante o fluxo (serviços, horário, profissional e total). */
+function OrderSummary({
+  services,
+  employee,
+  when,
+  businessName,
+  address,
+}: {
+  services: Service[];
+  employee: Employee | null;
+  when?: Date | null;
+  businessName?: string | null;
+  address?: string | null;
+}) {
+  const totalPrice = services.reduce((a, s) => a + s.price_cents, 0);
+  const totalDuration = services.reduce((a, s) => a + s.duration_minutes, 0);
+  return (
+    <div className="ui-card overflow-hidden lg:sticky lg:top-6">
+      <div className="h-1.5" style={{ background: "var(--brand)" }} />
+      <div className="p-5 sm:p-6">
+        <UICardHeader icon={ShoppingBag} title="Resumo do pedido" />
+        <ul className="space-y-3">
+          {services.map((s) => (
+            <li key={s.id} className="flex items-center gap-3">
+              {s.image_url ? (
+                <img
+                  src={s.image_url}
+                  alt={s.name}
+                  loading="lazy"
+                  className="h-10 w-10 rounded-xl object-cover shrink-0 border border-border"
+                />
+              ) : (
+                <span className="ui-icon-bubble h-10 w-10 grid place-items-center rounded-xl shrink-0">
+                  <Tag className="h-4 w-4" />
+                </span>
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-foreground truncate">{s.name}</p>
+                <p className="text-xs text-muted-foreground">{s.duration_minutes} min</p>
+              </div>
+              <span className="text-sm font-bold ui-accent-text shrink-0">
+                {formatBRL(s.price_cents)}
+              </span>
+            </li>
+          ))}
+        </ul>
+
+        <div className="mt-4 pt-3 border-t border-border space-y-2">
+          {when && (
+            <UISummaryRow icon={CalendarIcon}>
+              <span className="capitalize">{formatLongDate(when)}</span>
+            </UISummaryRow>
+          )}
+          {when && <UISummaryRow icon={Clock}>{formatTime(when)}</UISummaryRow>}
+          {employee && <UISummaryRow icon={User}>com {employee.name}</UISummaryRow>}
+          {businessName && (
+            <UISummaryRow icon={MapPin} sub={address || undefined}>
+              {businessName}
+            </UISummaryRow>
+          )}
+        </div>
+
+        <div className="mt-4 pt-3 border-t border-border space-y-1.5">
+          <div className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
+            <span>Duração total</span>
+            <span className="font-semibold text-foreground">{totalDuration} min</span>
+          </div>
+          <div className="flex items-baseline justify-between gap-2">
+            <span className="text-sm font-semibold text-muted-foreground">Total</span>
+            <span className="text-2xl font-black tracking-tight" style={{ color: "var(--brand)" }}>
+              {formatBRL(totalPrice)}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Indicador de progresso do fluxo de agendamento (estilo stepper com checks). */
+function BookingStepper({ step, hasEmployees }: { step: Step; hasEmployees: boolean }) {
+  const labels = hasEmployees
+    ? ["Serviços", "Profissional", "Data e horário", "Seus dados"]
+    : ["Serviços", "Data e horário", "Seus dados"];
+  const activeIndex = useMemo(() => {
+    switch (step) {
+      case "service":
+        return 0;
+      case "employee":
+        return 1;
+      case "when":
+        return hasEmployees ? 2 : 1;
+      case "form":
+        return hasEmployees ? 3 : 2;
+      default:
+        return labels.length - 1;
+    }
+  }, [step, hasEmployees, labels.length]);
+  const allDone = step === "done";
+
+  return (
+    <nav
+      aria-label="Progresso do agendamento"
+      className="ui-card px-4 py-3 mb-5 animate-fade-in-up"
+    >
+      <div className="sm:hidden">
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <span className="text-xs font-bold text-foreground">
+            Passo {Math.min(activeIndex + 1, labels.length)} de {labels.length}
+          </span>
+          <span className="text-xs font-semibold ui-accent-text">
+            {allDone ? "Concluído" : labels[Math.min(activeIndex, labels.length - 1)]}
+          </span>
+        </div>
+        <div
+          className="h-2 rounded-full bg-muted overflow-hidden"
+          role="progressbar"
+          aria-valuenow={Math.min(activeIndex + 1, labels.length)}
+          aria-valuemin={1}
+          aria-valuemax={labels.length}
+        >
+          <div
+            className="h-full rounded-full transition-all duration-500"
+            style={{
+              width: `${(Math.min(activeIndex + 1, labels.length) / labels.length) * 100}%`,
+              background: "var(--brand)",
+            }}
+          />
+        </div>
+      </div>
+
+      <ol className="hidden sm:flex items-start">
+        {labels.map((label, i) => {
+          const done = allDone || i < activeIndex;
+          const active = !allDone && i === activeIndex;
+          return (
+            <li key={label} className={cn("flex items-center", i < labels.length - 1 && "flex-1")}>
+              <div className="flex flex-col items-center gap-1.5">
+                <span
+                  className={cn(
+                    "h-9 w-9 rounded-full grid place-items-center text-sm font-bold border-2 transition-all duration-300",
+                    done && "border-transparent text-brand-foreground",
+                    active &&
+                      "border-transparent text-accent-foreground shadow-md ring-4 ring-accent/20",
+                    !done && !active && "border-border text-muted-foreground",
+                  )}
+                  style={
+                    done
+                      ? { backgroundColor: "var(--brand)" }
+                      : active
+                        ? { backgroundColor: "var(--accent)" }
+                        : undefined
+                  }
+                >
+                  {done ? <Check className="h-4 w-4" /> : i + 1}
+                </span>
+                <span
+                  className={cn(
+                    "text-xs font-semibold whitespace-nowrap",
+                    done || active ? "text-foreground" : "text-muted-foreground",
+                  )}
+                >
+                  {label}
+                </span>
+              </div>
+              {i < labels.length - 1 && (
+                <div
+                  className={cn(
+                    "h-0.5 flex-1 mx-3 mt-[18px] rounded-full transition-colors duration-300",
+                    done ? "" : "bg-border",
+                  )}
+                  style={done ? { backgroundColor: "var(--brand)" } : undefined}
+                />
+              )}
+            </li>
+          );
+        })}
+      </ol>
+    </nav>
   );
 }
