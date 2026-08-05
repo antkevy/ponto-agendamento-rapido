@@ -7,7 +7,8 @@ import { OnboardingCard } from "@/components/onboarding-card";
 import { useMyProfessional } from "@/hooks/use-my-professional";
 import { supabase } from "@/integrations/supabase/client";
 import { db } from "@/lib/db-tables";
-import { formatBRL } from "@/lib/booking";
+import { formatBRL, formatLongDate, formatTime } from "@/lib/booking";
+import { cn } from "@/lib/utils";
 import {
   X,
   CheckCheck,
@@ -18,11 +19,28 @@ import {
   MessageSquare,
   Plus,
   RefreshCw,
+  CalendarPlus,
+  Tag,
+  User,
+  Users,
+  MessageCircle,
+  Clock,
+  Pencil,
+  Calendar,
+  Info,
 } from "lucide-react";
 import { displayPhoneBR, isValidPhoneBR } from "@/lib/phone";
 import { ViewToggle, type ViewMode } from "@/components/view-toggle";
 import { PhoneInput } from "@/components/phone-input";
 import { Modal } from "@/routes/app.servicos";
+import {
+  UIButton,
+  UIIconBubble,
+  UIInput,
+  UITextarea,
+  UINotice,
+  UISummaryRow,
+} from "@/components/ui-kit";
 
 export const Route = createFileRoute("/app/agendamentos")({
   head: () => ({ meta: [{ title: "Agendamentos — Agendaí" }] }),
@@ -267,11 +285,12 @@ function Page() {
           )}
 
           {creating && (
-            <Modal onClose={() => setCreating(false)}>
+            <Modal onClose={() => setCreating(false)} size="lg" hideFooter>
               <NewAppointmentForm
                 proId={pro.id}
                 saving={create.isPending}
                 onSubmit={(v) => create.mutate(v)}
+                onClose={() => setCreating(false)}
               />
             </Modal>
           )}
@@ -488,17 +507,16 @@ type NewAppointmentPayload = {
   notes: string | null;
 };
 
-const inputCls =
-  "w-full min-h-[44px] px-3 py-2 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-ring mt-1";
-
 function NewAppointmentForm({
   proId,
   saving,
   onSubmit,
+  onClose,
 }: {
   proId: string;
   saving: boolean;
   onSubmit: (v: NewAppointmentPayload) => void;
+  onClose: () => void;
 }) {
   const [serviceId, setServiceId] = useState("");
   const [clientMode, setClientMode] = useState<"new" | "existing">("new");
@@ -568,6 +586,15 @@ function NewAppointmentForm({
   }, [existingClients, existingFallback]);
 
   const selected = (services ?? []).find((s) => s.id === serviceId);
+  const selectedClient =
+    clientMode === "existing" ? clientOptions.find((c) => c.key === clientKey) : null;
+  const when = startsAt ? new Date(startsAt) : null;
+  const finalNamePreview =
+    clientMode === "existing" ? (selectedClient?.name ?? "") : clientName.trim();
+  const endTimeLabel =
+    selected && when
+      ? formatTime(new Date(when.getTime() + selected.duration_minutes * 60000))
+      : "—";
 
   const nowInput = new Date();
   const pad = (n: number) => String(n).padStart(2, "0");
@@ -616,146 +643,238 @@ function NewAppointmentForm({
           notes: notes.trim() || null,
         });
       }}
-      className="space-y-4"
+      className="flex flex-col h-full"
     >
-      <h2 className="text-2xl font-black tracking-tight text-foreground">Novo agendamento</h2>
-
-      <label className="block">
-        <span className="text-sm font-medium">Serviço</span>
-        <select
-          required
-          value={serviceId}
-          onChange={(e) => setServiceId(e.target.value)}
-          className={inputCls}
-        >
-          <option value="">Selecione um serviço...</option>
-          {(services ?? []).map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name} · {formatBRL(s.price_cents)}
-            </option>
-          ))}
-        </select>
-        {!servicesLoading && (services ?? []).length === 0 && (
-          <p className="text-xs text-muted-foreground mt-1">
-            Crie um serviço ativo na aba Serviços para poder agendar.
-          </p>
-        )}
-      </label>
-      <div>
-        <span className="text-sm font-medium">Cliente</span>
-        <div className="flex gap-2 mt-1">
-          <button
-            type="button"
-            onClick={() => {
-              setClientMode("new");
-              setClientKey("");
-            }}
-            data-selected={clientMode === "new" || undefined}
-            className="chip !min-h-[36px] !py-1.5 text-sm"
-          >
-            Cliente novo
-          </button>
-          <button
-            type="button"
-            onClick={() => setClientMode("existing")}
-            data-selected={clientMode === "existing" || undefined}
-            className="chip !min-h-[36px] !py-1.5 text-sm"
-          >
-            Já cadastrado
-          </button>
+      <header className="flex items-center justify-between gap-3 mb-5">
+        <div className="flex items-center gap-3 min-w-0">
+          <UIIconBubble icon={CalendarPlus} />
+          <div className="min-w-0">
+            <h2 className="text-xl font-black tracking-tight text-foreground">Novo agendamento</h2>
+            <p className="text-sm text-muted-foreground">Marque um horário para um cliente.</p>
+          </div>
         </div>
-      </div>
-      {clientMode === "existing" ? (
-        <label className="block">
-          <span className="text-sm font-medium">Selecionar cliente</span>
-          <select
-            required
-            value={clientKey}
-            onChange={(e) => {
-              const key = e.target.value;
-              setClientKey(key);
-              const c = clientOptions.find((o) => o.key === key);
-              if (c) {
-                setClientName(c.name);
-                setPhone(c.phone);
-                setEmail(c.email ?? "");
-              }
-            }}
-            className={inputCls}
-          >
-            <option value="">Selecione...</option>
-            {clientOptions.map((c) => (
-              <option key={c.key} value={c.key}>
-                {c.name} · {displayPhoneBR(c.phone)}
-              </option>
-            ))}
-          </select>
-          {clientOptions.length === 0 && (
-            <p className="text-xs text-muted-foreground mt-1">
-              Nenhum cliente cadastrado ainda. Escolha "Cliente novo" ou cadastre na aba Clientes.
-            </p>
+      </header>
+
+      <div className="flex-1 space-y-6">
+        <section className="space-y-3">
+          <SectionLabel>Serviço</SectionLabel>
+          <span className="ui-field">
+            <Tag className="ui-field-icon" />
+            <select
+              required
+              value={serviceId}
+              onChange={(e) => setServiceId(e.target.value)}
+              className="ui-field-input pl-11"
+            >
+              <option value="">Selecione um serviço...</option>
+              {(services ?? []).map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name} · {formatBRL(s.price_cents)}
+                </option>
+              ))}
+            </select>
+          </span>
+          {!servicesLoading && (services ?? []).length === 0 && (
+            <UINotice icon={Info} title="Nenhum serviço ativo">
+              Crie um serviço na aba Serviços para poder agendar.
+            </UINotice>
           )}
-        </label>
-      ) : (
-        <>
-          <label className="block">
-            <span className="text-sm font-medium">Nome do cliente</span>
+        </section>
+
+        <section className="space-y-3">
+          <SectionLabel>Cliente</SectionLabel>
+          <div
+            className="grid grid-cols-2 gap-1 p-1 rounded-xl bg-muted"
+            role="group"
+            aria-label="Tipo de cliente"
+          >
+            <button
+              type="button"
+              onClick={() => {
+                setClientMode("new");
+                setClientKey("");
+              }}
+              className={cn(
+                "min-h-[40px] rounded-lg text-sm font-semibold transition-all",
+                clientMode === "new"
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              Cliente novo
+            </button>
+            <button
+              type="button"
+              onClick={() => setClientMode("existing")}
+              className={cn(
+                "min-h-[40px] rounded-lg text-sm font-semibold transition-all",
+                clientMode === "existing"
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              Já cadastrado
+            </button>
+          </div>
+
+          {clientMode === "existing" ? (
+            <>
+              <span className="ui-field">
+                <Users className="ui-field-icon" />
+                <select
+                  required
+                  value={clientKey}
+                  onChange={(e) => {
+                    const key = e.target.value;
+                    setClientKey(key);
+                    const c = clientOptions.find((o) => o.key === key);
+                    if (c) {
+                      setClientName(c.name);
+                      setPhone(c.phone);
+                      setEmail(c.email ?? "");
+                    }
+                  }}
+                  className="ui-field-input pl-11"
+                >
+                  <option value="">Selecione um cliente...</option>
+                  {clientOptions.map((c) => (
+                    <option key={c.key} value={c.key}>
+                      {c.name} · {displayPhoneBR(c.phone)}
+                    </option>
+                  ))}
+                </select>
+              </span>
+              {selectedClient && (
+                <div className="flex items-center gap-3 p-2.5 rounded-xl border border-border bg-muted/50">
+                  <span className="ui-icon-bubble h-9 w-9 grid place-items-center rounded-full shrink-0 font-bold text-sm">
+                    {selectedClient.name.charAt(0).toUpperCase()}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-foreground truncate">
+                      {selectedClient.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {displayPhoneBR(selectedClient.phone)}
+                      {selectedClient.email ? ` · ${selectedClient.email}` : ""}
+                    </p>
+                  </div>
+                </div>
+              )}
+              {clientOptions.length === 0 && (
+                <UINotice icon={Info} title="Nenhum cliente cadastrado">
+                  Escolha "Cliente novo" ou cadastre na aba Clientes.
+                </UINotice>
+              )}
+            </>
+          ) : (
+            <div className="space-y-3">
+              <UIInput
+                label="Nome completo"
+                icon={User}
+                required
+                value={clientName}
+                onChange={(e) => setClientName(e.target.value)}
+                autoComplete="name"
+                placeholder="Ex.: Maria Silva"
+              />
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="block">
+                  <span className="block text-sm font-semibold text-foreground mb-2">WhatsApp</span>
+                  <span className="ui-field">
+                    <MessageCircle className="ui-field-icon" />
+                    <PhoneInput
+                      value={phone}
+                      onChange={setPhone}
+                      className="ui-field-input pl-11"
+                    />
+                  </span>
+                </label>
+                <UIInput
+                  label="E-mail (opcional)"
+                  icon={Mail}
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="cliente@email.com"
+                />
+              </div>
+            </div>
+          )}
+        </section>
+
+        <section className="space-y-3">
+          <SectionLabel>Data e hora</SectionLabel>
+          <span className="ui-field">
+            <Clock className="ui-field-icon" />
             <input
               required
-              value={clientName}
-              onChange={(e) => setClientName(e.target.value)}
-              placeholder="Ex.: Maria Silva"
-              className={inputCls}
+              type="datetime-local"
+              value={startsAt}
+              min={minInput}
+              onChange={(e) => setStartsAt(e.target.value)}
+              className="ui-field-input pl-11"
             />
-          </label>
-          <label className="block">
-            <span className="text-sm font-medium">Telefone (WhatsApp)</span>
-            <PhoneInput value={phone} onChange={setPhone} className={inputCls} />
-          </label>
-          <label className="block">
-            <span className="text-sm font-medium">E-mail (opcional)</span>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="cliente@email.com"
-              className={inputCls}
-            />
-          </label>
-        </>
-      )}
-      <label className="block">
-        <span className="text-sm font-medium">Data e hora do atendimento</span>
-        <input
-          required
-          type="datetime-local"
-          value={startsAt}
-          min={minInput}
-          onChange={(e) => setStartsAt(e.target.value)}
-          className={inputCls}
-        />
-        {selected && (
-          <p className="text-xs text-muted-foreground mt-1">
-            Duração: {selected.duration_minutes} min · Término às{" "}
-            {new Date(
-              new Date(startsAt).getTime() + selected.duration_minutes * 60000,
-            ).toLocaleTimeString("pt-BR", { timeStyle: "short" })}
+          </span>
+          <p className="text-xs text-muted-foreground">
+            {selected
+              ? `${selected.duration_minutes} min de duração · término às ${endTimeLabel}`
+              : "Escolha um serviço para ver a duração."}
           </p>
-        )}
-      </label>
-      <label className="block">
-        <span className="text-sm font-medium">Observações (opcional)</span>
-        <textarea
-          rows={3}
+        </section>
+
+        <UITextarea
+          label="Observações (opcional)"
+          icon={Pencil}
+          rows={2}
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          placeholder="Ex.: Cliente pediu para lembrar de 15 min antes."
-          className={inputCls}
+          placeholder="Alguma preferência ou observação?"
         />
-      </label>
-      <button disabled={saving} className="btn-brand w-full disabled:opacity-60">
-        {saving ? "Salvando..." : "Confirmar agendamento"}
-      </button>
+      </div>
+
+      {selected && (
+        <div className="mt-6">
+          <div className="ui-card p-4 sm:p-5 space-y-3">
+            <UISummaryRow icon={Tag} sub={`${selected.duration_minutes} min`}>
+              {selected.name}
+            </UISummaryRow>
+            <UISummaryRow icon={Calendar} sub={when ? `às ${formatTime(when)}` : undefined}>
+              <span className="first-letter:uppercase">
+                {when ? formatLongDate(when) : "Data a definir"}
+              </span>
+            </UISummaryRow>
+            <UISummaryRow icon={User}>{finalNamePreview || "Cliente a definir"}</UISummaryRow>
+            <div className="pt-3 border-t border-border flex items-center justify-between gap-3">
+              <span className="text-sm font-semibold text-muted-foreground">Total</span>
+              <span
+                className="text-2xl font-black tracking-tight"
+                style={{ color: "var(--brand)" }}
+              >
+                {formatBRL(selected.price_cents)}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <footer className="mt-5 sticky bottom-0 -mx-5 sm:-mx-6 px-5 sm:px-6 py-3 bg-background border-t border-border">
+        <div className="flex gap-3">
+          <UIButton type="button" variant="outline" className="flex-1" onClick={onClose}>
+            Cancelar
+          </UIButton>
+          <UIButton type="submit" className="flex-[1.6]" icon={CalendarPlus} disabled={saving}>
+            {saving ? "Salvando..." : "Confirmar"}
+          </UIButton>
+        </div>
+      </footer>
     </form>
+  );
+}
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{children}</p>
   );
 }

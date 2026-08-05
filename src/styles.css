@@ -58,6 +58,7 @@
 
 :root {
   --radius: 0.75rem;
+  color-scheme: light;
 
   /* Agendaí palette (exact hex → oklch) */
   --background: oklch(1 0 0);                              /* #FFFFFF */
@@ -117,6 +118,7 @@
 }
 
 .dark {
+  color-scheme: dark;
   --background: oklch(0.16 0.02 258);
   --foreground: oklch(0.97 0.005 240);
   --card: oklch(0.20 0.025 258);
@@ -175,6 +177,11 @@
 @layer base {
   * { border-color: var(--border); }
   html { -webkit-font-smoothing: antialiased; }
+  input,
+  select,
+  textarea {
+    accent-color: var(--accent);
+  }
   body {
     background-color: var(--background);
     color: var(--foreground);

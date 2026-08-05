@@ -8,6 +8,7 @@ import { useMyProfessional } from "@/hooks/use-my-professional";
 import { supabase } from "@/integrations/supabase/client";
 import { db } from "@/lib/db-tables";
 import { formatBRL, WEEKDAYS_PT } from "@/lib/booking";
+import { cn } from "@/lib/utils";
 import { ViewToggle, type ViewMode } from "@/components/view-toggle";
 import { ImageUpload } from "@/components/image-upload";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -1994,20 +1995,37 @@ function QuickAdd({ onAdd }: { onAdd: (s: string, e: string) => void }) {
 const inputCls =
   "w-full min-h-[44px] px-3 py-2 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-ring mt-1";
 
-export function Modal({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
+export function Modal({
+  children,
+  onClose,
+  size = "md",
+  hideFooter,
+}: {
+  children: React.ReactNode;
+  onClose: () => void;
+  size?: "md" | "lg";
+  hideFooter?: boolean;
+}) {
   return (
     <div
       className="fixed inset-0 z-50 bg-foreground/40 grid sm:place-items-center animate-fade-in-up"
       onClick={onClose}
+      role="dialog"
+      aria-modal="true"
     >
       <div
-        className="bg-background w-full sm:max-w-md sm:rounded-2xl p-6 h-full sm:h-auto sm:my-8 overflow-y-auto"
+        className={cn(
+          "bg-background w-full sm:rounded-2xl p-5 sm:p-6 h-full sm:h-auto sm:my-8 overflow-y-auto",
+          size === "lg" ? "sm:max-w-xl" : "sm:max-w-md",
+        )}
         onClick={(e) => e.stopPropagation()}
       >
         {children}
-        <button onClick={onClose} className="btn-outline-brand w-full mt-3">
-          Cancelar
-        </button>
+        {!hideFooter && (
+          <button onClick={onClose} className="btn-outline-brand w-full mt-3">
+            Cancelar
+          </button>
+        )}
       </div>
     </div>
   );
