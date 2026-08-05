@@ -41,13 +41,9 @@ import {
   Mail,
   Pencil,
   Lock,
-  BellRing,
   Check,
   MousePointerClick,
   ShoppingBag,
-  Star,
-  Undo2,
-  Zap,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -95,25 +91,6 @@ const HOW_IT_WORKS: Array<{ icon: LucideIcon; title: string; text: string }> = [
     icon: BadgeCheck,
     title: "Confirme na hora",
     text: "Preencha seus dados e receba a confirmação imediata.",
-  },
-];
-
-/** Prova social exibida no landing (genérica da plataforma). */
-const REVIEWS: Array<{ name: string; role: string; quote: string }> = [
-  {
-    name: "Mariana",
-    role: "Cliente Agendaí",
-    quote: "Agendei em menos de um minuto e o horário estava certinho.",
-  },
-  {
-    name: "Carlos",
-    role: "Cliente Agendaí",
-    quote: "Adoro escolher o melhor horário sem precisar esperar resposta.",
-  },
-  {
-    name: "Fernanda",
-    role: "Cliente Agendaí",
-    quote: "Recebi a confirmação na hora e o lembrete do agendamento.",
   },
 ];
 
@@ -520,57 +497,6 @@ function BookingPage() {
                     <p className="mt-1 text-sm text-muted-foreground leading-relaxed">{s.text}</p>
                   </div>
                 ))}
-              </div>
-            </div>
-
-            {/* Prova social */}
-            <div>
-              <h3 className="text-center text-lg sm:text-2xl font-black tracking-tight text-foreground">
-                Quem já agendou, <span className="ui-accent-text">recomenda.</span>
-              </h3>
-              <div className="mt-6 grid gap-3 sm:gap-4 sm:grid-cols-3">
-                {REVIEWS.map((r, i) => (
-                  <figure
-                    key={r.name}
-                    className="ui-card p-5 flex flex-col ui-stagger"
-                    style={{ ["--i" as string]: i }}
-                  >
-                    <div className="flex gap-0.5 mb-3">
-                      {Array.from({ length: 5 }).map((_, j) => (
-                        <Star key={j} className="h-4 w-4 fill-current ui-accent-text" />
-                      ))}
-                    </div>
-                    <blockquote className="text-sm text-foreground leading-relaxed flex-1">
-                      "{r.quote}"
-                    </blockquote>
-                    <figcaption className="mt-4 pt-3 border-t border-border flex items-center gap-2.5">
-                      <span
-                        className="h-8 w-8 rounded-full grid place-items-center text-xs font-bold text-brand-foreground shrink-0"
-                        style={{ backgroundColor: "var(--brand)" }}
-                      >
-                        {r.name.charAt(0)}
-                      </span>
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold text-foreground">{r.name}</p>
-                        <p className="text-xs text-muted-foreground">{r.role}</p>
-                      </div>
-                    </figcaption>
-                  </figure>
-                ))}
-              </div>
-              <div className="mt-5 flex flex-wrap justify-center gap-2">
-                <span className="ui-badge">
-                  <ShieldCheck className="h-3.5 w-3.5" /> Dados seguros
-                </span>
-                <span className="ui-badge">
-                  <Zap className="h-3.5 w-3.5" /> Confirmação imediata
-                </span>
-                <span className="ui-badge">
-                  <BellRing className="h-3.5 w-3.5" /> Lembrete automático
-                </span>
-                <span className="ui-badge">
-                  <Undo2 className="h-3.5 w-3.5" /> Cancelamento grátis até 24h
-                </span>
               </div>
             </div>
 
