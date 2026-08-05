@@ -126,7 +126,7 @@ function SignIn() {
       subtitle="Acesse seu painel para gerenciar agendamentos, serviços e horários."
     >
       {recovering ? (
-        <form onSubmit={onResetPassword} className="space-y-4">
+        <form onSubmit={onResetPassword} className="space-y-3">
           <UIPasswordInput
             label="Nova senha"
             icon={Lock}
@@ -162,7 +162,7 @@ function SignIn() {
         </form>
       ) : (
         <>
-          <form onSubmit={onSubmit} className="space-y-4">
+          <form onSubmit={onSubmit} className="space-y-3">
             <UIInput
               label="E-mail"
               icon={Mail}
@@ -210,7 +210,7 @@ function SignIn() {
             </UIButton>
           </form>
 
-          <div className="my-6 flex items-center gap-3 text-xs text-muted-foreground">
+          <div className="my-4 flex items-center gap-3 text-xs text-muted-foreground">
             <span className="h-px flex-1 bg-border" />
             ou continue com
             <span className="h-px flex-1 bg-border" />
@@ -225,7 +225,7 @@ function SignIn() {
             </UIButton>
           </div>
 
-          <p className="mt-6 text-sm text-muted-foreground text-center">
+          <p className="mt-4 text-sm text-muted-foreground text-center">
             Ainda não possui conta?{" "}
             <Link to="/cadastrar" className="ui-link">
               Cadastre-se gratuitamente
@@ -292,7 +292,7 @@ export function AuthLayout({
       <div className="ui-auth-overlay" aria-hidden="true" />
 
       <div className="relative">
-        <header className="max-w-6xl mx-auto px-5 sm:px-8 h-20 flex items-center justify-between">
+        <header className="max-w-6xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between">
           <BrandLogo />
           <div className="flex items-center gap-2">
             <ThemeToggle />
@@ -305,26 +305,24 @@ export function AuthLayout({
           </div>
         </header>
 
-        <main className="max-w-md mx-auto px-4 sm:px-8 pt-2 pb-16">
-          <UICard glass className="mt-4 p-6 sm:p-8 animate-ui-scale-in">
+        <main className="max-w-md mx-auto px-4 sm:px-8 pt-1 pb-8">
+          <UICard glass className="mt-3 p-5 sm:p-6 animate-ui-scale-in">
             <UITitle size="lg" accent={accent}>
               {title}
             </UITitle>
-            <p className="mt-3 text-sm sm:text-base text-muted-foreground leading-relaxed">
-              {subtitle}
-            </p>
-            <div className="mt-7">{children}</div>
+            <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{subtitle}</p>
+            <div className="mt-4">{children}</div>
           </UICard>
 
-          <ul className="mt-7 grid grid-cols-3 gap-2 text-center">
+          <ul className="mt-5 grid grid-cols-3 gap-2 text-center">
             {BENEFITS.map((b, i) => (
               <li
                 key={b.label}
-                className="ui-stagger flex flex-col items-center gap-2"
+                className="ui-stagger flex flex-col items-center gap-1"
                 style={{ ["--i" as string]: i + 1 }}
               >
-                <span className="ui-icon-bubble h-10 w-10 grid place-items-center rounded-xl">
-                  <b.icon className="h-5 w-5" />
+                <span className="ui-icon-bubble h-9 w-9 grid place-items-center rounded-xl">
+                  <b.icon className="h-4 w-4" />
                 </span>
                 <span className="text-[11px] sm:text-xs text-muted-foreground leading-tight">
                   {b.label}
