@@ -26,6 +26,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Percent,
+  RefreshCw,
 } from "lucide-react";
 import { OnboardingCard } from "@/components/onboarding-card";
 
@@ -61,7 +62,11 @@ function Dashboard() {
   }, [currentMonth]);
   const prevMonthEnd = useMemo(() => new Date(monthStart), [monthStart]);
 
-  const { data: stats } = useQuery({
+  const {
+    data: stats,
+    refetch,
+    isFetching,
+  } = useQuery({
     queryKey: ["dashboard-stats", pro?.id, monthOffset],
     enabled: !!pro?.id,
     queryFn: async () => {
@@ -207,6 +212,14 @@ function Dashboard() {
                 </button>
               )}
             </div>
+            <button
+              onClick={() => void refetch()}
+              disabled={isFetching}
+              title="Atualizar dados"
+              className="p-2 min-h-[40px] min-w-[40px] grid place-items-center rounded-lg hover:bg-muted border border-border text-muted-foreground disabled:opacity-60"
+            >
+              <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
+            </button>
           </div>
 
           <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">

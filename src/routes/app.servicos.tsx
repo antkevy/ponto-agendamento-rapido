@@ -37,6 +37,14 @@ type Plano = {
   image_url: string | null;
   is_active: boolean;
 };
+type Produto = {
+  id: string;
+  name: string;
+  description: string | null;
+  price_cents: number;
+  image_url: string | null;
+  is_active: boolean;
+};
 type Block = { id: string; starts_at: string; ends_at: string; reason: string | null };
 type HorarioRow = { id: string; weekday: number; start_time: string; end_time: string };
 type Employee = { id: string; name: string; photo_url: string | null; is_active: boolean };
@@ -58,6 +66,7 @@ function Page() {
           <TabsList className="w-full justify-start">
             <TabsTrigger value="servicos">Serviços</TabsTrigger>
             <TabsTrigger value="planos">Planos</TabsTrigger>
+            <TabsTrigger value="produtos">Produtos</TabsTrigger>
             <TabsTrigger value="bloqueios">Bloqueios</TabsTrigger>
             <TabsTrigger value="horarios">Horários</TabsTrigger>
             <TabsTrigger value="funcionarios">Funcionários</TabsTrigger>
@@ -68,6 +77,9 @@ function Page() {
           </TabsContent>
           <TabsContent value="planos" className="space-y-4">
             <PlanosTab pro={pro} />
+          </TabsContent>
+          <TabsContent value="produtos" className="space-y-4">
+            <ProdutosTab pro={pro} />
           </TabsContent>
           <TabsContent value="bloqueios" className="space-y-4">
             <BloqueiosTab pro={pro} />
@@ -460,6 +472,192 @@ function PlanosTab({ pro }: { pro: Pro }) {
       {editing && (
         <Modal onClose={() => setEditing(null)}>
           <PlanoForm initial={editing} onSubmit={(v) => save.mutate(v)} saving={save.isPending} />
+        </Modal>
+      )}
+    </>
+  );
+}
+
+function ProdutosTab({ pro }: { pro: Pro }) {
+  const qc = useQueryClient();
+  const [editing, setEditing] = useState<Partial<Produto> | null>(null);
+  const [view, setView] = useState<ViewMode>("list");
+
+  const { data: produtos } = useQuery({
+    queryKey: ["produtos", pro.id],
+    enabled: !!pro.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from(db.produtos)
+        .select("*")
+        .eq("professional_id", pro.id)
+        .order("created_at");
+      if (error) throw error;
+      return data as Produto[];
+    },
+  });
+
+  const save = useMutation({
+    mutationFn: async ({ image, ...p }: Partial<Produto> & { image?: File }) => {
+      let image_url = p.image_url ?? null;
+      const produtoId = p.id ?? crypto.randomUUID();
+      if (image) {
+        const ext = image.name.split(".").pop();
+        const path = `${pro.user_id}/produtos/${produtoId}.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from("brand-assets")
+          .upload(path, image, {
+            upsert: true,
+            contentType: image.type || `image/${ext === "jpg" ? "jpeg" : ext}`,
+          });
+        if (uploadError) throw uploadError;
+        const { data: signed, error: signErr } = await supabase.storage
+          .from("brand-assets")
+          .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+        if (signErr) throw signErr;
+        image_url = signed.signedUrl;
+      }
+      if (p.id) {
+        const { error } = await supabase
+          .from(db.produtos)
+          .update({
+            name: p.name!,
+            price_cents: p.price_cents ?? 0,
+            description: p.description ?? null,
+            image_url,
+            is_active: p.is_active ?? true,
+          })
+          .eq("id", p.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from(db.produtos).insert({
+          id: produtoId,
+          professional_id: pro.id,
+          name: p.name!,
+          price_cents: p.price_cents ?? 0,
+          description: p.description ?? null,
+          image_url,
+        });
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["produtos"] });
+      setEditing(null);
+      toast.success("Produto salvo!");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const remove = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from(db.produtos).delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["produtos"] });
+      toast.success("Removido.");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return (
+    <>
+      <div className="flex items-center justify-between gap-3 mb-2 flex-wrap">
+        <button onClick={() => setEditing({})} className="btn-brand inline-flex items-center gap-2">
+          <Plus className="h-4 w-4" /> Novo produto
+        </button>
+        <ViewToggle value={view} onChange={setView} />
+      </div>
+      {(produtos ?? []).length === 0 && (
+        <p className="text-muted-foreground text-sm">
+          Nenhum produto ainda. Cadastre itens para vender no seu estabelecimento.
+        </p>
+      )}
+      {view === "list" ? (
+        <div className="grid gap-3">
+          {(produtos ?? []).map((p) => (
+            <div
+              key={p.id}
+              className="card-elevated p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+            >
+              <div className="flex items-center gap-4 min-w-0">
+                {p.image_url && (
+                  <img
+                    src={p.image_url}
+                    alt={p.name}
+                    className="h-14 w-14 rounded-lg object-cover shrink-0 aspect-square"
+                  />
+                )}
+                <div className="min-w-0">
+                  <p className="font-semibold truncate">{p.name}</p>
+                  <p className="text-sm text-muted-foreground">{formatBRL(p.price_cents)}</p>
+                  {p.description && (
+                    <p className="text-sm mt-1 text-muted-foreground line-clamp-2">
+                      {p.description}
+                    </p>
+                  )}
+                </div>
+              </div>
+              <div className="flex gap-2 shrink-0">
+                <button
+                  onClick={() => setEditing(p)}
+                  className="btn-outline-brand inline-flex items-center gap-1 text-sm !py-2"
+                >
+                  <Pencil className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => {
+                    if (confirm("Excluir este produto?")) remove.mutate(p.id);
+                  }}
+                  className="btn-outline-brand inline-flex items-center gap-1 text-sm !py-2 text-destructive"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+          {(produtos ?? []).map((p) => (
+            <div key={p.id} className="card-elevated p-4 flex flex-col gap-2">
+              {p.image_url && (
+                <img
+                  src={p.image_url}
+                  alt={p.name}
+                  className="w-full aspect-square rounded-lg object-cover"
+                />
+              )}
+              <p className="font-semibold truncate">{p.name}</p>
+              <p className="text-lg font-black tracking-tight">{formatBRL(p.price_cents)}</p>
+              {p.description && (
+                <p className="text-sm text-muted-foreground line-clamp-3">{p.description}</p>
+              )}
+              <div className="flex gap-2 mt-auto pt-2">
+                <button
+                  onClick={() => setEditing(p)}
+                  className="btn-outline-brand inline-flex items-center gap-1 text-sm !py-2 flex-1 justify-center"
+                >
+                  <Pencil className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => {
+                    if (confirm("Excluir este produto?")) remove.mutate(p.id);
+                  }}
+                  className="btn-outline-brand inline-flex items-center gap-1 text-sm !py-2 text-destructive"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {editing && (
+        <Modal onClose={() => setEditing(null)}>
+          <ProdutoForm initial={editing} onSubmit={(v) => save.mutate(v)} saving={save.isPending} />
         </Modal>
       )}
     </>
@@ -1230,6 +1428,126 @@ function PlanoForm({
           value={description ?? ""}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Descreva o que inclui neste plano..."
+          className={inputCls}
+        />
+      </label>
+      <button disabled={saving} className="btn-brand w-full disabled:opacity-60">
+        {saving ? "Salvando..." : "Salvar"}
+      </button>
+    </form>
+  );
+}
+
+function ProdutoForm({
+  initial,
+  onSubmit,
+  saving,
+}: {
+  initial: Partial<Produto>;
+  onSubmit: (p: Partial<Produto> & { image?: File }) => void;
+  saving: boolean;
+}) {
+  const [name, setName] = useState(initial.name ?? "");
+  const [priceReais, setPriceReais] = useState(
+    ((initial.price_cents ?? 0) / 100).toString().replace(".", ","),
+  );
+  const [description, setDescription] = useState(initial.description ?? "");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState(initial.image_url ?? "");
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageFile(file);
+    setPreview(URL.createObjectURL(file));
+  }
+
+  function clearImage() {
+    setImageFile(null);
+    setPreview("");
+    if (fileRef.current) fileRef.current.value = "";
+  }
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        const cents = Math.round(parseFloat(priceReais.replace(",", ".") || "0") * 100);
+        onSubmit({
+          id: initial.id,
+          name,
+          price_cents: cents,
+          description: description || null,
+          image_url: initial.image_url,
+          image: imageFile ?? undefined,
+        });
+      }}
+      className="space-y-4"
+    >
+      <h2 className="text-2xl font-black tracking-tight text-foreground">
+        {initial.id ? "Editar" : "Novo"} produto
+      </h2>
+
+      <div>
+        <span className="text-sm font-medium">Foto (opcional)</span>
+        {preview ? (
+          <div className="relative mt-1 w-full h-36 rounded-lg overflow-hidden border border-border">
+            <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+            <button
+              type="button"
+              onClick={clearImage}
+              className="absolute top-2 right-2 bg-background/80 rounded-full p-1"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            className="w-full mt-1 min-h-[44px] rounded-lg border-2 border-dashed border-border flex items-center justify-center gap-2 text-sm text-muted-foreground hover:bg-muted transition-colors"
+          >
+            <Upload className="h-4 w-4" /> Escolher foto
+          </button>
+        )}
+        <p className="text-xs text-muted-foreground mt-1">Recomendado: 600×600 px</p>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleFile}
+        />
+      </div>
+
+      <label className="block">
+        <span className="text-sm font-medium">Nome</span>
+        <input
+          required
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Ex.: Shampoo profissional"
+          className={inputCls}
+        />
+      </label>
+      <label className="block">
+        <span className="text-sm font-medium">Preço (R$)</span>
+        <input
+          inputMode="decimal"
+          value={priceReais}
+          onChange={(e) => setPriceReais(e.target.value)}
+          placeholder="0,00"
+          className={inputCls}
+        />
+      </label>
+      <label className="block">
+        <span className="text-sm font-medium">Descrição do produto (opcional)</span>
+        <textarea
+          rows={4}
+          value={description ?? ""}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Descreva o produto, tamanho, marca..."
           className={inputCls}
         />
       </label>
