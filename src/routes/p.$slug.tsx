@@ -1246,7 +1246,7 @@ function FormStep({
                   />
                 ) : (
                   <span className="ui-icon-bubble h-14 w-14 grid place-items-center rounded-2xl shrink-0">
-                    <Scissors className="h-6 w-6" />
+                    <Tag className="h-6 w-6" />
                   </span>
                 )}
                 <div className="min-w-0">
