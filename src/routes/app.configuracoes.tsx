@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
@@ -7,11 +7,11 @@ import { OnboardingCard } from "@/components/onboarding-card";
 import { useMyProfessional } from "@/hooks/use-my-professional";
 import { supabase } from "@/integrations/supabase/client";
 import { db } from "@/lib/db-tables";
-import { slugify, formatBRL } from "@/lib/booking";
+import { slugify } from "@/lib/booking";
 import { PhoneInput } from "@/components/phone-input";
 import { isValidPhoneBR, onlyDigits } from "@/lib/phone";
 import { ImageUpload } from "@/components/image-upload";
-import { CopyCheck, ExternalLink, Gem } from "lucide-react";
+import { CopyCheck, ExternalLink } from "lucide-react";
 import { AppearanceSettings } from "@/components/appearance-settings";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import type { ProfessionalTheme } from "@/lib/appearance";
@@ -131,7 +131,6 @@ function Page() {
               <TabsTrigger value="perfil">Perfil</TabsTrigger>
               <TabsTrigger value="localizacao">Localização & Contato</TabsTrigger>
               <TabsTrigger value="mensagens">Mensagens</TabsTrigger>
-              <TabsTrigger value="planos">Planos</TabsTrigger>
               <TabsTrigger value="apariencia">Aparência</TabsTrigger>
             </TabsList>
 
@@ -243,10 +242,6 @@ function Page() {
               </div>
             </TabsContent>
 
-            <TabsContent value="planos" className="space-y-6">
-              <PlanosList proId={pro.id} />
-            </TabsContent>
-
             <TabsContent value="apariencia" className="space-y-6">
               <AppearanceSettings
                 proId={pro.id}
@@ -273,68 +268,5 @@ function F({ label, hint, children }: { label: string; hint?: string; children: 
       {children}
       {hint && <span className="text-xs text-muted-foreground mt-1 block font-mono">{hint}</span>}
     </label>
-  );
-}
-
-type Plan = {
-  id: string;
-  name: string;
-  description: string | null;
-  price_cents: number;
-  image_url: string | null;
-  is_active: boolean;
-};
-
-function PlanosList({ proId }: { proId?: string }) {
-  const { data: planos, isLoading } = useQuery({
-    queryKey: ["admin-planos", proId],
-    queryFn: async () => {
-      if (!proId) return [];
-      const { data, error } = await supabase
-        .from(db.planos)
-        .select("*")
-        .eq("professional_id", proId)
-        .order("price_cents");
-      if (error) throw error;
-      return (data ?? []) as Plan[];
-    },
-    enabled: !!proId,
-  });
-
-  if (isLoading) return <div className="skeleton h-20" />;
-  if (!planos || planos.length === 0) {
-    return (
-      <div className="card-elevated p-6 text-center text-sm text-muted-foreground">
-        Nenhum plano cadastrado ainda.
-      </div>
-    );
-  }
-
-  return (
-    <div className="card-elevated p-6 space-y-4">
-      <h3 className="text-lg font-bold tracking-tight flex items-center gap-2">
-        <Gem className="h-5 w-5" /> Planos
-      </h3>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {planos.map((p) => (
-          <div key={p.id} className="card-elevated p-5 flex flex-col gap-3">
-            {p.image_url && (
-              <img
-                src={p.image_url}
-                alt={p.name}
-                className="w-full aspect-video rounded-lg object-cover"
-              />
-            )}
-            <p className="font-semibold text-lg">{p.name}</p>
-            <p className="text-2xl font-black tracking-tight" style={{ color: "var(--brand)" }}>
-              {formatBRL(p.price_cents)}
-            </p>
-            {p.description && (
-              <p className="text-sm text-muted-foreground leading-relaxed">{p.description}</p>
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
   );
 }

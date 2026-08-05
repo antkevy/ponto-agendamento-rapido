@@ -285,7 +285,7 @@ function Page() {
           )}
 
           {creating && (
-            <Modal onClose={() => setCreating(false)} size="lg" hideFooter>
+            <Modal onClose={() => setCreating(false)} size="xl" hideFooter>
               <NewAppointmentForm
                 proId={pro.id}
                 saving={create.isPending}
@@ -600,6 +600,26 @@ function NewAppointmentForm({
   const pad = (n: number) => String(n).padStart(2, "0");
   const minInput = `${nowInput.getFullYear()}-${pad(nowInput.getMonth() + 1)}-${pad(nowInput.getDate())}T${pad(nowInput.getHours())}:${pad(nowInput.getMinutes())}`;
 
+  const summaryCard = selected ? (
+    <div className="ui-card p-4 sm:p-5 space-y-3">
+      <UISummaryRow icon={Tag} sub={`${selected.duration_minutes} min`}>
+        {selected.name}
+      </UISummaryRow>
+      <UISummaryRow icon={Calendar} sub={when ? `às ${formatTime(when)}` : undefined}>
+        <span className="first-letter:uppercase">
+          {when ? formatLongDate(when) : "Data a definir"}
+        </span>
+      </UISummaryRow>
+      <UISummaryRow icon={User}>{finalNamePreview || "Cliente a definir"}</UISummaryRow>
+      <div className="pt-3 border-t border-border flex items-center justify-between gap-3">
+        <span className="text-sm font-semibold text-muted-foreground">Total</span>
+        <span className="text-2xl font-black tracking-tight" style={{ color: "var(--brand)" }}>
+          {formatBRL(selected.price_cents)}
+        </span>
+      </div>
+    </div>
+  ) : null;
+
   return (
     <form
       onSubmit={(e) => {
@@ -655,209 +675,192 @@ function NewAppointmentForm({
         </div>
       </header>
 
-      <div className="flex-1 space-y-6">
-        <section className="space-y-3">
-          <SectionLabel>Serviço</SectionLabel>
-          <span className="ui-field">
-            <Tag className="ui-field-icon" />
-            <select
-              required
-              value={serviceId}
-              onChange={(e) => setServiceId(e.target.value)}
-              className="ui-field-input pl-11"
-            >
-              <option value="">Selecione um serviço...</option>
-              {(services ?? []).map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name} · {formatBRL(s.price_cents)}
-                </option>
-              ))}
-            </select>
-          </span>
-          {!servicesLoading && (services ?? []).length === 0 && (
-            <UINotice icon={Info} title="Nenhum serviço ativo">
-              Crie um serviço na aba Serviços para poder agendar.
-            </UINotice>
-          )}
-        </section>
-
-        <section className="space-y-3">
-          <SectionLabel>Cliente</SectionLabel>
-          <div
-            className="grid grid-cols-2 gap-1 p-1 rounded-xl bg-muted"
-            role="group"
-            aria-label="Tipo de cliente"
-          >
-            <button
-              type="button"
-              onClick={() => {
-                setClientMode("new");
-                setClientKey("");
-              }}
-              className={cn(
-                "min-h-[40px] rounded-lg text-sm font-semibold transition-all",
-                clientMode === "new"
-                  ? "bg-card text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              Cliente novo
-            </button>
-            <button
-              type="button"
-              onClick={() => setClientMode("existing")}
-              className={cn(
-                "min-h-[40px] rounded-lg text-sm font-semibold transition-all",
-                clientMode === "existing"
-                  ? "bg-card text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              Já cadastrado
-            </button>
-          </div>
-
-          {clientMode === "existing" ? (
-            <>
-              <span className="ui-field">
-                <Users className="ui-field-icon" />
-                <select
-                  required
-                  value={clientKey}
-                  onChange={(e) => {
-                    const key = e.target.value;
-                    setClientKey(key);
-                    const c = clientOptions.find((o) => o.key === key);
-                    if (c) {
-                      setClientName(c.name);
-                      setPhone(c.phone);
-                      setEmail(c.email ?? "");
-                    }
-                  }}
-                  className="ui-field-input pl-11"
-                >
-                  <option value="">Selecione um cliente...</option>
-                  {clientOptions.map((c) => (
-                    <option key={c.key} value={c.key}>
-                      {c.name} · {displayPhoneBR(c.phone)}
-                    </option>
-                  ))}
-                </select>
-              </span>
-              {selectedClient && (
-                <div className="flex items-center gap-3 p-2.5 rounded-xl border border-border bg-muted/50">
-                  <span className="ui-icon-bubble h-9 w-9 grid place-items-center rounded-full shrink-0 font-bold text-sm">
-                    {selectedClient.name.charAt(0).toUpperCase()}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-foreground truncate">
-                      {selectedClient.name}
-                    </p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {displayPhoneBR(selectedClient.phone)}
-                      {selectedClient.email ? ` · ${selectedClient.email}` : ""}
-                    </p>
-                  </div>
-                </div>
-              )}
-              {clientOptions.length === 0 && (
-                <UINotice icon={Info} title="Nenhum cliente cadastrado">
-                  Escolha "Cliente novo" — o cliente é cadastrado automaticamente ao agendar.
-                </UINotice>
-              )}
-            </>
-          ) : (
-            <div className="space-y-3">
-              <UIInput
-                label="Nome completo"
-                icon={User}
+      <div className="flex-1 min-h-0 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-10">
+        <div className="space-y-6 min-h-0 lg:overflow-y-auto lg:pr-1">
+          <section className="space-y-3">
+            <SectionLabel>Serviço</SectionLabel>
+            <span className="ui-field">
+              <Tag className="ui-field-icon" />
+              <select
                 required
-                value={clientName}
-                onChange={(e) => setClientName(e.target.value)}
-                autoComplete="name"
-                placeholder="Ex.: Maria Silva"
-              />
-              <div className="grid gap-3 sm:grid-cols-2">
-                <label className="block">
-                  <span className="block text-sm font-semibold text-foreground mb-2">WhatsApp</span>
-                  <span className="ui-field">
-                    <MessageCircle className="ui-field-icon" />
-                    <PhoneInput
-                      value={phone}
-                      onChange={setPhone}
-                      className="ui-field-input pl-11"
-                    />
-                  </span>
-                </label>
-                <UIInput
-                  label="E-mail (opcional)"
-                  icon={Mail}
-                  type="email"
-                  inputMode="email"
-                  autoComplete="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="cliente@email.com"
-                />
-              </div>
+                value={serviceId}
+                onChange={(e) => setServiceId(e.target.value)}
+                className="ui-field-input pl-11"
+              >
+                <option value="">Selecione um serviço...</option>
+                {(services ?? []).map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name} · {formatBRL(s.price_cents)}
+                  </option>
+                ))}
+              </select>
+            </span>
+            {!servicesLoading && (services ?? []).length === 0 && (
+              <UINotice icon={Info} title="Nenhum serviço ativo">
+                Crie um serviço na aba Serviços para poder agendar.
+              </UINotice>
+            )}
+          </section>
+
+          <section className="space-y-3">
+            <SectionLabel>Cliente</SectionLabel>
+            <div
+              className="grid grid-cols-2 gap-1 p-1 rounded-xl bg-muted"
+              role="group"
+              aria-label="Tipo de cliente"
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  setClientMode("new");
+                  setClientKey("");
+                }}
+                className={cn(
+                  "min-h-[40px] rounded-lg text-sm font-semibold transition-all",
+                  clientMode === "new"
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                Cliente novo
+              </button>
+              <button
+                type="button"
+                onClick={() => setClientMode("existing")}
+                className={cn(
+                  "min-h-[40px] rounded-lg text-sm font-semibold transition-all",
+                  clientMode === "existing"
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                Já cadastrado
+              </button>
             </div>
-          )}
-        </section>
 
-        <section className="space-y-3">
-          <SectionLabel>Data e hora</SectionLabel>
-          <span className="ui-field">
-            <Clock className="ui-field-icon" />
-            <input
-              required
-              type="datetime-local"
-              value={startsAt}
-              min={minInput}
-              onChange={(e) => setStartsAt(e.target.value)}
-              className="ui-field-input pl-11"
-            />
-          </span>
-          <p className="text-xs text-muted-foreground">
-            {selected
-              ? `${selected.duration_minutes} min de duração · término às ${endTimeLabel}`
-              : "Escolha um serviço para ver a duração."}
-          </p>
-        </section>
+            {clientMode === "existing" ? (
+              <>
+                <span className="ui-field">
+                  <Users className="ui-field-icon" />
+                  <select
+                    required
+                    value={clientKey}
+                    onChange={(e) => {
+                      const key = e.target.value;
+                      setClientKey(key);
+                      const c = clientOptions.find((o) => o.key === key);
+                      if (c) {
+                        setClientName(c.name);
+                        setPhone(c.phone);
+                        setEmail(c.email ?? "");
+                      }
+                    }}
+                    className="ui-field-input pl-11"
+                  >
+                    <option value="">Selecione um cliente...</option>
+                    {clientOptions.map((c) => (
+                      <option key={c.key} value={c.key}>
+                        {c.name} · {displayPhoneBR(c.phone)}
+                      </option>
+                    ))}
+                  </select>
+                </span>
+                {selectedClient && (
+                  <div className="flex items-center gap-3 p-2.5 rounded-xl border border-border bg-muted/50">
+                    <span className="ui-icon-bubble h-9 w-9 grid place-items-center rounded-full shrink-0 font-bold text-sm">
+                      {selectedClient.name.charAt(0).toUpperCase()}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-foreground truncate">
+                        {selectedClient.name}
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {displayPhoneBR(selectedClient.phone)}
+                        {selectedClient.email ? ` · ${selectedClient.email}` : ""}
+                      </p>
+                    </div>
+                  </div>
+                )}
+                {clientOptions.length === 0 && (
+                  <UINotice icon={Info} title="Nenhum cliente cadastrado">
+                    Escolha "Cliente novo" — o cliente é cadastrado automaticamente ao agendar.
+                  </UINotice>
+                )}
+              </>
+            ) : (
+              <div className="space-y-3">
+                <UIInput
+                  label="Nome completo"
+                  icon={User}
+                  required
+                  value={clientName}
+                  onChange={(e) => setClientName(e.target.value)}
+                  autoComplete="name"
+                  placeholder="Ex.: Maria Silva"
+                />
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className="block">
+                    <span className="block text-sm font-semibold text-foreground mb-2">
+                      WhatsApp
+                    </span>
+                    <span className="ui-field">
+                      <MessageCircle className="ui-field-icon" />
+                      <PhoneInput
+                        value={phone}
+                        onChange={setPhone}
+                        className="ui-field-input pl-11"
+                      />
+                    </span>
+                  </label>
+                  <UIInput
+                    label="E-mail (opcional)"
+                    icon={Mail}
+                    type="email"
+                    inputMode="email"
+                    autoComplete="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="cliente@email.com"
+                  />
+                </div>
+              </div>
+            )}
+          </section>
 
-        <UITextarea
-          label="Observações (opcional)"
-          icon={Pencil}
-          rows={2}
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder="Alguma preferência ou observação?"
-        />
+          <section className="space-y-3">
+            <SectionLabel>Data e hora</SectionLabel>
+            <span className="ui-field">
+              <Clock className="ui-field-icon" />
+              <input
+                required
+                type="datetime-local"
+                value={startsAt}
+                min={minInput}
+                onChange={(e) => setStartsAt(e.target.value)}
+                className="ui-field-input pl-11"
+              />
+            </span>
+            <p className="text-xs text-muted-foreground">
+              {selected
+                ? `${selected.duration_minutes} min de duração · término às ${endTimeLabel}`
+                : "Escolha um serviço para ver a duração."}
+            </p>
+          </section>
+
+          <UITextarea
+            label="Observações (opcional)"
+            icon={Pencil}
+            rows={2}
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Alguma preferência ou observação?"
+          />
+        </div>
+
+        {summaryCard && <aside className="hidden lg:block">{summaryCard}</aside>}
       </div>
 
-      {selected && (
-        <div className="mt-6">
-          <div className="ui-card p-4 sm:p-5 space-y-3">
-            <UISummaryRow icon={Tag} sub={`${selected.duration_minutes} min`}>
-              {selected.name}
-            </UISummaryRow>
-            <UISummaryRow icon={Calendar} sub={when ? `às ${formatTime(when)}` : undefined}>
-              <span className="first-letter:uppercase">
-                {when ? formatLongDate(when) : "Data a definir"}
-              </span>
-            </UISummaryRow>
-            <UISummaryRow icon={User}>{finalNamePreview || "Cliente a definir"}</UISummaryRow>
-            <div className="pt-3 border-t border-border flex items-center justify-between gap-3">
-              <span className="text-sm font-semibold text-muted-foreground">Total</span>
-              <span
-                className="text-2xl font-black tracking-tight"
-                style={{ color: "var(--brand)" }}
-              >
-                {formatBRL(selected.price_cents)}
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
+      {summaryCard && <div className="mt-6 lg:hidden">{summaryCard}</div>}
 
       <footer className="mt-5 sticky bottom-0 -mx-5 sm:-mx-6 px-5 sm:px-6 py-3 bg-background border-t border-border">
         <div className="flex gap-3">
