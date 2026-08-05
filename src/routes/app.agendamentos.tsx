@@ -36,6 +36,7 @@ import {
   Info,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
 } from "lucide-react";
 import { displayPhoneBR, isValidPhoneBR } from "@/lib/phone";
 import { ViewToggle, type ViewMode } from "@/components/view-toggle";
@@ -137,6 +138,16 @@ function Page() {
     );
   }, [appts, search]);
 
+  const counts = useMemo(
+    () => ({
+      all: filtered.length,
+      confirmed: filtered.filter((a) => a.status === "confirmed").length,
+      completed: filtered.filter((a) => a.status === "completed").length,
+      cancelled: filtered.filter((a) => a.status === "cancelled").length,
+    }),
+    [filtered],
+  );
+
   const update = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: Appt["status"] }) => {
       const { error } = await supabase.from(db.agendamentos).update({ status }).eq("id", id);
@@ -184,88 +195,134 @@ function Page() {
         <OnboardingCard />
       ) : (
         <>
-          <div className="flex items-center justify-between gap-3 mb-5 flex-wrap">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-5">
             <p className="text-sm text-muted-foreground">
               Gerencie os agendamentos do seu negócio.
             </p>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setCreating(true)}
-                className="btn-brand inline-flex items-center gap-2"
-              >
-                <Plus className="h-4 w-4" /> Novo agendamento
-              </button>
-              <button
                 onClick={() => void refetch()}
                 disabled={isFetching}
                 title="Atualizar"
-                className="p-2 min-h-[40px] min-w-[40px] grid place-items-center rounded-lg hover:bg-muted border border-border text-muted-foreground disabled:opacity-60"
+                className="p-2 min-h-[44px] min-w-[44px] grid place-items-center rounded-lg hover:bg-muted border border-border text-muted-foreground disabled:opacity-60"
               >
                 <RefreshCw
                   className={`h-4 w-4 transition-colors ${isFetching ? "animate-spin text-accent" : "text-muted-foreground"}`}
                 />
               </button>
+              <button
+                onClick={() => setCreating(true)}
+                className="btn-brand inline-flex items-center justify-center gap-2 flex-1 sm:flex-none"
+              >
+                <Plus className="h-4 w-4" /> Novo agendamento
+              </button>
             </div>
           </div>
-          <div className="card-elevated p-4 mb-5 space-y-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+
+          <div className="card-elevated p-3 sm:p-4 mb-4">
+            <div className="space-y-2">
+              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                 Período
               </p>
-              <div className="flex flex-wrap gap-2">
+              <div
+                className="grid grid-cols-4 gap-1 p-1 rounded-xl bg-muted sm:max-w-md"
+                role="group"
+                aria-label="Período"
+              >
                 {RANGES.map((r) => (
                   <button
                     key={r.key}
                     onClick={() => setRange(r.key)}
                     data-selected={range === r.key || undefined}
-                    className="chip !min-h-[36px] !py-1.5 text-sm"
+                    className="min-h-[40px] rounded-lg text-sm font-semibold transition-all text-muted-foreground hover:text-foreground data-[selected]:bg-card data-[selected]:text-foreground data-[selected]:shadow-sm"
                   >
                     {r.label}
                   </button>
                 ))}
               </div>
             </div>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-                Status
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {STATUSES.map((s) => (
-                  <button
-                    key={s.key}
-                    onClick={() => setStatus(s.key)}
-                    data-selected={status === s.key || undefined}
-                    className="chip !min-h-[36px] !py-1.5 text-sm inline-flex items-center gap-1.5"
-                  >
-                    <span className={`h-2 w-2 rounded-full ${s.dotCls}`} />
-                    {s.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
-              <div className="relative flex-1">
-                <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+
+            <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+              <div className="relative flex-1 min-w-0">
+                <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
                 <input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Buscar por cliente, serviço, telefone ou email..."
-                  className="w-full min-h-[40px] pl-9 pr-3 py-2 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-ring text-sm"
+                  className="w-full h-[44px] pl-9 pr-9 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 />
+                {search && (
+                  <button
+                    onClick={() => setSearch("")}
+                    aria-label="Limpar busca"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
               </div>
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-xs text-muted-foreground">
-                  {filtered.length} resultado(s)
-                </span>
-                <span className="max-sm:hidden">
+
+              <div className="flex items-center gap-2 shrink-0">
+                <div className="relative">
+                  <span
+                    className={`absolute left-3 top-1/2 -translate-y-1/2 h-2.5 w-2.5 rounded-full pointer-events-none ${STATUSES.find((s) => s.key === status)?.dotCls}`}
+                  />
+                  <select
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value as StatusFilter)}
+                    aria-label="Filtrar por status"
+                    className="h-[44px] pl-9 pr-9 rounded-lg border border-border bg-background text-sm font-medium appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    {STATUSES.map((s) => (
+                      <option key={s.key} value={s.key}>
+                        {s.label} ({counts[s.key]})
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="h-4 w-4 absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                </div>
+                <span className="hidden sm:block">
                   <ViewToggle value={view} onChange={setView} />
                 </span>
               </div>
             </div>
           </div>
 
+          <div className="flex items-center justify-between gap-3 mb-3">
+            <p className="text-sm text-muted-foreground">
+              {filtered.length} resultado{filtered.length === 1 ? "" : "s"}
+            </p>
+            {search && (
+              <button
+                onClick={() => setSearch("")}
+                className="text-sm font-medium text-accent hover:underline"
+              >
+                Limpar busca
+              </button>
+            )}
+          </div>
+
           {filtered.length === 0 ? (
-            <p className="text-muted-foreground text-sm">Nenhum agendamento encontrado.</p>
+            <div className="card-elevated p-8 text-center">
+              <CalendarClock className="h-9 w-9 mx-auto text-muted-foreground/50 mb-2" />
+              <p className="font-semibold">Nenhum agendamento encontrado</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                {search || status !== "all"
+                  ? "Ajuste os filtros para ver mais resultados."
+                  : "Crie o primeiro agendamento do dia."}
+              </p>
+              {(search || status !== "all") && (
+                <button
+                  onClick={() => {
+                    setSearch("");
+                    setStatus("all");
+                  }}
+                  className="btn-outline-brand inline-flex items-center gap-1 text-sm mt-4"
+                >
+                  <X className="h-4 w-4" /> Limpar filtros
+                </button>
+              )}
+            </div>
           ) : view === "list" ? (
             <div className="space-y-3">
               {filtered.map((a) => (
