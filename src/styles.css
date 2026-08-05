@@ -182,6 +182,15 @@
   textarea {
     accent-color: var(--accent);
   }
+  /* Android/iOS: evita o zoom automático ao focar campos no mobile
+     (o Chrome dá zoom em inputs com fonte < 16px). */
+  @media (max-width: 767px) {
+    input,
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
+  }
   body {
     background-color: var(--background);
     color: var(--foreground);

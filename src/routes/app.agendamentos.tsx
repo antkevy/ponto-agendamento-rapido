@@ -301,7 +301,7 @@ function Page() {
                     key={r.key}
                     onClick={() => setRange(r.key)}
                     data-selected={range === r.key || undefined}
-                    className="min-h-[40px] rounded-lg text-sm font-semibold transition-all text-muted-foreground hover:text-foreground data-[selected]:bg-card data-[selected]:text-foreground data-[selected]:shadow-sm"
+                    className="min-h-[44px] rounded-lg text-sm font-semibold transition-all text-muted-foreground hover:text-foreground data-[selected]:bg-card data-[selected]:text-foreground data-[selected]:shadow-sm"
                   >
                     {r.label}
                   </button>
@@ -507,7 +507,7 @@ function ApptsTable({
   onUpdateById: (id: string, s: Appt["status"]) => void;
 }) {
   return (
-    <CardTable>
+    <CardTable tableClassName="min-w-[760px]">
       <thead className="bg-muted/50 [&_tr]:border-b [&_tr]:border-border/60">
         <tr>
           <DataTableHead>Cliente</DataTableHead>
@@ -953,7 +953,7 @@ function NewAppointmentForm({
                   setClientKey("");
                 }}
                 className={cn(
-                  "min-h-[40px] rounded-lg text-sm font-semibold transition-all",
+                  "min-h-[44px] rounded-lg text-sm font-semibold transition-all",
                   clientMode === "new"
                     ? "bg-card text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground",
@@ -965,7 +965,7 @@ function NewAppointmentForm({
                 type="button"
                 onClick={() => setClientMode("existing")}
                 className={cn(
-                  "min-h-[40px] rounded-lg text-sm font-semibold transition-all",
+                  "min-h-[44px] rounded-lg text-sm font-semibold transition-all",
                   clientMode === "existing"
                     ? "bg-card text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground",
@@ -1094,7 +1094,7 @@ function NewAppointmentForm({
 
       {summaryCard && <div className="mt-5 lg:hidden shrink-0">{summaryCard}</div>}
 
-      <footer className="mt-5 sticky bottom-0 -mx-5 sm:-mx-6 px-5 sm:px-6 py-3 bg-background border-t border-border shrink-0">
+      <footer className="mt-5 sticky bottom-0 -mx-5 sm:-mx-6 px-5 sm:px-6 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] bg-background border-t border-border shrink-0">
         <div className="flex gap-3">
           <UIButton type="button" variant="outline" className="flex-1" onClick={onClose}>
             Cancelar
@@ -1293,7 +1293,7 @@ function AvailabilityPicker({
                     }}
                     data-selected={selected || undefined}
                     data-today={isToday || undefined}
-                    className="h-10 w-full rounded-lg text-sm font-medium disabled:opacity-30 disabled:cursor-not-allowed hover:bg-accent/10 hover:text-accent transition-colors data-[today]:ring-1 data-[today]:ring-accent/40 data-[selected]:!bg-accent data-[selected]:!text-accent-foreground data-[selected]:ring-0"
+                    className="h-11 w-full rounded-lg text-sm font-medium disabled:opacity-30 disabled:cursor-not-allowed hover:bg-accent/10 hover:text-accent transition-colors data-[today]:ring-1 data-[today]:ring-accent/40 data-[selected]:!bg-accent data-[selected]:!text-accent-foreground data-[selected]:ring-0"
                   >
                     {d.getDate()}
                   </button>
@@ -1310,7 +1310,7 @@ function AvailabilityPicker({
             ) : loadingBusy ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="skeleton h-10" />
+                  <div key={i} className="skeleton h-11" />
                 ))}
               </div>
             ) : slots.length === 0 ? (

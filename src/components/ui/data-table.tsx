@@ -9,15 +9,17 @@ import { cn } from "@/lib/utils";
  */
 export function CardTable({
   className,
+  tableClassName,
   children,
 }: {
   className?: string;
+  tableClassName?: string;
   children: React.ReactNode;
 }) {
   return (
     <div className={cn("card-elevated overflow-hidden", className)}>
       <div className="relative overflow-x-auto scrollbar-slim">
-        <table className="w-full caption-bottom text-sm">{children}</table>
+        <table className={cn("w-full caption-bottom text-sm", tableClassName)}>{children}</table>
       </div>
     </div>
   );

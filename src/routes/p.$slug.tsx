@@ -706,7 +706,7 @@ function BookingPage() {
                   </ul>
                 )}
 
-                <div className="ui-card p-4 sm:p-5 space-y-3 sticky bottom-3 z-20">
+                <div className="ui-card p-4 sm:p-5 space-y-3 sticky bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-20">
                   {selectedServices.length === 0 ? (
                     <div
                       className="rounded-2xl border border-dashed p-4 text-center"
@@ -919,7 +919,7 @@ function WhatsAppFloat({ phone }: { phone: string }) {
       href={`https://wa.me/${full}`}
       target="_blank"
       rel="noopener noreferrer"
-      className="fixed bottom-6 right-6 z-40 h-14 w-14 rounded-full grid place-items-center text-white shadow-lg hover:scale-110 transition-transform animate-fade-in-up"
+      className="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] right-6 z-40 h-14 w-14 rounded-full grid place-items-center text-white shadow-lg hover:scale-110 transition-transform animate-fade-in-up"
       style={{ backgroundColor: "#25D366" }}
       aria-label="Fale conosco pelo WhatsApp"
     >
@@ -1155,7 +1155,7 @@ function WhenStep({
                     onClick={() => setSelectedDay(d)}
                     data-selected={selected || undefined}
                     data-today={isToday || undefined}
-                    className="h-10 w-full rounded-lg text-sm font-medium disabled:opacity-30 disabled:cursor-not-allowed hover:bg-accent/10 hover:text-accent transition-colors data-[today]:ring-1 data-[today]:ring-accent/40 data-[selected]:!bg-accent data-[selected]:!text-accent-foreground data-[selected]:ring-0"
+                    className="h-11 w-full rounded-lg text-sm font-medium disabled:opacity-30 disabled:cursor-not-allowed hover:bg-accent/10 hover:text-accent transition-colors data-[today]:ring-1 data-[today]:ring-accent/40 data-[selected]:!bg-accent data-[selected]:!text-accent-foreground data-[selected]:ring-0"
                   >
                     {d.getDate()}
                   </button>
