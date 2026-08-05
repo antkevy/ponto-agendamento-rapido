@@ -1,13 +1,32 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, CartesianGrid } from "recharts";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  CartesianGrid,
+} from "recharts";
 import { AppShell } from "@/components/app-shell";
 import { useMyProfessional } from "@/hooks/use-my-professional";
 import { supabase } from "@/integrations/supabase/client";
 import { db } from "@/lib/db-tables";
 import { formatBRL } from "@/lib/booking";
-import { Calendar, DollarSign, CheckCircle2, TrendingUp, ChevronLeft, ChevronRight, Percent } from "lucide-react";
+import {
+  Calendar,
+  DollarSign,
+  CheckCircle2,
+  TrendingUp,
+  ChevronLeft,
+  ChevronRight,
+  Percent,
+} from "lucide-react";
 import { OnboardingCard } from "@/components/onboarding-card";
 
 export const Route = createFileRoute("/app/")({
@@ -17,7 +36,11 @@ export const Route = createFileRoute("/app/")({
 
 function Dashboard() {
   const { data: pro, isLoading } = useMyProfessional();
-  const today = useMemo(() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; }, []);
+  const today = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
   const [monthOffset, setMonthOffset] = useState(0);
   const currentMonth = useMemo(() => {
     const d = new Date(today.getFullYear(), today.getMonth() + monthOffset, 1);
@@ -91,12 +114,18 @@ function Dashboard() {
       const prevCount = allPrevious.filter((a) => a.status !== "cancelled").length;
 
       const dailyRevenue: Record<string, number> = {};
-      allCurrent.filter((a) => a.status !== "cancelled").forEach((a) => {
-        const day = a.starts_at.slice(0, 10);
-        dailyRevenue[day] = (dailyRevenue[day] ?? 0) + a.service_snapshot_price_cents;
-      });
+      allCurrent
+        .filter((a) => a.status !== "cancelled")
+        .forEach((a) => {
+          const day = a.starts_at.slice(0, 10);
+          dailyRevenue[day] = (dailyRevenue[day] ?? 0) + a.service_snapshot_price_cents;
+        });
 
-      const daysInMonth = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0).getDate();
+      const daysInMonth = new Date(
+        monthStart.getFullYear(),
+        monthStart.getMonth() + 1,
+        0,
+      ).getDate();
       const dailyData = Array.from({ length: daysInMonth }, (_, i) => {
         const d = new Date(monthStart.getFullYear(), monthStart.getMonth(), i + 1);
         const key = d.toISOString().slice(0, 10);
@@ -104,12 +133,14 @@ function Dashboard() {
       });
 
       const serviceRevenue: Record<string, { receita: number; count: number }> = {};
-      allCurrent.filter((a) => a.status !== "cancelled").forEach((a) => {
-        const name = a.service_snapshot_name;
-        if (!serviceRevenue[name]) serviceRevenue[name] = { receita: 0, count: 0 };
-        serviceRevenue[name].receita += a.service_snapshot_price_cents;
-        serviceRevenue[name].count += 1;
-      });
+      allCurrent
+        .filter((a) => a.status !== "cancelled")
+        .forEach((a) => {
+          const name = a.service_snapshot_name;
+          if (!serviceRevenue[name]) serviceRevenue[name] = { receita: 0, count: 0 };
+          serviceRevenue[name].receita += a.service_snapshot_price_cents;
+          serviceRevenue[name].count += 1;
+        });
       const serviceData = Object.entries(serviceRevenue)
         .map(([name, v]) => ({ name, receita: v.receita, count: v.count }))
         .sort((a, b) => b.receita - a.receita);
@@ -154,66 +185,152 @@ function Dashboard() {
         <>
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-2">
-              <button onClick={() => setMonthOffset((p) => p - 1)} className="p-2 min-h-[40px] min-w-[40px] grid place-items-center rounded-lg hover:bg-muted border border-border"><ChevronLeft className="h-4 w-4" /></button>
+              <button
+                onClick={() => setMonthOffset((p) => p - 1)}
+                className="p-2 min-h-[40px] min-w-[40px] grid place-items-center rounded-lg hover:bg-muted border border-border"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
               <span className="font-bold capitalize text-lg">{monthLabel}</span>
-              <button onClick={() => setMonthOffset((p) => p + 1)} className="p-2 min-h-[40px] min-w-[40px] grid place-items-center rounded-lg hover:bg-muted border border-border"><ChevronRight className="h-4 w-4" /></button>
-              {monthOffset !== 0 && <button onClick={() => setMonthOffset(0)} className="text-xs text-accent hover:underline ml-2">Voltar ao mês atual</button>}
+              <button
+                onClick={() => setMonthOffset((p) => p + 1)}
+                className="p-2 min-h-[40px] min-w-[40px] grid place-items-center rounded-lg hover:bg-muted border border-border"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+              {monthOffset !== 0 && (
+                <button
+                  onClick={() => setMonthOffset(0)}
+                  className="text-xs text-accent hover:underline ml-2"
+                >
+                  Voltar ao mês atual
+                </button>
+              )}
             </div>
           </div>
 
           <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-            <StatCard icon={Calendar} label="Hoje" value={String(stats?.today.length ?? 0)} hint="agendamentos" />
-            <StatCard icon={CheckCircle2} label="Atendimentos" value={String(stats?.monthCount ?? 0)} hint="no mês" />
-            <StatCard icon={DollarSign} label="Receita" value={formatBRL(stats?.totalRevenue ?? 0)} hint="confirmado + concluído" />
-            <StatCard icon={TrendingUp} label="Ticket médio" value={formatBRL(stats?.avgTicket ?? 0)} hint="por concluído" />
+            <StatCard
+              icon={Calendar}
+              label="Hoje"
+              value={String(stats?.today.length ?? 0)}
+              hint="agendamentos"
+            />
+            <StatCard
+              icon={CheckCircle2}
+              label="Atendimentos"
+              value={String(stats?.monthCount ?? 0)}
+              hint="no mês"
+            />
+            <StatCard
+              icon={DollarSign}
+              label="Receita"
+              value={formatBRL(stats?.totalRevenue ?? 0)}
+              hint="confirmado + concluído"
+            />
+            <StatCard
+              icon={TrendingUp}
+              label="Ticket médio"
+              value={formatBRL(stats?.avgTicket ?? 0)}
+              hint="por concluído"
+            />
           </div>
 
           {stats && (
             <div className="mt-6 grid gap-6 lg:grid-cols-2">
               <div className="card-elevated p-5">
-                <h3 className="text-lg font-bold tracking-tight text-foreground mb-4">Receita diária</h3>
+                <h3 className="text-lg font-bold tracking-tight text-foreground mb-4">
+                  Receita diária
+                </h3>
                 {stats.dailyData.every((d) => d.receita === 0) ? (
-                  <p className="text-sm text-muted-foreground py-8 text-center">Nenhum dado no período.</p>
+                  <p className="text-sm text-muted-foreground py-8 text-center">
+                    Nenhum dado no período.
+                  </p>
                 ) : (
                   <ResponsiveContainer width="100%" height={220}>
                     <BarChart data={stats.dailyData}>
                       <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border, #E2E8F0)" />
-                      <XAxis dataKey="day" tick={{ fontSize: 11 }} stroke="var(--color-muted-foreground, #94A3B8)" tickLine={false} />
-                      <YAxis tick={{ fontSize: 11 }} stroke="var(--color-muted-foreground, #94A3B8)" tickLine={false} tickFormatter={(v: number) => `R${(v / 100).toFixed(0)}`} />
+                      <XAxis
+                        dataKey="day"
+                        tick={{ fontSize: 11 }}
+                        stroke="var(--color-muted-foreground, #94A3B8)"
+                        tickLine={false}
+                      />
+                      <YAxis
+                        tick={{ fontSize: 11 }}
+                        stroke="var(--color-muted-foreground, #94A3B8)"
+                        tickLine={false}
+                        tickFormatter={(v: number) => `R${(v / 100).toFixed(0)}`}
+                      />
                       <Tooltip
                         formatter={(v: number) => [formatBRL(v), "Receita"]}
                         labelFormatter={(l: number) => `Dia ${l}`}
-                        contentStyle={{ borderRadius: "12px", border: "1px solid var(--color-border, #E2E8F0)", background: "var(--color-background, #FFF)", fontSize: "13px" }}
+                        contentStyle={{
+                          borderRadius: "12px",
+                          border: "1px solid var(--color-border, #E2E8F0)",
+                          background: "var(--color-background, #FFF)",
+                          fontSize: "13px",
+                        }}
+                        itemStyle={{ color: "var(--color-foreground, #0F172A)" }}
+                        labelStyle={{ color: "var(--color-foreground, #0F172A)" }}
                       />
-                      <Bar dataKey="receita" fill="oklch(0.55 0.18 250)" radius={[4, 4, 0, 0]} maxBarSize={32} />
+                      <Bar
+                        dataKey="receita"
+                        fill="oklch(0.55 0.18 250)"
+                        radius={[4, 4, 0, 0]}
+                        maxBarSize={32}
+                      />
                     </BarChart>
                   </ResponsiveContainer>
                 )}
               </div>
 
               <div className="card-elevated p-5">
-                <h3 className="text-lg font-bold tracking-tight text-foreground mb-4">Receita por serviço</h3>
+                <h3 className="text-lg font-bold tracking-tight text-foreground mb-4">
+                  Receita por serviço
+                </h3>
                 {stats.serviceData.length === 0 ? (
-                  <p className="text-sm text-muted-foreground py-8 text-center">Nenhum dado no período.</p>
+                  <p className="text-sm text-muted-foreground py-8 text-center">
+                    Nenhum dado no período.
+                  </p>
                 ) : (
                   <div className="flex flex-col sm:flex-row items-center gap-4">
                     <ResponsiveContainer width="100%" height={200}>
                       <PieChart>
-                        <Pie data={stats.serviceData} dataKey="receita" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={3}>
+                        <Pie
+                          data={stats.serviceData}
+                          dataKey="receita"
+                          nameKey="name"
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={50}
+                          outerRadius={80}
+                          paddingAngle={3}
+                        >
                           {stats.serviceData.map((_, i) => (
                             <Cell key={i} fill={COLORS[i % COLORS.length]} />
                           ))}
                         </Pie>
                         <Tooltip
                           formatter={(v: number) => [formatBRL(v), "Receita"]}
-                          contentStyle={{ borderRadius: "12px", border: "1px solid var(--color-border, #E2E8F0)", background: "var(--color-background, #FFF)", fontSize: "13px" }}
+                          contentStyle={{
+                            borderRadius: "12px",
+                            border: "1px solid var(--color-border, #E2E8F0)",
+                            background: "var(--color-background, #FFF)",
+                            fontSize: "13px",
+                          }}
+                          itemStyle={{ color: "var(--color-foreground, #0F172A)" }}
+                          labelStyle={{ color: "var(--color-foreground, #0F172A)" }}
                         />
                       </PieChart>
                     </ResponsiveContainer>
                     <div className="shrink-0 space-y-1.5 text-sm w-full sm:w-auto">
                       {stats.serviceData.map((s, i) => (
                         <div key={s.name} className="flex items-center gap-2">
-                          <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
+                          <span
+                            className="h-2.5 w-2.5 rounded-full shrink-0"
+                            style={{ backgroundColor: COLORS[i % COLORS.length] }}
+                          />
                           <span className="truncate max-w-[120px]">{s.name}</span>
                           <span className="font-semibold ml-auto">{formatBRL(s.receita)}</span>
                         </div>
@@ -228,7 +345,9 @@ function Dashboard() {
           {stats && (stats.prevRevenue > 0 || stats.prevCount > 0) && (
             <div className="mt-6 grid gap-6 lg:grid-cols-2">
               <div className="card-elevated p-5">
-                <h3 className="text-lg font-bold tracking-tight text-foreground mb-4">Comparação com mês anterior</h3>
+                <h3 className="text-lg font-bold tracking-tight text-foreground mb-4">
+                  Comparação com mês anterior
+                </h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-xs text-muted-foreground">Receita</p>
@@ -244,27 +363,50 @@ function Dashboard() {
               </div>
 
               <div className="card-elevated p-5">
-                <h3 className="text-lg font-bold tracking-tight text-foreground mb-4">Status dos agendamentos</h3>
+                <h3 className="text-lg font-bold tracking-tight text-foreground mb-4">
+                  Status dos agendamentos
+                </h3>
                 {stats.statusData.length === 0 ? (
-                  <p className="text-sm text-muted-foreground py-8 text-center">Nenhum dado no período.</p>
+                  <p className="text-sm text-muted-foreground py-8 text-center">
+                    Nenhum dado no período.
+                  </p>
                 ) : (
                   <div className="flex items-center gap-4">
                     <ResponsiveContainer width="100%" height={160}>
                       <PieChart>
-                        <Pie data={stats.statusData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={40} outerRadius={65} paddingAngle={3}>
+                        <Pie
+                          data={stats.statusData}
+                          dataKey="value"
+                          nameKey="name"
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={40}
+                          outerRadius={65}
+                          paddingAngle={3}
+                        >
                           {stats.statusData.map((_, i) => (
                             <Cell key={i} fill={COLORS[i % COLORS.length]} />
                           ))}
                         </Pie>
                         <Tooltip
-                          contentStyle={{ borderRadius: "12px", border: "1px solid var(--color-border, #E2E8F0)", background: "var(--color-background, #FFF)", fontSize: "13px" }}
+                          contentStyle={{
+                            borderRadius: "12px",
+                            border: "1px solid var(--color-border, #E2E8F0)",
+                            background: "var(--color-background, #FFF)",
+                            fontSize: "13px",
+                          }}
+                          itemStyle={{ color: "var(--color-foreground, #0F172A)" }}
+                          labelStyle={{ color: "var(--color-foreground, #0F172A)" }}
                         />
                       </PieChart>
                     </ResponsiveContainer>
                     <div className="shrink-0 space-y-2 text-sm">
                       {stats.statusData.map((s, i) => (
                         <div key={s.name} className="flex items-center gap-2">
-                          <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
+                          <span
+                            className="h-2.5 w-2.5 rounded-full shrink-0"
+                            style={{ backgroundColor: COLORS[i % COLORS.length] }}
+                          />
                           <span>{s.name}</span>
                           <span className="font-semibold">{s.value}</span>
                         </div>
@@ -277,7 +419,9 @@ function Dashboard() {
           )}
 
           <section className="mt-6 card-elevated p-5">
-            <h2 className="text-xl font-black tracking-tight text-foreground mb-4">Agendamentos de hoje</h2>
+            <h2 className="text-xl font-black tracking-tight text-foreground mb-4">
+              Agendamentos de hoje
+            </h2>
             {(stats?.today.length ?? 0) === 0 ? (
               <p className="text-muted-foreground text-sm">Nenhum agendamento hoje.</p>
             ) : (
@@ -286,9 +430,16 @@ function Dashboard() {
                   <li key={a.id} className="py-3 flex items-center justify-between gap-3">
                     <div className="min-w-0">
                       <p className="font-medium truncate">{a.client_name}</p>
-                      <p className="text-sm text-muted-foreground truncate">{a.service_snapshot_name}</p>
+                      <p className="text-sm text-muted-foreground truncate">
+                        {a.service_snapshot_name}
+                      </p>
                     </div>
-                    <span className="text-sm font-mono shrink-0">{new Date(a.starts_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
+                    <span className="text-sm font-mono shrink-0">
+                      {new Date(a.starts_at).toLocaleTimeString("pt-BR", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -296,18 +447,34 @@ function Dashboard() {
           </section>
 
           <section className="mt-6 card-elevated p-5">
-            <h2 className="text-xl font-black tracking-tight text-foreground mb-4">Próximos agendamentos</h2>
+            <h2 className="text-xl font-black tracking-tight text-foreground mb-4">
+              Próximos agendamentos
+            </h2>
             {(stats?.upcoming.length ?? 0) === 0 ? (
-              <p className="text-muted-foreground text-sm">Nada agendado ainda. <Link to="/app/agendamentos" className="text-accent hover:underline">Ver todos</Link></p>
+              <p className="text-muted-foreground text-sm">
+                Nada agendado ainda.{" "}
+                <Link to="/app/agendamentos" className="text-accent hover:underline">
+                  Ver todos
+                </Link>
+              </p>
             ) : (
               <ul className="divide-y divide-border">
                 {stats!.upcoming.map((a) => (
                   <li key={a.id} className="py-3 flex items-center justify-between gap-3">
                     <div className="min-w-0">
                       <p className="font-medium truncate">{a.client_name}</p>
-                      <p className="text-sm text-muted-foreground truncate">{a.service_snapshot_name}</p>
+                      <p className="text-sm text-muted-foreground truncate">
+                        {a.service_snapshot_name}
+                      </p>
                     </div>
-                    <span className="text-sm shrink-0">{new Date(a.starts_at).toLocaleString("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
+                    <span className="text-sm shrink-0">
+                      {new Date(a.starts_at).toLocaleString("pt-BR", {
+                        day: "2-digit",
+                        month: "short",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -319,7 +486,17 @@ function Dashboard() {
   );
 }
 
-function StatCard({ icon: Icon, label, value, hint }: { icon: typeof Calendar; label: string; value: string; hint: string }) {
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+  hint,
+}: {
+  icon: typeof Calendar;
+  label: string;
+  value: string;
+  hint: string;
+}) {
   return (
     <div className="card-elevated p-5 animate-fade-in-up">
       <div className="flex items-center justify-between">
@@ -337,8 +514,11 @@ function ComparisonBadge({ current, previous }: { current: number; previous: num
   const pct = ((current - previous) / previous) * 100;
   const isUp = pct >= 0;
   return (
-    <span className={`inline-flex items-center gap-0.5 text-xs font-semibold mt-1 ${isUp ? "text-success" : "text-destructive"}`}>
-      {isUp ? "+" : ""}{pct.toFixed(1)}%
+    <span
+      className={`inline-flex items-center gap-0.5 text-xs font-semibold mt-1 ${isUp ? "text-success" : "text-destructive"}`}
+    >
+      {isUp ? "+" : ""}
+      {pct.toFixed(1)}%
       <Percent className="h-3 w-3" />
     </span>
   );
