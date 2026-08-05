@@ -191,12 +191,22 @@ function Page() {
           )}
           <div className="flex items-center gap-2 shrink-0">
             <ThemeToggle />
-            <Link
-              to="/"
-              className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-            >
-              <ArrowLeft className="h-4 w-4" /> Início
-            </Link>
+            {proSlug ? (
+              <Link
+                to="/p/$slug"
+                params={{ slug: proSlug }}
+                className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+              >
+                <ArrowLeft className="h-4 w-4" /> Início
+              </Link>
+            ) : (
+              <Link
+                to="/"
+                className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+              >
+                <ArrowLeft className="h-4 w-4" /> Início
+              </Link>
+            )}
           </div>
         </div>
       </header>
