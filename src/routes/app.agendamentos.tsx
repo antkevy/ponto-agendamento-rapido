@@ -42,6 +42,7 @@ import { displayPhoneBR, isValidPhoneBR } from "@/lib/phone";
 import { ViewToggle, type ViewMode } from "@/components/view-toggle";
 import { PhoneInput } from "@/components/phone-input";
 import { Modal } from "@/routes/app.servicos";
+import { Reveal } from "@/components/reveal";
 import { CardTable, DataTableHead, DataTableRow, DataTableCell } from "@/components/ui/data-table";
 import {
   UIButton,
@@ -196,7 +197,7 @@ function Page() {
         <OnboardingCard />
       ) : (
         <>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-5">
+          <div className="animate-ui-slide-up flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-5">
             <p className="text-sm text-muted-foreground">
               Gerencie os agendamentos do seu negócio.
             </p>
@@ -229,7 +230,10 @@ function Page() {
             </div>
           </div>
 
-          <div className="card-elevated p-3 sm:p-4 mb-4">
+          <div
+            className="animate-ui-slide-up card-elevated p-3 sm:p-4 mb-4"
+            style={{ animationDelay: "80ms" }}
+          >
             <div className="space-y-2">
               <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                 Período
@@ -298,7 +302,10 @@ function Page() {
             </div>
           </div>
 
-          <div className="flex items-center justify-between gap-3 mb-3">
+          <div
+            className="animate-ui-slide-up flex items-center justify-between gap-3 mb-3"
+            style={{ animationDelay: "120ms" }}
+          >
             <p className="text-sm text-muted-foreground">
               {filtered.length} resultado{filtered.length === 1 ? "" : "s"}
             </p>
@@ -313,47 +320,74 @@ function Page() {
           </div>
 
           {filtered.length === 0 ? (
-            <div className="card-elevated p-8 text-center">
-              <CalendarClock className="h-9 w-9 mx-auto text-muted-foreground/50 mb-2" />
-              <p className="font-semibold">Nenhum agendamento encontrado</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                {search || status !== "all"
-                  ? "Ajuste os filtros para ver mais resultados."
-                  : "Crie o primeiro agendamento do dia."}
-              </p>
-              {(search || status !== "all") && (
-                <button
-                  onClick={() => {
-                    setSearch("");
-                    setStatus("all");
-                  }}
-                  className="btn-outline-brand inline-flex items-center gap-1 text-sm mt-4"
-                >
-                  <X className="h-4 w-4" /> Limpar filtros
-                </button>
-              )}
-            </div>
+            <Reveal delay={140}>
+              <div className="card-elevated p-10 sm:p-14 text-center">
+                <span className="ui-icon-bubble mx-auto grid h-14 w-14 place-items-center rounded-2xl mb-4">
+                  <CalendarClock className="h-7 w-7" />
+                </span>
+                <p className="text-lg font-bold">Nenhum agendamento encontrado</p>
+                <p className="text-sm text-muted-foreground mt-1 max-w-sm mx-auto">
+                  {search || status !== "all"
+                    ? "Ajuste os filtros para ver mais resultados."
+                    : "Você ainda não tem agendamentos. Crie o primeiro em poucos segundos."}
+                </p>
+                <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-2">
+                  {search || status !== "all" ? (
+                    <button
+                      onClick={() => {
+                        setSearch("");
+                        setStatus("all");
+                      }}
+                      className="btn-outline-brand inline-flex items-center gap-1 text-sm"
+                    >
+                      <X className="h-4 w-4" /> Limpar filtros
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => setCreating(true)}
+                        className="btn-brand inline-flex items-center gap-2"
+                      >
+                        <Plus className="h-4 w-4" /> Criar agendamento
+                      </button>
+                      <button
+                        onClick={() => void refetch()}
+                        disabled={isFetching}
+                        className="btn-outline-brand inline-flex items-center gap-1 text-sm"
+                      >
+                        <RefreshCw className="h-4 w-4" /> Atualizar
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </Reveal>
           ) : view === "list" ? (
-            <ApptsTable
-              appts={filtered}
-              businessName={pro.business_name}
-              msgConfirmed={pro.msg_confirmed}
-              msgCancelled={pro.msg_cancelled}
-              onUpdateById={(id, s) => update.mutate({ id, status: s })}
-            />
+            <Reveal delay={140}>
+              <ApptsTable
+                appts={filtered}
+                businessName={pro.business_name}
+                msgConfirmed={pro.msg_confirmed}
+                msgCancelled={pro.msg_cancelled}
+                onUpdateById={(id, s) => update.mutate({ id, status: s })}
+              />
+            </Reveal>
           ) : (
-            <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
-              {filtered.map((a) => (
-                <ApptCard
-                  key={a.id}
-                  a={a}
-                  businessName={pro.business_name}
-                  msgConfirmed={pro.msg_confirmed}
-                  msgCancelled={pro.msg_cancelled}
-                  onUpdate={(s) => update.mutate({ id: a.id, status: s })}
-                />
-              ))}
-            </div>
+            <Reveal delay={140}>
+              <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
+                {filtered.map((a, i) => (
+                  <div key={a.id} className="ui-stagger" style={{ ["--i" as string]: i }}>
+                    <ApptCard
+                      a={a}
+                      businessName={pro.business_name}
+                      msgConfirmed={pro.msg_confirmed}
+                      msgCancelled={pro.msg_cancelled}
+                      onUpdate={(s) => update.mutate({ id: a.id, status: s })}
+                    />
+                  </div>
+                ))}
+              </div>
+            </Reveal>
           )}
 
           {creating && (
@@ -431,8 +465,8 @@ function ApptsTable({
         </tr>
       </thead>
       <tbody>
-        {appts.map((a) => (
-          <DataTableRow key={a.id}>
+        {appts.map((a, i) => (
+          <DataTableRow key={a.id} className="ui-stagger-fade" style={{ ["--i" as string]: i }}>
             <DataTableCell>
               <p className="font-semibold truncate max-w-[180px]">{a.client_name}</p>
               <p className="text-xs text-muted-foreground truncate max-w-[180px]">

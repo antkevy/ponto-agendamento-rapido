@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { Reveal } from "@/components/reveal";
 import { cn } from "@/lib/utils";
 import {
   ArrowRight,
@@ -145,51 +145,6 @@ const CATEGORIES = [
 const WEEK_DAYS = ["S", "T", "Q", "Q", "S", "S", "D"];
 const WEEK_DATES = ["19", "20", "21", "22", "23", "24", "25"];
 const TIME_SLOTS = ["09:00", "09:30", "10:00", "10:30", "11:00", "11:30"];
-
-function Reveal({
-  children,
-  className,
-  delay = 0,
-}: {
-  children: React.ReactNode;
-  className?: string;
-  delay?: number;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [mounted, setMounted] = useState(false);
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => setMounted(true), []);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const io = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setVisible(true);
-          io.disconnect();
-        }
-      },
-      { threshold: 0.15, rootMargin: "0px 0px -40px 0px" },
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
-
-  return (
-    <div
-      ref={ref}
-      style={{ transitionDelay: `${delay}ms` }}
-      className={cn(
-        "transition-all duration-700 ease-out",
-        mounted && !visible && "opacity-0 translate-y-5",
-        className,
-      )}
-    >
-      {children}
-    </div>
-  );
-}
 
 function PhoneMockup() {
   return (
