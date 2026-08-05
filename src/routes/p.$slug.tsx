@@ -330,6 +330,17 @@ function BookingPage() {
 
         {step === "landing" && (
           <section className="animate-fade-in-up space-y-8">
+            <div className="text-center">
+              <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground leading-[1.15]">
+                Seu tempo é importante. <br />
+                Na {pro.business_name}, cuidamos dele.
+              </h2>
+              <p className="text-muted-foreground mt-3 leading-relaxed">
+                Escolha o serviço, o horário e pronto: seu agendamento fica confirmado em poucos
+                cliques, com toda praticidade e segurança.
+              </p>
+            </div>
+
             {pro.description && (
               <div className="card-elevated p-6 text-center">
                 <p className="text-lg text-muted-foreground leading-relaxed">{pro.description}</p>
@@ -382,6 +393,10 @@ function BookingPage() {
               >
                 Agendar serviço <ArrowLeft className="h-5 w-5 rotate-180" />
               </button>
+              <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+                <ShieldCheck className="h-4 w-4 ui-icon-color" /> Ambiente seguro · atendimento de
+                qualidade
+              </div>
               <div>
                 <a
                   href={`/meus-agendamentos?pro=${encodeURIComponent(pro.slug)}`}
