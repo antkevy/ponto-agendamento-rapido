@@ -11,7 +11,7 @@ import { slugify, formatBRL } from "@/lib/booking";
 import { PhoneInput } from "@/components/phone-input";
 import { isValidPhoneBR, onlyDigits } from "@/lib/phone";
 import { ImageUpload } from "@/components/image-upload";
-import { CopyCheck, Gem } from "lucide-react";
+import { CopyCheck, ExternalLink, Gem } from "lucide-react";
 import { AppearanceSettings } from "@/components/appearance-settings";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import type { ProfessionalTheme } from "@/lib/appearance";
@@ -102,21 +102,28 @@ function Page() {
               <p className="text-xs opacity-80">Sua página pública</p>
               <p className="font-mono text-sm break-all">/p/{form.slug || pro.slug}</p>
             </div>
-            <a
-              href={`/p/${form.slug || pro.slug}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-white text-[#0F172A] font-semibold rounded-full px-5 py-2.5 min-h-[44px] hover:bg-white/90 hover:text-[#0F172A] transition shrink-0"
-              onClick={(e) => {
-                e.preventDefault();
-                void navigator.clipboard.writeText(
-                  `${window.location.origin}/p/${form.slug || pro.slug}`,
-                );
-                toast.success("Link copiado!");
-              }}
-            >
-              <CopyCheck className="h-4 w-4" /> Copiar link
-            </a>
+            <div className="flex gap-2 shrink-0">
+              <a
+                href={`/p/${form.slug || pro.slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 bg-white text-[#0F172A] font-semibold rounded-full px-5 py-2.5 min-h-[44px] hover:bg-white/90 hover:text-[#0F172A] transition"
+              >
+                <ExternalLink className="h-4 w-4" /> Ver página
+              </a>
+              <button
+                type="button"
+                onClick={() => {
+                  void navigator.clipboard.writeText(
+                    `${window.location.origin}/p/${form.slug || pro.slug}`,
+                  );
+                  toast.success("Link copiado!");
+                }}
+                className="inline-flex items-center gap-2 bg-white text-[#0F172A] font-semibold rounded-full px-5 py-2.5 min-h-[44px] hover:bg-white/90 hover:text-[#0F172A] transition border border-border"
+              >
+                <CopyCheck className="h-4 w-4" /> Copiar link
+              </button>
+            </div>
           </div>
 
           <Tabs defaultValue="perfil" className="w-full">
