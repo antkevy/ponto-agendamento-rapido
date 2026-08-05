@@ -4,19 +4,26 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/hooks/use-theme";
 import { BrandLogo } from "@/components/brand-logo";
-import { Calendar, LayoutDashboard, Briefcase, Clock, Ban, Settings, LogOut, Menu, Users, Moon, Sun, X, BarChart3, User, Gem } from "lucide-react";
+import {
+  Calendar,
+  LayoutDashboard,
+  Briefcase,
+  Settings,
+  LogOut,
+  Menu,
+  Moon,
+  Sun,
+  X,
+  BarChart3,
+  User,
+} from "lucide-react";
 import { useState } from "react";
-
 
 const links: Array<{ to: string; label: string; icon: typeof Calendar; exact?: boolean }> = [
   { to: "/app", label: "Painel", icon: LayoutDashboard, exact: true },
   { to: "/app/agendamentos", label: "Agendamentos", icon: Calendar },
   { to: "/app/servicos", label: "Serviços", icon: Briefcase },
-  { to: "/app/funcionarios", label: "Funcionários", icon: Users },
   { to: "/app/clientes", label: "Clientes", icon: User },
-  { to: "/app/planos", label: "Planos", icon: Gem },
-  { to: "/app/horarios", label: "Horários", icon: Clock },
-  { to: "/app/bloqueios", label: "Bloqueios", icon: Ban },
   { to: "/app/relatorio", label: "Relatório", icon: BarChart3 },
   { to: "/app/configuracoes", label: "Configurações", icon: Settings },
 ];
@@ -61,7 +68,11 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
         <BrandLogo to="/app" size="sm" />
         <div className="flex items-center gap-1">
           {ThemeButton}
-          <button onClick={() => setOpen(!open)} aria-label="Menu" className="p-2 min-h-[44px] min-w-[44px] grid place-items-center rounded-md hover:bg-muted text-foreground">
+          <button
+            onClick={() => setOpen(!open)}
+            aria-label="Menu"
+            className="p-2 min-h-[44px] min-w-[44px] grid place-items-center rounded-md hover:bg-muted text-foreground"
+          >
             {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
         </div>
@@ -103,7 +114,11 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
 
         <main className="flex-1 min-w-0">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-10 py-6 lg:py-10">
-            {title && <h1 className="text-3xl lg:text-4xl font-black tracking-tight text-foreground mb-6 animate-fade-in-up">{title}</h1>}
+            {title && (
+              <h1 className="text-3xl lg:text-4xl font-black tracking-tight text-foreground mb-6 animate-fade-in-up">
+                {title}
+              </h1>
+            )}
             {children}
           </div>
         </main>

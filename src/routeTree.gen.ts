@@ -15,12 +15,8 @@ import { Route as EntrarRouteImport } from './routes/entrar'
 import { Route as MeusAgendamentosRouteImport } from './routes/meus-agendamentos'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppAgendamentosRouteImport } from './routes/app.agendamentos'
-import { Route as AppBloqueiosRouteImport } from './routes/app.bloqueios'
 import { Route as AppClientesRouteImport } from './routes/app.clientes'
 import { Route as AppConfiguracoesRouteImport } from './routes/app.configuracoes'
-import { Route as AppFuncionariosRouteImport } from './routes/app.funcionarios'
-import { Route as AppHorariosRouteImport } from './routes/app.horarios'
-import { Route as AppPlanosRouteImport } from './routes/app.planos'
 import { Route as AppRelatorioRouteImport } from './routes/app.relatorio'
 import { Route as AppServicosRouteImport } from './routes/app.servicos'
 import { Route as PSlugRouteImport } from './routes/p.$slug'
@@ -55,11 +51,6 @@ const AppAgendamentosRoute = AppAgendamentosRouteImport.update({
   path: '/app/agendamentos',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AppBloqueiosRoute = AppBloqueiosRouteImport.update({
-  id: '/app/bloqueios',
-  path: '/app/bloqueios',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AppClientesRoute = AppClientesRouteImport.update({
   id: '/app/clientes',
   path: '/app/clientes',
@@ -68,21 +59,6 @@ const AppClientesRoute = AppClientesRouteImport.update({
 const AppConfiguracoesRoute = AppConfiguracoesRouteImport.update({
   id: '/app/configuracoes',
   path: '/app/configuracoes',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppFuncionariosRoute = AppFuncionariosRouteImport.update({
-  id: '/app/funcionarios',
-  path: '/app/funcionarios',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppHorariosRoute = AppHorariosRouteImport.update({
-  id: '/app/horarios',
-  path: '/app/horarios',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppPlanosRoute = AppPlanosRouteImport.update({
-  id: '/app/planos',
-  path: '/app/planos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppRelatorioRoute = AppRelatorioRouteImport.update({
@@ -107,12 +83,8 @@ export interface FileRoutesByFullPath {
   '/entrar': typeof EntrarRoute
   '/meus-agendamentos': typeof MeusAgendamentosRoute
   '/app/agendamentos': typeof AppAgendamentosRoute
-  '/app/bloqueios': typeof AppBloqueiosRoute
   '/app/clientes': typeof AppClientesRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
-  '/app/funcionarios': typeof AppFuncionariosRoute
-  '/app/horarios': typeof AppHorariosRoute
-  '/app/planos': typeof AppPlanosRoute
   '/app/relatorio': typeof AppRelatorioRoute
   '/app/servicos': typeof AppServicosRoute
   '/p/$slug': typeof PSlugRoute
@@ -124,12 +96,8 @@ export interface FileRoutesByTo {
   '/entrar': typeof EntrarRoute
   '/meus-agendamentos': typeof MeusAgendamentosRoute
   '/app/agendamentos': typeof AppAgendamentosRoute
-  '/app/bloqueios': typeof AppBloqueiosRoute
   '/app/clientes': typeof AppClientesRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
-  '/app/funcionarios': typeof AppFuncionariosRoute
-  '/app/horarios': typeof AppHorariosRoute
-  '/app/planos': typeof AppPlanosRoute
   '/app/relatorio': typeof AppRelatorioRoute
   '/app/servicos': typeof AppServicosRoute
   '/p/$slug': typeof PSlugRoute
@@ -142,12 +110,8 @@ export interface FileRoutesById {
   '/entrar': typeof EntrarRoute
   '/meus-agendamentos': typeof MeusAgendamentosRoute
   '/app/agendamentos': typeof AppAgendamentosRoute
-  '/app/bloqueios': typeof AppBloqueiosRoute
   '/app/clientes': typeof AppClientesRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
-  '/app/funcionarios': typeof AppFuncionariosRoute
-  '/app/horarios': typeof AppHorariosRoute
-  '/app/planos': typeof AppPlanosRoute
   '/app/relatorio': typeof AppRelatorioRoute
   '/app/servicos': typeof AppServicosRoute
   '/p/$slug': typeof PSlugRoute
@@ -161,12 +125,8 @@ export interface FileRouteTypes {
     | '/entrar'
     | '/meus-agendamentos'
     | '/app/agendamentos'
-    | '/app/bloqueios'
     | '/app/clientes'
     | '/app/configuracoes'
-    | '/app/funcionarios'
-    | '/app/horarios'
-    | '/app/planos'
     | '/app/relatorio'
     | '/app/servicos'
     | '/p/$slug'
@@ -178,12 +138,8 @@ export interface FileRouteTypes {
     | '/entrar'
     | '/meus-agendamentos'
     | '/app/agendamentos'
-    | '/app/bloqueios'
     | '/app/clientes'
     | '/app/configuracoes'
-    | '/app/funcionarios'
-    | '/app/horarios'
-    | '/app/planos'
     | '/app/relatorio'
     | '/app/servicos'
     | '/p/$slug'
@@ -195,12 +151,8 @@ export interface FileRouteTypes {
     | '/entrar'
     | '/meus-agendamentos'
     | '/app/agendamentos'
-    | '/app/bloqueios'
     | '/app/clientes'
     | '/app/configuracoes'
-    | '/app/funcionarios'
-    | '/app/horarios'
-    | '/app/planos'
     | '/app/relatorio'
     | '/app/servicos'
     | '/p/$slug'
@@ -213,12 +165,8 @@ export interface RootRouteChildren {
   EntrarRoute: typeof EntrarRoute
   MeusAgendamentosRoute: typeof MeusAgendamentosRoute
   AppAgendamentosRoute: typeof AppAgendamentosRoute
-  AppBloqueiosRoute: typeof AppBloqueiosRoute
   AppClientesRoute: typeof AppClientesRoute
   AppConfiguracoesRoute: typeof AppConfiguracoesRoute
-  AppFuncionariosRoute: typeof AppFuncionariosRoute
-  AppHorariosRoute: typeof AppHorariosRoute
-  AppPlanosRoute: typeof AppPlanosRoute
   AppRelatorioRoute: typeof AppRelatorioRoute
   AppServicosRoute: typeof AppServicosRoute
   PSlugRoute: typeof PSlugRoute
@@ -269,13 +217,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAgendamentosRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/app/bloqueios': {
-      id: '/app/bloqueios'
-      path: '/app/bloqueios'
-      fullPath: '/app/bloqueios'
-      preLoaderRoute: typeof AppBloqueiosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/app/clientes': {
       id: '/app/clientes'
       path: '/app/clientes'
@@ -288,27 +229,6 @@ declare module '@tanstack/react-router' {
       path: '/app/configuracoes'
       fullPath: '/app/configuracoes'
       preLoaderRoute: typeof AppConfiguracoesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/app/funcionarios': {
-      id: '/app/funcionarios'
-      path: '/app/funcionarios'
-      fullPath: '/app/funcionarios'
-      preLoaderRoute: typeof AppFuncionariosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/app/horarios': {
-      id: '/app/horarios'
-      path: '/app/horarios'
-      fullPath: '/app/horarios'
-      preLoaderRoute: typeof AppHorariosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/app/planos': {
-      id: '/app/planos'
-      path: '/app/planos'
-      fullPath: '/app/planos'
-      preLoaderRoute: typeof AppPlanosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app/relatorio': {
@@ -341,12 +261,8 @@ const rootRouteChildren: RootRouteChildren = {
   EntrarRoute: EntrarRoute,
   MeusAgendamentosRoute: MeusAgendamentosRoute,
   AppAgendamentosRoute: AppAgendamentosRoute,
-  AppBloqueiosRoute: AppBloqueiosRoute,
   AppClientesRoute: AppClientesRoute,
   AppConfiguracoesRoute: AppConfiguracoesRoute,
-  AppFuncionariosRoute: AppFuncionariosRoute,
-  AppHorariosRoute: AppHorariosRoute,
-  AppPlanosRoute: AppPlanosRoute,
   AppRelatorioRoute: AppRelatorioRoute,
   AppServicosRoute: AppServicosRoute,
   PSlugRoute: PSlugRoute,
