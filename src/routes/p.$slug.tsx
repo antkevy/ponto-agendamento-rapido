@@ -1,6 +1,6 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { db } from "@/lib/db-tables";
@@ -143,6 +143,10 @@ function BookingPage() {
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [when, setWhen] = useState<Date | null>(null);
   const [confirmedId, setConfirmedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [step]);
 
   const { data: planos, isLoading: loadingPlanos } = useQuery({
     queryKey: ["public-planos", pro.id],
