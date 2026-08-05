@@ -256,7 +256,7 @@ function PhoneMockup() {
         </span>
         <span>
           <span className="block text-[11px] font-bold text-foreground leading-tight">
-            Agendamento confirmado
+            Agendado
           </span>
           <span className="block text-[10px] text-muted-foreground">Hoje · 14h00 · Corte</span>
         </span>

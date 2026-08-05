@@ -217,14 +217,14 @@ function Page() {
                   <code className="text-accent">{"{data}"}</code>,{" "}
                   <code className="text-accent">{"{horario}"}</code> para personalizar.
                 </p>
-                <F label="Confirmado">
+                <F label="Agendado">
                   <textarea
                     rows={4}
                     value={form.msg_confirmed}
                     onChange={(e) => setForm({ ...form, msg_confirmed: e.target.value })}
                     className={cls}
                     placeholder={
-                      "Ola {nome}! Seu agendamento na {negocio} esta confirmado!\n\nData: {data}\nHorario: {horario}\nServico: {servico}\nValor: {valor}"
+                      "Ola {nome}! Seu agendamento na {negocio} esta agendado!\n\nData: {data}\nHorario: {horario}\nServico: {servico}\nValor: {valor}"
                     }
                   />
                 </F>

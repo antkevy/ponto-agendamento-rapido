@@ -768,7 +768,7 @@ function RescheduleModal({
 
 function StatusPill({ status }: { status: Row["status"] }) {
   const map = {
-    confirmed: ["Confirmado", "bg-accent/10 text-accent border-accent/20"],
+    confirmed: ["Agendado", "bg-accent/10 text-accent border-accent/20"],
     cancelled: ["Cancelado", "bg-destructive/10 text-destructive border-destructive/20"],
     completed: ["Concluído", "bg-success/10 text-success border-success/20"],
   } as const;

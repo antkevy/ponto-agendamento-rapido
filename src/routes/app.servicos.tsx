@@ -12,7 +12,19 @@ import { cn } from "@/lib/utils";
 import { ViewToggle, type ViewMode } from "@/components/view-toggle";
 import { ImageUpload } from "@/components/image-upload";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Pencil, Trash2, Plus, Clock, Upload, X, Power, User, Check } from "lucide-react";
+import {
+  Pencil,
+  Trash2,
+  Plus,
+  Clock,
+  Upload,
+  X,
+  Power,
+  User,
+  Check,
+  Sparkles,
+  Tag,
+} from "lucide-react";
 
 export const Route = createFileRoute("/app/servicos")({
   head: () => ({ meta: [{ title: "Serviços — Agendaí" }] }),
@@ -184,102 +196,43 @@ function ServicosTab({ pro }: { pro: Pro }) {
 
   return (
     <>
-      <div className="flex items-center justify-between gap-3 mb-2 flex-wrap">
-        <button
-          onClick={() => setEditing({ duration_minutes: 30 })}
-          className="btn-brand inline-flex items-center gap-2"
-        >
-          <Plus className="h-4 w-4" /> Novo serviço
-        </button>
-        <ViewToggle value={view} onChange={setView} />
-      </div>
-      {(services ?? []).length === 0 && (
-        <p className="text-muted-foreground text-sm">
-          Nenhum serviço ainda. Crie o primeiro para começar a receber agendamentos.
-        </p>
-      )}
-      {view === "list" ? (
+      <CatalogHeader
+        countLabel={`${services?.length ?? 0} ${(services?.length ?? 0) === 1 ? "serviço" : "serviços"}`}
+        onCreateLabel="Novo serviço"
+        onCreate={() => setEditing({ duration_minutes: 30 })}
+        view={view}
+        onViewChange={setView}
+      />
+      {(services ?? []).length === 0 ? (
+        <CatalogEmpty
+          message="Crie o primeiro serviço para começar a receber agendamentos."
+          actionLabel="Criar serviço"
+          onAction={() => setEditing({ duration_minutes: 30 })}
+        />
+      ) : view === "list" ? (
         <div className="grid gap-3">
           {(services ?? []).map((s) => (
-            <div
+            <CatalogRow
               key={s.id}
-              className="card-elevated p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
-            >
-              <div className="flex items-center gap-4 min-w-0">
-                {s.image_url && (
-                  <img
-                    src={s.image_url}
-                    alt={s.name}
-                    className="h-14 w-14 rounded-lg object-cover shrink-0 aspect-square"
-                  />
-                )}
-                <div className="min-w-0">
-                  <p className="font-semibold truncate">{s.name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {s.duration_minutes} min · {formatBRL(s.price_cents)}
-                  </p>
-                  {s.description && (
-                    <p className="text-sm mt-1 text-muted-foreground line-clamp-2">
-                      {s.description}
-                    </p>
-                  )}
-                </div>
-              </div>
-              <div className="flex gap-2 shrink-0">
-                <button
-                  onClick={() => setEditing(s)}
-                  className="btn-outline-brand inline-flex items-center gap-1 text-sm !py-2"
-                >
-                  <Pencil className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={() => {
-                    if (confirm("Excluir este serviço?")) remove.mutate(s.id);
-                  }}
-                  className="btn-outline-brand inline-flex items-center gap-1 text-sm !py-2 text-destructive"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
+              item={s}
+              onEdit={() => setEditing(s)}
+              onDelete={() => {
+                if (confirm("Excluir este serviço?")) remove.mutate(s.id);
+              }}
+            />
           ))}
         </div>
       ) : (
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {(services ?? []).map((s) => (
-            <div key={s.id} className="card-elevated p-4 flex flex-col gap-2">
-              {s.image_url && (
-                <img
-                  src={s.image_url}
-                  alt={s.name}
-                  className="w-full aspect-square rounded-lg object-cover"
-                />
-              )}
-              <p className="font-semibold truncate">{s.name}</p>
-              <p className="text-sm text-muted-foreground inline-flex items-center gap-1.5">
-                <Clock className="h-3.5 w-3.5" /> {s.duration_minutes} min
-              </p>
-              <p className="text-lg font-black tracking-tight">{formatBRL(s.price_cents)}</p>
-              {s.description && (
-                <p className="text-sm text-muted-foreground line-clamp-3">{s.description}</p>
-              )}
-              <div className="flex gap-2 mt-auto pt-2">
-                <button
-                  onClick={() => setEditing(s)}
-                  className="btn-outline-brand inline-flex items-center gap-1 text-sm !py-2 flex-1 justify-center"
-                >
-                  <Pencil className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={() => {
-                    if (confirm("Excluir este serviço?")) remove.mutate(s.id);
-                  }}
-                  className="btn-outline-brand inline-flex items-center gap-1 text-sm !py-2 text-destructive"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
+            <CatalogCard
+              key={s.id}
+              item={s}
+              onEdit={() => setEditing(s)}
+              onDelete={() => {
+                if (confirm("Excluir este serviço?")) remove.mutate(s.id);
+              }}
+            />
           ))}
         </div>
       )}
@@ -378,94 +331,43 @@ function PlanosTab({ pro }: { pro: Pro }) {
 
   return (
     <>
-      <div className="flex items-center justify-between gap-3 mb-2 flex-wrap">
-        <button onClick={() => setEditing({})} className="btn-brand inline-flex items-center gap-2">
-          <Plus className="h-4 w-4" /> Novo plano
-        </button>
-        <ViewToggle value={view} onChange={setView} />
-      </div>
-      {(planos ?? []).length === 0 && (
-        <p className="text-muted-foreground text-sm">
-          Nenhum plano ainda. Crie o primeiro para oferecer assinaturas ou pacotes.
-        </p>
-      )}
-      {view === "list" ? (
+      <CatalogHeader
+        countLabel={`${planos?.length ?? 0} ${(planos?.length ?? 0) === 1 ? "plano" : "planos"}`}
+        onCreateLabel="Novo plano"
+        onCreate={() => setEditing({})}
+        view={view}
+        onViewChange={setView}
+      />
+      {(planos ?? []).length === 0 ? (
+        <CatalogEmpty
+          message="Crie o primeiro plano para oferecer assinaturas ou pacotes."
+          actionLabel="Criar plano"
+          onAction={() => setEditing({})}
+        />
+      ) : view === "list" ? (
         <div className="grid gap-3">
           {(planos ?? []).map((p) => (
-            <div
+            <CatalogRow
               key={p.id}
-              className="card-elevated p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
-            >
-              <div className="flex items-center gap-4 min-w-0">
-                {p.image_url && (
-                  <img
-                    src={p.image_url}
-                    alt={p.name}
-                    className="h-14 w-14 rounded-lg object-cover shrink-0 aspect-square"
-                  />
-                )}
-                <div className="min-w-0">
-                  <p className="font-semibold truncate">{p.name}</p>
-                  <p className="text-sm text-muted-foreground">{formatBRL(p.price_cents)}</p>
-                  {p.description && (
-                    <p className="text-sm mt-1 text-muted-foreground line-clamp-2">
-                      {p.description}
-                    </p>
-                  )}
-                </div>
-              </div>
-              <div className="flex gap-2 shrink-0">
-                <button
-                  onClick={() => setEditing(p)}
-                  className="btn-outline-brand inline-flex items-center gap-1 text-sm !py-2"
-                >
-                  <Pencil className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={() => {
-                    if (confirm("Excluir este plano?")) remove.mutate(p.id);
-                  }}
-                  className="btn-outline-brand inline-flex items-center gap-1 text-sm !py-2 text-destructive"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
+              item={p}
+              onEdit={() => setEditing(p)}
+              onDelete={() => {
+                if (confirm("Excluir este plano?")) remove.mutate(p.id);
+              }}
+            />
           ))}
         </div>
       ) : (
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {(planos ?? []).map((p) => (
-            <div key={p.id} className="card-elevated p-4 flex flex-col gap-2">
-              {p.image_url && (
-                <img
-                  src={p.image_url}
-                  alt={p.name}
-                  className="w-full aspect-square rounded-lg object-cover"
-                />
-              )}
-              <p className="font-semibold truncate">{p.name}</p>
-              <p className="text-lg font-black tracking-tight">{formatBRL(p.price_cents)}</p>
-              {p.description && (
-                <p className="text-sm text-muted-foreground line-clamp-3">{p.description}</p>
-              )}
-              <div className="flex gap-2 mt-auto pt-2">
-                <button
-                  onClick={() => setEditing(p)}
-                  className="btn-outline-brand inline-flex items-center gap-1 text-sm !py-2 flex-1 justify-center"
-                >
-                  <Pencil className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={() => {
-                    if (confirm("Excluir este plano?")) remove.mutate(p.id);
-                  }}
-                  className="btn-outline-brand inline-flex items-center gap-1 text-sm !py-2 text-destructive"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
+            <CatalogCard
+              key={p.id}
+              item={p}
+              onEdit={() => setEditing(p)}
+              onDelete={() => {
+                if (confirm("Excluir este plano?")) remove.mutate(p.id);
+              }}
+            />
           ))}
         </div>
       )}
@@ -564,94 +466,43 @@ function ProdutosTab({ pro }: { pro: Pro }) {
 
   return (
     <>
-      <div className="flex items-center justify-between gap-3 mb-2 flex-wrap">
-        <button onClick={() => setEditing({})} className="btn-brand inline-flex items-center gap-2">
-          <Plus className="h-4 w-4" /> Novo produto
-        </button>
-        <ViewToggle value={view} onChange={setView} />
-      </div>
-      {(produtos ?? []).length === 0 && (
-        <p className="text-muted-foreground text-sm">
-          Nenhum produto ainda. Cadastre itens para vender no seu estabelecimento.
-        </p>
-      )}
-      {view === "list" ? (
+      <CatalogHeader
+        countLabel={`${produtos?.length ?? 0} ${(produtos?.length ?? 0) === 1 ? "produto" : "produtos"}`}
+        onCreateLabel="Novo produto"
+        onCreate={() => setEditing({})}
+        view={view}
+        onViewChange={setView}
+      />
+      {(produtos ?? []).length === 0 ? (
+        <CatalogEmpty
+          message="Cadastre itens para vender no seu estabelecimento."
+          actionLabel="Criar produto"
+          onAction={() => setEditing({})}
+        />
+      ) : view === "list" ? (
         <div className="grid gap-3">
           {(produtos ?? []).map((p) => (
-            <div
+            <CatalogRow
               key={p.id}
-              className="card-elevated p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
-            >
-              <div className="flex items-center gap-4 min-w-0">
-                {p.image_url && (
-                  <img
-                    src={p.image_url}
-                    alt={p.name}
-                    className="h-14 w-14 rounded-lg object-cover shrink-0 aspect-square"
-                  />
-                )}
-                <div className="min-w-0">
-                  <p className="font-semibold truncate">{p.name}</p>
-                  <p className="text-sm text-muted-foreground">{formatBRL(p.price_cents)}</p>
-                  {p.description && (
-                    <p className="text-sm mt-1 text-muted-foreground line-clamp-2">
-                      {p.description}
-                    </p>
-                  )}
-                </div>
-              </div>
-              <div className="flex gap-2 shrink-0">
-                <button
-                  onClick={() => setEditing(p)}
-                  className="btn-outline-brand inline-flex items-center gap-1 text-sm !py-2"
-                >
-                  <Pencil className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={() => {
-                    if (confirm("Excluir este produto?")) remove.mutate(p.id);
-                  }}
-                  className="btn-outline-brand inline-flex items-center gap-1 text-sm !py-2 text-destructive"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
+              item={p}
+              onEdit={() => setEditing(p)}
+              onDelete={() => {
+                if (confirm("Excluir este produto?")) remove.mutate(p.id);
+              }}
+            />
           ))}
         </div>
       ) : (
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {(produtos ?? []).map((p) => (
-            <div key={p.id} className="card-elevated p-4 flex flex-col gap-2">
-              {p.image_url && (
-                <img
-                  src={p.image_url}
-                  alt={p.name}
-                  className="w-full aspect-square rounded-lg object-cover"
-                />
-              )}
-              <p className="font-semibold truncate">{p.name}</p>
-              <p className="text-lg font-black tracking-tight">{formatBRL(p.price_cents)}</p>
-              {p.description && (
-                <p className="text-sm text-muted-foreground line-clamp-3">{p.description}</p>
-              )}
-              <div className="flex gap-2 mt-auto pt-2">
-                <button
-                  onClick={() => setEditing(p)}
-                  className="btn-outline-brand inline-flex items-center gap-1 text-sm !py-2 flex-1 justify-center"
-                >
-                  <Pencil className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={() => {
-                    if (confirm("Excluir este produto?")) remove.mutate(p.id);
-                  }}
-                  className="btn-outline-brand inline-flex items-center gap-1 text-sm !py-2 text-destructive"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
+            <CatalogCard
+              key={p.id}
+              item={p}
+              onEdit={() => setEditing(p)}
+              onDelete={() => {
+                if (confirm("Excluir este produto?")) remove.mutate(p.id);
+              }}
+            />
           ))}
         </div>
       )}
@@ -662,6 +513,208 @@ function ProdutosTab({ pro }: { pro: Pro }) {
         </Modal>
       )}
     </>
+  );
+}
+
+type CatalogItem = {
+  id: string;
+  name: string;
+  description: string | null;
+  price_cents: number;
+  image_url: string | null;
+  duration_minutes?: number | null;
+  is_active: boolean;
+};
+
+function CatalogHeader({
+  countLabel,
+  onCreateLabel,
+  onCreate,
+  view,
+  onViewChange,
+}: {
+  countLabel: string;
+  onCreateLabel: string;
+  onCreate: () => void;
+  view: ViewMode;
+  onViewChange: (v: ViewMode) => void;
+}) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <span className="ui-badge">{countLabel}</span>
+      <div className="flex items-center gap-2">
+        <ViewToggle value={view} onChange={onViewChange} />
+        <button onClick={onCreate} className="btn-brand inline-flex items-center gap-2">
+          <Plus className="h-4 w-4" /> {onCreateLabel}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function CatalogEmpty({
+  message,
+  actionLabel,
+  onAction,
+}: {
+  message: string;
+  actionLabel: string;
+  onAction: () => void;
+}) {
+  return (
+    <div className="card-elevated py-14 px-6 text-center">
+      <span className="ui-icon-bubble h-14 w-14 mx-auto grid place-items-center rounded-2xl">
+        <Sparkles className="h-6 w-6" />
+      </span>
+      <p className="font-bold mt-4 text-foreground">Comece por aqui</p>
+      <p className="text-sm text-muted-foreground mt-1 max-w-xs mx-auto leading-relaxed">
+        {message}
+      </p>
+      <button onClick={onAction} className="btn-brand inline-flex items-center gap-2 mt-5">
+        <Plus className="h-4 w-4" /> {actionLabel}
+      </button>
+    </div>
+  );
+}
+
+function CatalogRow({
+  item,
+  onEdit,
+  onDelete,
+}: {
+  item: CatalogItem;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  return (
+    <div
+      className={cn(
+        "card-elevated p-3 sm:p-4 transition-shadow hover:shadow-md",
+        !item.is_active && "opacity-70",
+      )}
+    >
+      <div className="flex items-center gap-3 sm:gap-4">
+        {item.image_url ? (
+          <img
+            src={item.image_url}
+            alt={item.name}
+            loading="lazy"
+            className="h-14 w-14 rounded-xl object-cover shrink-0 aspect-square border border-border"
+          />
+        ) : (
+          <span className="h-14 w-14 rounded-xl grid place-items-center shrink-0 bg-secondary text-muted-foreground border border-border">
+            <Tag className="h-5 w-5" />
+          </span>
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="font-bold truncate text-foreground">{item.name}</p>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5 text-sm text-muted-foreground">
+            {item.duration_minutes != null && (
+              <span className="inline-flex items-center gap-1">
+                <Clock className="h-3.5 w-3.5 shrink-0" /> {item.duration_minutes} min
+              </span>
+            )}
+            {!item.is_active && (
+              <span className="inline-flex items-center gap-1">
+                <Power className="h-3.5 w-3.5 shrink-0" /> Inativo
+              </span>
+            )}
+          </div>
+          {item.description && (
+            <p className="text-sm text-muted-foreground mt-1 line-clamp-2 leading-relaxed">
+              {item.description}
+            </p>
+          )}
+        </div>
+        <div className="shrink-0 flex flex-col items-end gap-1.5">
+          <span className="text-lg font-black tracking-tight ui-accent-text">
+            {formatBRL(item.price_cents)}
+          </span>
+          <div className="flex gap-1">
+            <button
+              onClick={onEdit}
+              title="Editar"
+              className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            >
+              <Pencil className="h-4 w-4" />
+            </button>
+            <button
+              onClick={onDelete}
+              title="Excluir"
+              className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CatalogCard({
+  item,
+  onEdit,
+  onDelete,
+}: {
+  item: CatalogItem;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  return (
+    <div className="card-elevated overflow-hidden flex flex-col group">
+      <div className="relative overflow-hidden">
+        {item.image_url ? (
+          <img
+            src={item.image_url}
+            alt={item.name}
+            loading="lazy"
+            className="w-full aspect-[4/3] object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+          />
+        ) : (
+          <span className="w-full aspect-[4/3] grid place-items-center bg-secondary text-muted-foreground">
+            <Tag className="h-8 w-8" />
+          </span>
+        )}
+        {item.duration_minutes != null && (
+          <span className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-full bg-background/90 backdrop-blur px-2.5 py-1 text-[11px] font-bold text-foreground border border-border">
+            <Clock className="h-3 w-3" /> {item.duration_minutes} min
+          </span>
+        )}
+        {!item.is_active && (
+          <span className="absolute top-2 right-2 inline-flex items-center gap-1 rounded-full bg-background/90 backdrop-blur px-2.5 py-1 text-[11px] font-bold text-muted-foreground border border-border">
+            <Power className="h-3 w-3" /> Inativo
+          </span>
+        )}
+      </div>
+      <div className="p-3.5 sm:p-4 flex flex-col gap-1.5 flex-1">
+        <p className="font-bold truncate text-sm sm:text-base text-foreground">{item.name}</p>
+        <p className="text-lg font-black tracking-tight ui-accent-text">
+          {formatBRL(item.price_cents)}
+        </p>
+        {item.description && (
+          <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+            {item.description}
+          </p>
+        )}
+        <div className="flex gap-2 mt-auto pt-3">
+          <button
+            onClick={onEdit}
+            className="btn-outline-brand inline-flex items-center justify-center gap-1.5 text-sm !py-2 flex-1"
+          >
+            <Pencil className="h-4 w-4 shrink-0" />
+            <span className="max-sm:sr-only">Editar</span>
+          </button>
+          <button
+            onClick={onDelete}
+            title="Excluir"
+            className="btn-outline-brand inline-flex items-center justify-center !py-2 px-3 text-destructive"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 

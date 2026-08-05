@@ -397,7 +397,7 @@ function BookingPage() {
                   Na {pro.business_name}, cuidamos dele.
                 </h2>
                 <p className="mt-4 text-sm sm:text-base text-muted-foreground leading-relaxed max-w-lg">
-                  Escolha o serviço, o horário e pronto: seu agendamento fica confirmado em poucos
+                  Escolha o serviço, o horário e pronto: seu agendamento fica agendado em poucos
                   cliques, com toda praticidade e segurança.
                 </p>
                 <UIButton
@@ -1450,7 +1450,7 @@ function DoneStep({
         <CheckCircle2 className="h-10 w-10 text-success" />
       </div>
       <h2 className="mt-6 text-3xl font-black tracking-tight text-foreground">
-        Agendamento confirmado!
+        Agendado com sucesso!
       </h2>
       <p className="mt-2 text-muted-foreground">{pro.business_name} está te esperando.</p>
       <div className="mt-6 card-elevated p-4 max-w-sm mx-auto text-left space-y-1">

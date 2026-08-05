@@ -152,7 +152,7 @@ function Dashboard() {
         .sort((a, b) => b.receita - a.receita);
 
       const statusData = [
-        { name: "Confirmados", value: confirmed.length, color: "var(--color-accent, #0284C7)" },
+        { name: "Agendados", value: confirmed.length, color: "var(--color-accent, #0284C7)" },
         { name: "Concluídos", value: completed.length, color: "var(--color-success, #16A34A)" },
         { name: "Cancelados", value: cancelled.length, color: "var(--color-destructive, #DC2626)" },
       ].filter((s) => s.value > 0);
@@ -257,7 +257,7 @@ function Dashboard() {
               icon={DollarSign}
               label="Receita"
               value={formatBRL(stats?.totalRevenue ?? 0)}
-              hint="confirmado + concluído"
+              hint="agendado + concluído"
               tone="success"
               trend={pct(stats?.totalRevenue ?? 0, stats?.prevRevenue ?? 0)}
             />

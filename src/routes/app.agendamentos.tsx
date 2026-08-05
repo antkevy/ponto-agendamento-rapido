@@ -87,7 +87,7 @@ const RANGES: { key: Filter; label: string }[] = [
 ];
 const STATUSES: { key: StatusFilter; label: string; dotCls: string }[] = [
   { key: "all", label: "Todos", dotCls: "bg-muted-foreground" },
-  { key: "confirmed", label: "Confirmados", dotCls: "bg-accent" },
+  { key: "confirmed", label: "Agendados", dotCls: "bg-accent" },
   { key: "completed", label: "Concluídos", dotCls: "bg-success" },
   { key: "cancelled", label: "Cancelados", dotCls: "bg-destructive" },
 ];
@@ -266,7 +266,7 @@ function Page() {
             />
             <StatCard
               icon={CheckCheck}
-              label="Confirmados"
+              label="Agendados"
               value={String(summary.confirmed)}
               hint={`no período (${periodLabel})`}
               tone="brand"
@@ -508,7 +508,7 @@ function whatsAppMsg(
   const template = status === "confirmed" ? customConfirmed : customCancelled;
   if (template?.trim()) return replace(template);
   if (status === "confirmed") {
-    return `Ola ${a.client_name}! Seu agendamento na ${businessName} esta confirmado!\n\nData: ${date}\nHorario: ${time}\nServico: ${a.service_snapshot_name}\nValor: ${formatBRL(a.service_snapshot_price_cents)}\n\nQualquer duvida, estamos a disposicao!`;
+    return `Ola ${a.client_name}! Seu agendamento na ${businessName} esta agendado!\n\nData: ${date}\nHorario: ${time}\nServico: ${a.service_snapshot_name}\nValor: ${formatBRL(a.service_snapshot_price_cents)}\n\nQualquer duvida, estamos a disposicao!`;
   }
   return `Ola ${a.client_name}! Notamos que voce cancelou seu agendamento na ${businessName}.\n\nSe precisar de ajuda ou quiser remarcar, e so nos chamar! Estamos aqui para o que precisar.`;
 }
@@ -731,7 +731,7 @@ function Actions({ onUpdate }: { onUpdate: (s: Appt["status"]) => void }) {
 function StatusBadge({ status }: { status: Appt["status"] }) {
   const map = {
     confirmed: {
-      label: "Confirmado",
+      label: "Agendado",
       cls: "text-accent border-accent/30 bg-accent/10",
       dot: "bg-accent",
     },
