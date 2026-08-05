@@ -203,11 +203,20 @@ function Page() {
               <button
                 onClick={() => void refetch()}
                 disabled={isFetching}
+                aria-busy={isFetching || undefined}
                 title="Atualizar"
-                className="p-2 min-h-[44px] min-w-[44px] grid place-items-center rounded-lg hover:bg-muted border border-border text-muted-foreground disabled:opacity-60"
+                className={cn(
+                  "p-2 min-h-[44px] min-w-[44px] grid place-items-center rounded-lg border transition-colors",
+                  isFetching
+                    ? "border-accent/40 bg-accent/10 text-accent disabled:opacity-100"
+                    : "border-border text-muted-foreground hover:bg-muted disabled:opacity-60",
+                )}
               >
                 <RefreshCw
-                  className={`h-4 w-4 transition-colors ${isFetching ? "animate-spin text-accent" : "text-muted-foreground"}`}
+                  className={cn(
+                    "h-4 w-4 transition-colors",
+                    isFetching ? "animate-spin text-accent" : "text-muted-foreground",
+                  )}
                 />
               </button>
               <button
@@ -739,7 +748,7 @@ function NewAppointmentForm({
       </header>
 
       <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px] lg:overflow-visible lg:gap-10">
-        <div className="space-y-5 min-h-0 lg:space-y-6 lg:overflow-y-auto lg:pr-1">
+        <div className="space-y-5 min-h-0 lg:space-y-6 lg:overflow-y-auto overscroll-contain scrollbar-slim lg:pr-3">
           <section className="space-y-3">
             <SectionLabel>Serviço</SectionLabel>
             <span className="ui-field">
