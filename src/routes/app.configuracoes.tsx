@@ -11,7 +11,7 @@ import { slugify } from "@/lib/booking";
 import { PhoneInput } from "@/components/phone-input";
 import { isValidPhoneBR, onlyDigits } from "@/lib/phone";
 import { ImageUpload } from "@/components/image-upload";
-import { ExternalLink } from "lucide-react";
+import { CopyCheck } from "lucide-react";
 import { AppearanceSettings } from "@/components/appearance-settings";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import type { ProfessionalTheme } from "@/lib/appearance";
@@ -31,8 +31,6 @@ function Page() {
     address: "",
     phone: "",
     logo_url: "",
-    lat: "",
-    lng: "",
     msg_confirmed: "",
     msg_cancelled: "",
   });
@@ -46,8 +44,6 @@ function Page() {
         address: pro.address ?? "",
         phone: onlyDigits(pro.phone ?? ""),
         logo_url: pro.logo_url ?? "",
-        lat: pro.lat?.toString() ?? "",
-        lng: pro.lng?.toString() ?? "",
         msg_confirmed: pro.msg_confirmed ?? "",
         msg_cancelled: pro.msg_cancelled ?? "",
       });
@@ -58,10 +54,6 @@ function Page() {
       if (form.phone && !isValidPhoneBR(form.phone))
         throw new Error("Telefone incompleto. Use (XX) XXXXX-XXXX.");
       const slug = slugify(form.slug) || slugify(form.business_name);
-      const lat = form.lat ? parseFloat(form.lat) : null;
-      const lng = form.lng ? parseFloat(form.lng) : null;
-      if ((lat && !lng) || (!lat && lng))
-        throw new Error("Preencha latitude e longitude, ou deixe ambos vazios.");
       const { error } = await supabase
         .from(db.profissionais)
         .update({
@@ -71,8 +63,6 @@ function Page() {
           address: form.address || null,
           phone: form.phone || null,
           logo_url: form.logo_url || null,
-          lat,
-          lng,
           msg_confirmed: form.msg_confirmed.trim() || null,
           msg_cancelled: form.msg_cancelled.trim() || null,
         })
@@ -117,8 +107,15 @@ function Page() {
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 bg-white text-[#0F172A] font-semibold rounded-full px-5 py-2.5 min-h-[44px] hover:bg-white/90 hover:text-[#0F172A] transition shrink-0"
+              onClick={(e) => {
+                e.preventDefault();
+                void navigator.clipboard.writeText(
+                  `${window.location.origin}/p/${form.slug || pro.slug}`,
+                );
+                toast.success("Link copiado!");
+              }}
             >
-              <ExternalLink className="h-4 w-4" /> Ver página
+              <CopyCheck className="h-4 w-4" /> Copiar link
             </a>
           </div>
 
@@ -185,26 +182,6 @@ function Page() {
                     value={form.address}
                     onChange={(e) => setForm({ ...form, address: e.target.value })}
                     placeholder="Rua, número, bairro..."
-                    className={cls}
-                  />
-                </F>
-                <F label="Latitude">
-                  <input
-                    type="number"
-                    step="any"
-                    value={form.lat}
-                    onChange={(e) => setForm({ ...form, lat: e.target.value })}
-                    placeholder="Ex.: -23.5505"
-                    className={cls}
-                  />
-                </F>
-                <F label="Longitude">
-                  <input
-                    type="number"
-                    step="any"
-                    value={form.lng}
-                    onChange={(e) => setForm({ ...form, lng: e.target.value })}
-                    placeholder="Ex.: -46.6333"
                     className={cls}
                   />
                 </F>
