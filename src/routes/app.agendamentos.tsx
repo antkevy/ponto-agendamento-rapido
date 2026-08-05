@@ -21,6 +21,7 @@ import {
   CheckCheck,
   Search,
   CalendarClock,
+  CircleCheck,
   Phone,
   Mail,
   MessageSquare,
@@ -43,6 +44,7 @@ import { ViewToggle, type ViewMode } from "@/components/view-toggle";
 import { PhoneInput } from "@/components/phone-input";
 import { Modal } from "@/routes/app.servicos";
 import { Reveal } from "@/components/reveal";
+import { StatCard } from "@/components/ui/stat-card";
 import { CardTable, DataTableHead, DataTableRow, DataTableCell } from "@/components/ui/data-table";
 import {
   UIButton,
@@ -87,6 +89,12 @@ const STATUSES: { key: StatusFilter; label: string; dotCls: string }[] = [
   { key: "cancelled", label: "Cancelados", dotCls: "bg-destructive" },
 ];
 
+const ROW_BORDER: Record<Appt["status"], string> = {
+  confirmed: "var(--accent)",
+  completed: "var(--success)",
+  cancelled: "var(--destructive)",
+};
+
 function Page() {
   const { data: pro, isLoading } = useMyProfessional();
   const [range, setRange] = useState<Filter>("week");
@@ -101,7 +109,7 @@ function Page() {
     refetch,
     isFetching,
   } = useQuery({
-    queryKey: ["appointments", pro?.id, range, status],
+    queryKey: ["appointments", pro?.id, range],
     enabled: !!pro?.id,
     queryFn: async () => {
       const now = new Date();
@@ -113,22 +121,20 @@ function Page() {
       else if (range === "month") end.setMonth(end.getMonth() + 1);
       else end.setFullYear(end.getFullYear() + 5);
 
-      let q = supabase
+      const { data, error } = await supabase
         .from(db.agendamentos)
         .select("*")
         .eq("professional_id", pro!.id)
         .gte("starts_at", start.toISOString())
         .lt("starts_at", end.toISOString())
         .order("starts_at");
-      if (status !== "all") q = q.eq("status", status);
-      const { data, error } = await q;
       if (error) throw error;
       return data as Appt[];
     },
   });
 
   const filtered = useMemo(() => {
-    const list = appts ?? [];
+    const list = (appts ?? []).filter((a) => status === "all" || a.status === status);
     const q = search.trim().toLowerCase();
     if (!q) return list;
     return list.filter(
@@ -138,7 +144,7 @@ function Page() {
         (a.client_phone ?? "").includes(q) ||
         (a.client_email ?? "").toLowerCase().includes(q),
     );
-  }, [appts, search]);
+  }, [appts, search, status]);
 
   const counts = useMemo(
     () => ({
@@ -149,6 +155,19 @@ function Page() {
     }),
     [filtered],
   );
+
+  const periodLabel = RANGES.find((r) => r.key === range)?.label ?? "Período";
+
+  const summary = useMemo(() => {
+    const list = appts ?? [];
+    const todayStr = new Date().toDateString();
+    return {
+      today: list.filter((a) => new Date(a.starts_at).toDateString() === todayStr).length,
+      confirmed: list.filter((a) => a.status === "confirmed").length,
+      completed: list.filter((a) => a.status === "completed").length,
+      cancelled: list.filter((a) => a.status === "cancelled").length,
+    };
+  }, [appts]);
 
   const update = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: Appt["status"] }) => {
@@ -228,6 +247,40 @@ function Page() {
                 <Plus className="h-4 w-4" /> Novo agendamento
               </button>
             </div>
+          </div>
+
+          <div
+            className="animate-ui-slide-up grid grid-cols-2 gap-3 sm:grid-cols-4 mb-4"
+            style={{ animationDelay: "40ms" }}
+          >
+            <StatCard
+              icon={CalendarClock}
+              label="Hoje"
+              value={String(summary.today)}
+              hint="agendamentos hoje"
+              tone="accent"
+            />
+            <StatCard
+              icon={CheckCheck}
+              label="Confirmados"
+              value={String(summary.confirmed)}
+              hint={`no período (${periodLabel})`}
+              tone="brand"
+            />
+            <StatCard
+              icon={CircleCheck}
+              label="Concluídos"
+              value={String(summary.completed)}
+              hint="atendimentos finalizados"
+              tone="success"
+            />
+            <StatCard
+              icon={X}
+              label="Cancelados"
+              value={String(summary.cancelled)}
+              hint={`no período (${periodLabel})`}
+              tone="destructive"
+            />
           </div>
 
           <div
@@ -460,34 +513,49 @@ function ApptsTable({
           <DataTableHead>Cliente</DataTableHead>
           <DataTableHead>Serviço</DataTableHead>
           <DataTableHead>Data</DataTableHead>
+          <DataTableHead>Valor</DataTableHead>
           <DataTableHead>Status</DataTableHead>
           <DataTableHead className="text-right">Ações</DataTableHead>
         </tr>
       </thead>
       <tbody>
         {appts.map((a, i) => (
-          <DataTableRow key={a.id} className="ui-stagger-fade" style={{ ["--i" as string]: i }}>
+          <DataTableRow
+            key={a.id}
+            className="ui-stagger-fade"
+            style={{ ["--i" as string]: i, borderLeft: `2px solid ${ROW_BORDER[a.status]}` }}
+          >
             <DataTableCell>
-              <p className="font-semibold truncate max-w-[180px]">{a.client_name}</p>
-              <p className="text-xs text-muted-foreground truncate max-w-[180px]">
-                {displayPhoneBR(a.client_phone)}
-                {a.client_email ? ` · ${a.client_email}` : ""}
-              </p>
+              <div className="flex items-center gap-2.5 min-w-0">
+                <span className="ui-icon-bubble h-9 w-9 shrink-0 grid place-items-center rounded-full text-sm font-bold">
+                  {a.client_name.charAt(0).toUpperCase()}
+                </span>
+                <div className="min-w-0">
+                  <p className="font-semibold truncate max-w-[160px]">{a.client_name}</p>
+                  <p className="text-xs text-muted-foreground truncate max-w-[160px]">
+                    {displayPhoneBR(a.client_phone)}
+                    {a.client_email ? ` · ${a.client_email}` : ""}
+                  </p>
+                </div>
+              </div>
             </DataTableCell>
             <DataTableCell>
               <p className="font-medium truncate max-w-[200px]">{a.service_snapshot_name}</p>
-              <p className="text-xs text-muted-foreground">
-                {formatBRL(a.service_snapshot_price_cents)}
-              </p>
             </DataTableCell>
             <DataTableCell className="whitespace-nowrap">
-              <p className="font-medium">
+              <p className="font-medium capitalize">
                 {new Date(a.starts_at).toLocaleDateString("pt-BR", {
+                  weekday: "short",
                   day: "2-digit",
                   month: "short",
                 })}
               </p>
               <p className="text-xs text-muted-foreground">{formatTime(new Date(a.starts_at))}</p>
+            </DataTableCell>
+            <DataTableCell className="whitespace-nowrap">
+              <p className="font-black tracking-tight" style={{ color: "var(--brand)" }}>
+                {formatBRL(a.service_snapshot_price_cents)}
+              </p>
             </DataTableCell>
             <DataTableCell>
               <StatusBadge status={a.status} />
@@ -551,7 +619,13 @@ function ApptCard({
   onUpdate: (s: Appt["status"]) => void;
 }) {
   return (
-    <div className="card-elevated p-3 sm:p-4 flex flex-col gap-1.5">
+    <div
+      className={cn(
+        "card-elevated p-3 sm:p-4 flex flex-col gap-1.5",
+        a.status === "completed" && "border-success/25 bg-success/[0.03]",
+        a.status === "cancelled" && "opacity-75",
+      )}
+    >
       <div className="flex items-start justify-between gap-2">
         <p className="font-semibold truncate text-sm sm:text-base">{a.client_name}</p>
         <StatusBadge status={a.status} />
@@ -637,7 +711,7 @@ function StatusBadge({ status }: { status: Appt["status"] }) {
   const c = map[status];
   return (
     <span
-      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-0.5 text-xs font-medium ${c.cls}`}
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1 text-xs font-semibold ${c.cls}`}
     >
       <span aria-hidden="true" className={`size-1.5 rounded-full ${c.dot}`} />
       {c.label}
