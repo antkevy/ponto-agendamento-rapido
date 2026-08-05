@@ -27,6 +27,7 @@ import {
   ArrowLeft,
   ArrowRight,
   User,
+  Home,
   X,
   MessageCircle,
   BadgeCheck,
@@ -322,6 +323,14 @@ function BookingPage() {
             )}
           </div>
           <ThemeToggle className="shrink-0" />
+          <button
+            type="button"
+            onClick={() => setStep("landing")}
+            className="shrink-0 p-2 min-h-[44px] min-w-[44px] grid place-items-center rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+            title="Voltar ao início"
+          >
+            <Home className="h-5 w-5" />
+          </button>
         </div>
       </header>
 
