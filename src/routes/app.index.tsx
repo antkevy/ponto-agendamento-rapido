@@ -29,6 +29,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { OnboardingCard } from "@/components/onboarding-card";
+import { StatCard } from "@/components/ui/stat-card";
 
 export const Route = createFileRoute("/app/")({
   head: () => ({ meta: [{ title: "Painel — Agendaí" }] }),
@@ -178,6 +179,11 @@ function Dashboard() {
 
   const monthLabel = currentMonth.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
 
+  const pct = (current: number, previous: number) => {
+    if (!previous) return null;
+    return ((current - previous) / previous) * 100;
+  };
+
   const COLORS = ["#0284C7", "#16A34A", "#DC2626", "#F59E0B", "#8B5CF6", "#EC4899", "#14B8A6"];
 
   return (
@@ -237,24 +243,30 @@ function Dashboard() {
               label="Hoje"
               value={String(stats?.today.length ?? 0)}
               hint="agendamentos"
+              tone="accent"
             />
             <StatCard
               icon={CheckCircle2}
               label="Atendimentos"
               value={String(stats?.monthCount ?? 0)}
               hint="no mês"
+              tone="brand"
+              trend={pct(stats?.monthCount ?? 0, stats?.prevCount ?? 0)}
             />
             <StatCard
               icon={DollarSign}
               label="Receita"
               value={formatBRL(stats?.totalRevenue ?? 0)}
               hint="confirmado + concluído"
+              tone="success"
+              trend={pct(stats?.totalRevenue ?? 0, stats?.prevRevenue ?? 0)}
             />
             <StatCard
               icon={TrendingUp}
               label="Ticket médio"
               value={formatBRL(stats?.avgTicket ?? 0)}
               hint="por concluído"
+              tone="warning"
             />
           </div>
 
@@ -505,29 +517,6 @@ function Dashboard() {
         </>
       )}
     </AppShell>
-  );
-}
-
-function StatCard({
-  icon: Icon,
-  label,
-  value,
-  hint,
-}: {
-  icon: typeof Calendar;
-  label: string;
-  value: string;
-  hint: string;
-}) {
-  return (
-    <div className="card-elevated p-5 animate-fade-in-up">
-      <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-muted-foreground">{label}</span>
-        <Icon className="h-4 w-4 text-accent" />
-      </div>
-      <p className="mt-2 text-3xl font-black tracking-tight text-foreground">{value}</p>
-      <p className="text-xs text-muted-foreground mt-1">{hint}</p>
-    </div>
   );
 }
 

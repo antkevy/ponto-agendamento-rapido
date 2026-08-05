@@ -6,12 +6,12 @@ import { BrandLogo } from "@/components/brand-logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import {
   ArrowRight,
-  Check,
   Lock,
   Mail,
   ShieldCheck,
   CalendarCheck2,
   Headphones,
+  Quote,
 } from "lucide-react";
 import { UIButton, UICard, UIInput, UIPasswordInput, UITitle } from "@/components/ui-kit";
 import authBg from "@/assets/auth-bg.jpg";
@@ -217,6 +217,78 @@ const BENEFITS = [
   { icon: Headphones, label: "Suporte em português" },
 ];
 
+const AUTH_HEADLINE = "Seu tempo é importante. Com o Agendaí, sua agenda se organiza sozinha.";
+const AUTH_COPY =
+  "Receba agendamentos online 24h por dia, com confirmação automática e lembretes para seus clientes.";
+
+type Testimonial = {
+  name: string;
+  role: string;
+  text: string;
+  initials: string;
+};
+
+const TESTIMONIALS: Testimonial[] = [
+  {
+    name: "Mariana Souza",
+    role: "Salão de beleza",
+    text: "Desde que comecei a usar o Agendaí, não perco mais agendamento. Minha agenda se organiza sozinha e as clientes adoram escolher o horário online.",
+    initials: "MS",
+  },
+  {
+    name: "Carlos Andrade",
+    role: "Barbearia",
+    text: "O cliente confirma o horário e pronto: sem ligação, sem mensagem ida e volta. Já recomendo para todos os amigos do ramo.",
+    initials: "CA",
+  },
+  {
+    name: "Fernanda Lima",
+    role: "Estúdio de estética",
+    text: "A página de agendamento é linda e funciona de qualquer celular. Ganhei profissionalismo e um monte de tempo livre.",
+    initials: "FL",
+  },
+];
+
+function TestimonialQuote() {
+  const [active, setActive] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setActive((p) => (p + 1) % TESTIMONIALS.length), 6000);
+    return () => clearInterval(id);
+  }, []);
+  const t = TESTIMONIALS[active];
+  return (
+    <div className="text-white">
+      <Quote className="h-8 w-8 text-white/40" />
+      <p
+        key={active}
+        className="mt-3 text-base leading-relaxed text-white/90 min-h-[84px] animate-fade-in-up"
+      >
+        “{t.text}”
+      </p>
+      <div className="mt-4 flex items-center gap-3">
+        <span className="h-10 w-10 rounded-full grid place-items-center bg-white/15 border border-white/25 text-sm font-bold">
+          {t.initials}
+        </span>
+        <div>
+          <p className="font-semibold">{t.name}</p>
+          <p className="text-xs text-white/60">{t.role}</p>
+        </div>
+      </div>
+      <div className="mt-4 flex gap-1.5" role="tablist" aria-label="Depoimentos">
+        {TESTIMONIALS.map((_, i) => (
+          <button
+            key={i}
+            type="button"
+            onClick={() => setActive(i)}
+            aria-label={`Ver depoimento ${i + 1}`}
+            className={`h-1.5 rounded-full transition-all ${i === active ? "w-6 bg-white" : "w-1.5 bg-white/40 hover:bg-white/70"}`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function AuthLayout({
   title,
   accent,
@@ -229,17 +301,62 @@ export function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative min-h-screen overflow-hidden bg-background">
-      <div
-        className="ui-auth-bg"
-        style={{ backgroundImage: `url(${authBg})` }}
-        aria-hidden="true"
-      />
-      <div className="ui-auth-overlay" aria-hidden="true" />
+    <div className="min-h-screen bg-background lg:grid lg:grid-cols-2">
+      {/* Painel visual (desktop) */}
+      <aside className="relative hidden lg:block overflow-hidden">
+        <div
+          className="ui-auth-bg"
+          style={{ backgroundImage: `url(${authBg})` }}
+          aria-hidden="true"
+        />
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(180deg, color-mix(in oklab, var(--primary) 94%, black) 0%, color-mix(in oklab, var(--primary) 82%, black) 60%, color-mix(in oklab, var(--primary) 88%, black) 100%)",
+          }}
+          aria-hidden="true"
+        />
+        <div className="relative z-10 h-full flex flex-col justify-between gap-10 p-10 xl:p-14">
+          <div className="flex items-center gap-2.5 text-white">
+            <span className="h-10 w-10 rounded-full grid place-items-center bg-white/15 border border-white/25 shadow-md">
+              <CalendarCheck2 className="h-5 w-5" strokeWidth={2.5} />
+            </span>
+            <span className="text-2xl font-bold tracking-tight">Agendaí</span>
+          </div>
 
-      <div className="relative">
-        <header className="max-w-6xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between">
-          <BrandLogo />
+          <div className="space-y-8">
+            <div>
+              <h2 className="text-4xl xl:text-5xl font-black tracking-tight text-white leading-[1.08]">
+                {AUTH_HEADLINE}
+              </h2>
+              <p className="mt-4 text-white/80 leading-relaxed max-w-md">{AUTH_COPY}</p>
+            </div>
+
+            <ul className="flex flex-wrap gap-3">
+              {BENEFITS.map((b) => (
+                <li
+                  key={b.label}
+                  className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 backdrop-blur px-3.5 py-1.5 text-sm text-white"
+                >
+                  <b.icon className="h-4 w-4" />
+                  {b.label}
+                </li>
+              ))}
+            </ul>
+
+            <TestimonialQuote />
+          </div>
+        </div>
+      </aside>
+
+      {/* Coluna do formulário */}
+      <div className="relative min-h-screen lg:min-h-0 flex flex-col">
+        <header className="max-w-6xl w-full mx-auto px-5 sm:px-8 h-16 flex items-center justify-between">
+          <div className="lg:hidden">
+            <BrandLogo />
+          </div>
+          <div className="hidden lg:block" aria-hidden="true" />
           <div className="flex items-center gap-2">
             <ThemeToggle />
             <Link
@@ -251,31 +368,33 @@ export function AuthLayout({
           </div>
         </header>
 
-        <main className="max-w-md mx-auto px-4 sm:px-8 pt-1 pb-8">
-          <UICard glass className="mt-3 p-5 sm:p-6 animate-ui-scale-in">
-            <UITitle size="lg" accent={accent}>
-              {title}
-            </UITitle>
-            <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{subtitle}</p>
-            <div className="mt-4">{children}</div>
-          </UICard>
+        <main className="flex-1 grid place-items-center px-4 sm:px-8 pt-2 pb-10">
+          <div className="w-full max-w-md">
+            <UICard glass className="p-5 sm:p-6 animate-ui-scale-in">
+              <UITitle size="lg" accent={accent}>
+                {title}
+              </UITitle>
+              <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{subtitle}</p>
+              <div className="mt-4">{children}</div>
+            </UICard>
 
-          <ul className="mt-5 grid grid-cols-3 gap-2 text-center">
-            {BENEFITS.map((b, i) => (
-              <li
-                key={b.label}
-                className="ui-stagger flex flex-col items-center gap-1"
-                style={{ ["--i" as string]: i + 1 }}
-              >
-                <span className="ui-icon-bubble h-9 w-9 grid place-items-center rounded-xl">
-                  <b.icon className="h-4 w-4" />
-                </span>
-                <span className="text-[11px] sm:text-xs text-muted-foreground leading-tight">
-                  {b.label}
-                </span>
-              </li>
-            ))}
-          </ul>
+            <ul className="mt-5 grid grid-cols-3 gap-2 text-center lg:hidden">
+              {BENEFITS.map((b, i) => (
+                <li
+                  key={b.label}
+                  className="ui-stagger flex flex-col items-center gap-1"
+                  style={{ ["--i" as string]: i + 1 }}
+                >
+                  <span className="ui-icon-bubble h-9 w-9 grid place-items-center rounded-xl">
+                    <b.icon className="h-4 w-4" />
+                  </span>
+                  <span className="text-[11px] sm:text-xs text-muted-foreground leading-tight">
+                    {b.label}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </main>
       </div>
     </div>

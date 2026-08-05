@@ -53,6 +53,10 @@ import {
 } from "@/components/ui-kit";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ViewToggle, type ViewMode } from "@/components/view-toggle";
+import { ServiceCard, type ServiceVariant } from "@/components/service-card";
+
+/** Cores dos cards de planos (ciclam pelas variantes do ServiceCard). */
+const PLANO_VARIANTS: ServiceVariant[] = ["brand", "accent", "success", "warning"];
 
 /** Diferenciais genéricos exibidos na página pública (sem tema de segmento). */
 const BENEFITS: Array<{ icon: LucideIcon; title: string; text: string }> = [
@@ -421,29 +425,17 @@ function BookingPage() {
                 </h3>
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {planos.map((p, i) => (
-                    <div
+                    <ServiceCard
                       key={p.id}
-                      className="ui-card p-5 flex flex-col gap-3 transition-transform hover:-translate-y-0.5 ui-stagger"
+                      title={p.name}
+                      description={p.description}
+                      meta={formatBRL(p.price_cents)}
+                      image={p.image_url}
+                      imageAlt={p.name}
+                      variant={PLANO_VARIANTS[i % PLANO_VARIANTS.length]}
+                      className="ui-stagger"
                       style={{ ["--i" as string]: i }}
-                    >
-                      {p.image_url && (
-                        <img
-                          src={p.image_url}
-                          alt={p.name}
-                          loading="lazy"
-                          className="w-full aspect-video rounded-xl object-cover"
-                        />
-                      )}
-                      <p className="font-bold text-lg">{p.name}</p>
-                      <p className="text-2xl font-black tracking-tight ui-accent-text">
-                        {formatBRL(p.price_cents)}
-                      </p>
-                      {p.description && (
-                        <p className="text-sm text-muted-foreground leading-relaxed">
-                          {p.description}
-                        </p>
-                      )}
-                    </div>
+                    />
                   ))}
                 </div>
               </div>

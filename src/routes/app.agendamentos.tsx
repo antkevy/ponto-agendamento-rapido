@@ -42,6 +42,7 @@ import { displayPhoneBR, isValidPhoneBR } from "@/lib/phone";
 import { ViewToggle, type ViewMode } from "@/components/view-toggle";
 import { PhoneInput } from "@/components/phone-input";
 import { Modal } from "@/routes/app.servicos";
+import { CardTable, DataTableHead, DataTableRow, DataTableCell } from "@/components/ui/data-table";
 import {
   UIButton,
   UIIconBubble,
@@ -333,18 +334,13 @@ function Page() {
               )}
             </div>
           ) : view === "list" ? (
-            <div className="space-y-3">
-              {filtered.map((a) => (
-                <ApptRow
-                  key={a.id}
-                  a={a}
-                  businessName={pro.business_name}
-                  msgConfirmed={pro.msg_confirmed}
-                  msgCancelled={pro.msg_cancelled}
-                  onUpdate={(s) => update.mutate({ id: a.id, status: s })}
-                />
-              ))}
-            </div>
+            <ApptsTable
+              appts={filtered}
+              businessName={pro.business_name}
+              msgConfirmed={pro.msg_confirmed}
+              msgCancelled={pro.msg_cancelled}
+              onUpdateById={(id, s) => update.mutate({ id, status: s })}
+            />
           ) : (
             <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
               {filtered.map((a) => (
@@ -410,59 +406,100 @@ function whatsAppMsg(
   return `Ola ${a.client_name}! Notamos que voce cancelou seu agendamento na ${businessName}.\n\nSe precisar de ajuda ou quiser remarcar, e so nos chamar! Estamos aqui para o que precisar.`;
 }
 
-function ApptRow({
-  a,
+function ApptsTable({
+  appts,
   businessName,
   msgConfirmed,
   msgCancelled,
-  onUpdate,
+  onUpdateById,
 }: {
-  a: Appt;
+  appts: Appt[];
   businessName: string;
   msgConfirmed: string | null;
   msgCancelled: string | null;
-  onUpdate: (s: Appt["status"]) => void;
+  onUpdateById: (id: string, s: Appt["status"]) => void;
 }) {
   return (
-    <div className="card-elevated p-4">
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <p className="font-semibold truncate">{a.client_name}</p>
-            <StatusBadge status={a.status} />
-          </div>
-          <p className="text-sm text-muted-foreground">
-            {a.service_snapshot_name} · {formatBRL(a.service_snapshot_price_cents)}
-          </p>
-          <p className="text-sm mt-1">
-            {new Date(a.starts_at).toLocaleString("pt-BR", {
-              dateStyle: "medium",
-              timeStyle: "short",
-            })}
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">
-            {displayPhoneBR(a.client_phone)}
-            {a.client_email ? ` · ${a.client_email}` : ""}
-          </p>
-        </div>
-        <div className="flex gap-2 shrink-0">
-          <button
-            onClick={() => {
-              const msg = whatsAppMsg(a, businessName, a.status, msgConfirmed, msgCancelled);
-              window.open(
-                `${whatsAppUrl(a.client_phone)}${msg ? `?text=${encodeURIComponent(msg)}` : ""}`,
-                "_blank",
-              );
-            }}
-            className="btn-outline-brand inline-flex items-center gap-1 !py-2 text-sm"
-            title="Mensagem"
-          >
-            <MessageSquare className="h-4 w-4" /> Mensagem
-          </button>
-          {a.status === "confirmed" && <Actions onUpdate={onUpdate} />}
-        </div>
-      </div>
-    </div>
+    <CardTable>
+      <thead className="bg-muted/50 [&_tr]:border-b [&_tr]:border-border/60">
+        <tr>
+          <DataTableHead>Cliente</DataTableHead>
+          <DataTableHead>Serviço</DataTableHead>
+          <DataTableHead>Data</DataTableHead>
+          <DataTableHead>Status</DataTableHead>
+          <DataTableHead className="text-right">Ações</DataTableHead>
+        </tr>
+      </thead>
+      <tbody>
+        {appts.map((a) => (
+          <DataTableRow key={a.id}>
+            <DataTableCell>
+              <p className="font-semibold truncate max-w-[180px]">{a.client_name}</p>
+              <p className="text-xs text-muted-foreground truncate max-w-[180px]">
+                {displayPhoneBR(a.client_phone)}
+                {a.client_email ? ` · ${a.client_email}` : ""}
+              </p>
+            </DataTableCell>
+            <DataTableCell>
+              <p className="font-medium truncate max-w-[200px]">{a.service_snapshot_name}</p>
+              <p className="text-xs text-muted-foreground">
+                {formatBRL(a.service_snapshot_price_cents)}
+              </p>
+            </DataTableCell>
+            <DataTableCell className="whitespace-nowrap">
+              <p className="font-medium">
+                {new Date(a.starts_at).toLocaleDateString("pt-BR", {
+                  day: "2-digit",
+                  month: "short",
+                })}
+              </p>
+              <p className="text-xs text-muted-foreground">{formatTime(new Date(a.starts_at))}</p>
+            </DataTableCell>
+            <DataTableCell>
+              <StatusBadge status={a.status} />
+            </DataTableCell>
+            <DataTableCell>
+              <div className="flex items-center gap-1 justify-end">
+                <button
+                  onClick={() => {
+                    const msg = whatsAppMsg(a, businessName, a.status, msgConfirmed, msgCancelled);
+                    window.open(
+                      `${whatsAppUrl(a.client_phone)}${msg ? `?text=${encodeURIComponent(msg)}` : ""}`,
+                      "_blank",
+                    );
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-accent hover:bg-accent/10 transition-colors"
+                  title="Enviar mensagem"
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  Mensagem
+                </button>
+                {a.status === "confirmed" && (
+                  <>
+                    <button
+                      onClick={() => onUpdateById(a.id, "completed")}
+                      className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm font-medium text-success hover:bg-success/10 transition-colors"
+                      title="Concluir"
+                    >
+                      <CheckCheck className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (confirm("Cancelar este agendamento?")) onUpdateById(a.id, "cancelled");
+                      }}
+                      className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors"
+                      title="Cancelar"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </>
+                )}
+              </div>
+            </DataTableCell>
+          </DataTableRow>
+        ))}
+      </tbody>
+    </CardTable>
   );
 }
 
@@ -547,13 +584,30 @@ function Actions({ onUpdate }: { onUpdate: (s: Appt["status"]) => void }) {
 
 function StatusBadge({ status }: { status: Appt["status"] }) {
   const map = {
-    confirmed: { label: "Confirmado", cls: "bg-accent/10 text-accent" },
-    cancelled: { label: "Cancelado", cls: "bg-destructive/10 text-destructive" },
-    completed: { label: "Concluído", cls: "bg-success/10 text-success" },
+    confirmed: {
+      label: "Confirmado",
+      cls: "text-accent border-accent/30 bg-accent/10",
+      dot: "bg-accent",
+    },
+    cancelled: {
+      label: "Cancelado",
+      cls: "text-destructive border-destructive/30 bg-destructive/10",
+      dot: "bg-destructive",
+    },
+    completed: {
+      label: "Concluído",
+      cls: "text-success border-success/30 bg-success/10",
+      dot: "bg-success",
+    },
   } as const;
   const c = map[status];
   return (
-    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${c.cls}`}>{c.label}</span>
+    <span
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-0.5 text-xs font-medium ${c.cls}`}
+    >
+      <span aria-hidden="true" className={`size-1.5 rounded-full ${c.dot}`} />
+      {c.label}
+    </span>
   );
 }
 
