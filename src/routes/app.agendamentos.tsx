@@ -469,6 +469,13 @@ type ServiceOption = {
   price_cents: number;
 };
 
+type ClientOption = {
+  key: string;
+  name: string;
+  phone: string;
+  email: string | null;
+};
+
 type NewAppointmentPayload = {
   service_id: string;
   service_name: string;
@@ -494,6 +501,8 @@ function NewAppointmentForm({
   onSubmit: (v: NewAppointmentPayload) => void;
 }) {
   const [serviceId, setServiceId] = useState("");
+  const [clientMode, setClientMode] = useState<"new" | "existing">("new");
+  const [clientKey, setClientKey] = useState("");
   const [clientName, setClientName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -515,6 +524,49 @@ function NewAppointmentForm({
     },
   });
 
+  const { data: existingClients } = useQuery({
+    queryKey: ["appt-existing-clients", proId],
+    enabled: !!proId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from(db.clientes)
+        .select("id, name, phone, email")
+        .eq("professional_id", proId)
+        .order("name");
+      if (error) throw error;
+      return (data ?? []).map((c) => ({ key: c.id, name: c.name, phone: c.phone, email: c.email }));
+    },
+  });
+
+  const { data: existingFallback } = useQuery({
+    queryKey: ["appt-existing-fallback", proId],
+    enabled: !!proId && !!existingClients && existingClients.length === 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from(db.agendamentos)
+        .select("client_name, client_phone, client_email")
+        .eq("professional_id", proId)
+        .order("starts_at", { ascending: false })
+        .limit(2000);
+      if (error) throw error;
+      const seen = new Set<string>();
+      const rows: ClientOption[] = [];
+      for (const a of data ?? []) {
+        const p = a.client_phone;
+        if (p && !seen.has(p)) {
+          seen.add(p);
+          rows.push({ key: `fallback-${p}`, name: a.client_name, phone: p, email: a.client_email });
+        }
+      }
+      return rows.sort((x, y) => x.name.localeCompare(y.name));
+    },
+  });
+
+  const clientOptions = useMemo(() => {
+    if (existingClients && existingClients.length > 0) return existingClients;
+    return existingFallback ?? [];
+  }, [existingClients, existingFallback]);
+
   const selected = (services ?? []).find((s) => s.id === serviceId);
 
   const nowInput = new Date();
@@ -529,11 +581,20 @@ function NewAppointmentForm({
           toast.error("Selecione um serviço.");
           return;
         }
-        if (clientName.trim().length < 2) {
+        const client =
+          clientMode === "existing" ? clientOptions.find((c) => c.key === clientKey) : null;
+        if (clientMode === "existing" && !client) {
+          toast.error("Selecione um cliente existente.");
+          return;
+        }
+        const finalName = client ? client.name : clientName.trim();
+        const finalPhone = client ? client.phone : phone;
+        const finalEmail = client ? client.email : email.trim() || null;
+        if (finalName.length < 2) {
           toast.error("Informe o nome do cliente.");
           return;
         }
-        if (!isValidPhoneBR(phone)) {
+        if (!isValidPhoneBR(finalPhone)) {
           toast.error("Telefone incompleto. Use (XX) XXXXX-XXXX.");
           return;
         }
@@ -549,9 +610,9 @@ function NewAppointmentForm({
           service_price_cents: selected!.price_cents,
           starts_at: start.toISOString(),
           ends_at: ends.toISOString(),
-          client_name: clientName.trim(),
-          client_phone: phone,
-          client_email: email.trim() || null,
+          client_name: finalName,
+          client_phone: finalPhone,
+          client_email: finalEmail,
           notes: notes.trim() || null,
         });
       }}
@@ -580,30 +641,89 @@ function NewAppointmentForm({
           </p>
         )}
       </label>
-      <label className="block">
-        <span className="text-sm font-medium">Nome do cliente</span>
-        <input
-          required
-          value={clientName}
-          onChange={(e) => setClientName(e.target.value)}
-          placeholder="Ex.: Maria Silva"
-          className={inputCls}
-        />
-      </label>
-      <label className="block">
-        <span className="text-sm font-medium">Telefone (WhatsApp)</span>
-        <PhoneInput value={phone} onChange={setPhone} className={inputCls} />
-      </label>
-      <label className="block">
-        <span className="text-sm font-medium">E-mail (opcional)</span>
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="cliente@email.com"
-          className={inputCls}
-        />
-      </label>
+      <div>
+        <span className="text-sm font-medium">Cliente</span>
+        <div className="flex gap-2 mt-1">
+          <button
+            type="button"
+            onClick={() => {
+              setClientMode("new");
+              setClientKey("");
+            }}
+            data-selected={clientMode === "new" || undefined}
+            className="chip !min-h-[36px] !py-1.5 text-sm"
+          >
+            Cliente novo
+          </button>
+          <button
+            type="button"
+            onClick={() => setClientMode("existing")}
+            data-selected={clientMode === "existing" || undefined}
+            className="chip !min-h-[36px] !py-1.5 text-sm"
+          >
+            Já cadastrado
+          </button>
+        </div>
+      </div>
+      {clientMode === "existing" ? (
+        <label className="block">
+          <span className="text-sm font-medium">Selecionar cliente</span>
+          <select
+            required
+            value={clientKey}
+            onChange={(e) => {
+              const key = e.target.value;
+              setClientKey(key);
+              const c = clientOptions.find((o) => o.key === key);
+              if (c) {
+                setClientName(c.name);
+                setPhone(c.phone);
+                setEmail(c.email ?? "");
+              }
+            }}
+            className={inputCls}
+          >
+            <option value="">Selecione...</option>
+            {clientOptions.map((c) => (
+              <option key={c.key} value={c.key}>
+                {c.name} · {displayPhoneBR(c.phone)}
+              </option>
+            ))}
+          </select>
+          {clientOptions.length === 0 && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Nenhum cliente cadastrado ainda. Escolha "Cliente novo" ou cadastre na aba Clientes.
+            </p>
+          )}
+        </label>
+      ) : (
+        <>
+          <label className="block">
+            <span className="text-sm font-medium">Nome do cliente</span>
+            <input
+              required
+              value={clientName}
+              onChange={(e) => setClientName(e.target.value)}
+              placeholder="Ex.: Maria Silva"
+              className={inputCls}
+            />
+          </label>
+          <label className="block">
+            <span className="text-sm font-medium">Telefone (WhatsApp)</span>
+            <PhoneInput value={phone} onChange={setPhone} className={inputCls} />
+          </label>
+          <label className="block">
+            <span className="text-sm font-medium">E-mail (opcional)</span>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="cliente@email.com"
+              className={inputCls}
+            />
+          </label>
+        </>
+      )}
       <label className="block">
         <span className="text-sm font-medium">Data e hora do atendimento</span>
         <input
