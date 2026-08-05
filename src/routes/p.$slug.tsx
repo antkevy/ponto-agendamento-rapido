@@ -369,7 +369,7 @@ function BookingPage() {
                 >
                   Agendar agora <ArrowRight className="h-5 w-5" />
                 </UIButton>
-                <p className="mt-4 sm:mt-6 text-xs sm:text-sm text-muted-foreground inline-flex items-center gap-2">
+                <p className="mt-4 sm:mt-10 text-xs sm:text-sm text-muted-foreground inline-flex items-center gap-2">
                   <ShieldCheck className="h-4 w-4 ui-icon-color" /> Ambiente seguro e atendimento de
                   qualidade
                 </p>
