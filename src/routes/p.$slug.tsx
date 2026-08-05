@@ -25,19 +25,23 @@ import {
   MapPin,
   Clock,
   ArrowLeft,
+  ArrowRight,
   User,
   X,
   MessageCircle,
-  Gem,
+  BadgeCheck,
+  Sparkles,
+  Tag,
   ShieldCheck,
   CalendarCheck2,
   Calendar as CalendarIcon,
-  Scissors,
   Mail,
   Pencil,
   Lock,
+  type LucideIcon,
 } from "lucide-react";
 import {
+  UIBadge,
   UIButton,
   UICard,
   UICardHeader,
@@ -48,6 +52,15 @@ import {
 } from "@/components/ui-kit";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ViewToggle, type ViewMode } from "@/components/view-toggle";
+
+/** Diferenciais genéricos exibidos na página pública (sem tema de segmento). */
+const BENEFITS: Array<{ icon: LucideIcon; title: string; text: string }> = [
+  { icon: CalendarCheck2, title: "Agendamento online", text: "Reserve em poucos cliques, 24h por dia" },
+  { icon: Clock, title: "Horários reais", text: "Só aparece o que está mesmo disponível" },
+  { icon: BadgeCheck, title: "Confirmação na hora", text: "Você recebe o resumo do seu horário" },
+  { icon: ShieldCheck, title: "Seus dados seguros", text: "Usamos suas informações só no contato" },
+];
+
 
 /** Dados públicos de um profissional carregados pelo /p/:slug. */
 type PublicPro = {
