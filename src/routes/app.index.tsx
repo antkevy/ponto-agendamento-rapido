@@ -218,7 +218,9 @@ function Dashboard() {
               title="Atualizar dados"
               className="p-2 min-h-[40px] min-w-[40px] grid place-items-center rounded-lg hover:bg-muted border border-border text-muted-foreground disabled:opacity-60"
             >
-              <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
+              <RefreshCw
+                className={`h-4 w-4 transition-colors ${isFetching ? "animate-spin text-accent" : "text-muted-foreground"}`}
+              />
             </button>
           </div>
 

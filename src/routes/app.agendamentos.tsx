@@ -201,7 +201,9 @@ function Page() {
                 title="Atualizar"
                 className="p-2 min-h-[40px] min-w-[40px] grid place-items-center rounded-lg hover:bg-muted border border-border text-muted-foreground disabled:opacity-60"
               >
-                <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
+                <RefreshCw
+                  className={`h-4 w-4 transition-colors ${isFetching ? "animate-spin text-accent" : "text-muted-foreground"}`}
+                />
               </button>
             </div>
           </div>
@@ -669,7 +671,7 @@ function NewAppointmentForm({
       }}
       className="flex flex-col h-full"
     >
-      <header className="flex items-center justify-between gap-3 mb-5">
+      <header className="flex items-center justify-between gap-3 mb-5 shrink-0">
         <div className="flex items-center gap-3 min-w-0">
           <UIIconBubble icon={CalendarPlus} />
           <div className="min-w-0">
@@ -679,8 +681,8 @@ function NewAppointmentForm({
         </div>
       </header>
 
-      <div className="flex-1 min-h-0 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-10">
-        <div className="space-y-6 min-h-0 lg:overflow-y-auto lg:pr-1">
+      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px] lg:overflow-visible lg:gap-10">
+        <div className="space-y-5 min-h-0 lg:space-y-6 lg:overflow-y-auto lg:pr-1">
           <section className="space-y-3">
             <SectionLabel>Serviço</SectionLabel>
             <span className="ui-field">
@@ -862,9 +864,9 @@ function NewAppointmentForm({
         {summaryCard && <aside className="hidden lg:block">{summaryCard}</aside>}
       </div>
 
-      {summaryCard && <div className="mt-6 lg:hidden">{summaryCard}</div>}
+      {summaryCard && <div className="mt-5 lg:hidden shrink-0">{summaryCard}</div>}
 
-      <footer className="mt-5 sticky bottom-0 -mx-5 sm:-mx-6 px-5 sm:px-6 py-3 bg-background border-t border-border">
+      <footer className="mt-5 sticky bottom-0 -mx-5 sm:-mx-6 px-5 sm:px-6 py-3 bg-background border-t border-border shrink-0">
         <div className="flex gap-3">
           <UIButton type="button" variant="outline" className="flex-1" onClick={onClose}>
             Cancelar

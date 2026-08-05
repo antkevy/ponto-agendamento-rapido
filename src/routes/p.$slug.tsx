@@ -775,7 +775,7 @@ function BookingPage() {
 
         {detailService && (
           <div
-            className="fixed inset-0 z-50 bg-foreground/40 grid place-items-center p-4 animate-fade-in-up"
+            className="fixed inset-0 z-50 bg-foreground/40 backdrop-blur-sm dark:bg-black/60 dark:backdrop-blur-md grid place-items-center p-4 animate-fade-in-up"
             onClick={() => setDetailService(null)}
           >
             <div

@@ -2008,14 +2008,14 @@ export function Modal({
 }) {
   return (
     <div
-      className="fixed inset-0 z-50 bg-foreground/40 backdrop-blur-sm grid sm:place-items-center animate-fade-in-up"
+      className="fixed inset-0 z-50 bg-foreground/40 backdrop-blur-sm dark:bg-black/60 dark:backdrop-blur-md grid sm:place-items-center animate-fade-in-up"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
     >
       <div
         className={cn(
-          "bg-background w-full sm:rounded-2xl p-5 sm:p-6 h-full sm:h-auto sm:my-8 overflow-y-auto",
+          "bg-background w-full sm:rounded-2xl p-5 sm:p-6 h-[100dvh] sm:h-auto sm:my-8 overflow-y-auto",
           size === "md" && "sm:max-w-md",
           size === "lg" && "sm:max-w-xl",
           size === "xl" && "sm:max-w-3xl lg:max-w-4xl lg:h-[min(88vh,760px)] lg:overflow-hidden",
