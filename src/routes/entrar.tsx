@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { BrandLogo } from "@/components/brand-logo";
@@ -39,6 +39,47 @@ function SignIn() {
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [recovering, setRecovering] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
+
+  useEffect(() => {
+    const { data: subscription } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") {
+        sessionStorage.setItem("agendai_recovering", "1");
+        setRecovering(true);
+      }
+    });
+    if (sessionStorage.getItem("agendai_recovering") === "1") setRecovering(true);
+    return () => subscription.subscription.unsubscribe();
+  }, []);
+
+  function finishRecovery() {
+    sessionStorage.removeItem("agendai_recovering");
+    setRecovering(false);
+  }
+
+  async function onResetPassword(e: React.FormEvent) {
+    e.preventDefault();
+    if (newPassword.length < 6) {
+      toast.error("A senha precisa ter pelo menos 6 caracteres.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error("As senhas não coincidem.");
+      return;
+    }
+    setResetLoading(true);
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    setResetLoading(false);
+    if (error) return toast.error("Não foi possível atualizar a senha. Tente novamente.");
+    await supabase.auth.signOut();
+    finishRecovery();
+    setNewPassword("");
+    setConfirmPassword("");
+    toast.success("Senha atualizada! Faça login com a nova senha.");
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -68,11 +109,14 @@ function SignIn() {
   }
 
   function social(provider: "google" | "apple") {
-    toast.info(
-      provider === "google"
-        ? "Login com Google ainda não está habilitado nesta conta."
-        : "Login com Apple ainda não está habilitado nesta conta.",
-    );
+    void supabase.auth
+      .signInWithOAuth({
+        provider,
+        options: { redirectTo: `${window.location.origin}/app` },
+      })
+      .then(({ error }) => {
+        if (error) toast.error("Não foi possível iniciar o login. Tente novamente.");
+      });
   }
 
   return (
@@ -81,75 +125,114 @@ function SignIn() {
       accent="Entre e continue."
       subtitle="Acesse seu painel para gerenciar agendamentos, serviços e horários."
     >
-      <form onSubmit={onSubmit} className="space-y-4">
-        <UIInput
-          label="E-mail"
-          icon={Mail}
-          type="email"
-          required
-          inputMode="email"
-          autoComplete="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="seu@email.com"
-        />
-        <UIPasswordInput
-          label="Senha"
-          icon={Lock}
-          required
-          autoComplete="current-password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Sua senha"
-        />
-
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <label className="inline-flex items-center gap-2 text-sm text-muted-foreground cursor-pointer select-none">
-            <input
-              type="checkbox"
-              checked={remember}
-              onChange={(e) => setRemember(e.target.checked)}
-              className="h-4 w-4 rounded-[5px] accent-[var(--btn-color)]"
-            />
-            Lembrar de mim
-          </label>
-          <button type="button" onClick={onForgot} className="ui-link text-sm">
-            Esqueci minha senha
+      {recovering ? (
+        <form onSubmit={onResetPassword} className="space-y-4">
+          <UIPasswordInput
+            label="Nova senha"
+            icon={Lock}
+            required
+            minLength={6}
+            autoComplete="new-password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            placeholder="Mínimo de 6 caracteres"
+          />
+          <UIPasswordInput
+            label="Confirmar nova senha"
+            icon={Lock}
+            required
+            minLength={6}
+            autoComplete="new-password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            placeholder="Repita a nova senha"
+          />
+          <UIButton type="submit" size="lg" fullWidth disabled={resetLoading}>
+            {resetLoading ? "Salvando..." : "Salvar nova senha"}
+          </UIButton>
+          <button
+            type="button"
+            onClick={() => {
+              void supabase.auth.signOut().then(finishRecovery);
+            }}
+            className="ui-link text-sm w-full text-center"
+          >
+            Voltar ao login
           </button>
-        </div>
+        </form>
+      ) : (
+        <>
+          <form onSubmit={onSubmit} className="space-y-4">
+            <UIInput
+              label="E-mail"
+              icon={Mail}
+              type="email"
+              required
+              inputMode="email"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="seu@email.com"
+            />
+            <UIPasswordInput
+              label="Senha"
+              icon={Lock}
+              required
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Sua senha"
+            />
 
-        <UIButton type="submit" size="lg" fullWidth disabled={loading}>
-          {loading ? (
-            "Entrando..."
-          ) : (
-            <>
-              Entrar <ArrowRight className="h-5 w-5" />
-            </>
-          )}
-        </UIButton>
-      </form>
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <label className="inline-flex items-center gap-2 text-sm text-muted-foreground cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={remember}
+                  onChange={(e) => setRemember(e.target.checked)}
+                  className="h-4 w-4 rounded-[5px] accent-[var(--btn-color)]"
+                />
+                Lembrar de mim
+              </label>
+              <button type="button" onClick={onForgot} className="ui-link text-sm">
+                Esqueci minha senha
+              </button>
+            </div>
 
-      <div className="my-6 flex items-center gap-3 text-xs text-muted-foreground">
-        <span className="h-px flex-1 bg-border" />
-        ou continue com
-        <span className="h-px flex-1 bg-border" />
-      </div>
+            <UIButton type="submit" size="lg" fullWidth disabled={loading}>
+              {loading ? (
+                "Entrando..."
+              ) : (
+                <>
+                  Entrar <ArrowRight className="h-5 w-5" />
+                </>
+              )}
+            </UIButton>
+          </form>
 
-      <div className="grid grid-cols-2 gap-3">
-        <UIButton type="button" variant="outline" onClick={() => social("google")}>
-          <GoogleGlyph /> Google
-        </UIButton>
-        <UIButton type="button" variant="outline" onClick={() => social("apple")}>
-          <AppleGlyph /> Apple
-        </UIButton>
-      </div>
+          <div className="my-6 flex items-center gap-3 text-xs text-muted-foreground">
+            <span className="h-px flex-1 bg-border" />
+            ou continue com
+            <span className="h-px flex-1 bg-border" />
+          </div>
 
-      <p className="mt-6 text-sm text-muted-foreground text-center">
-        Ainda não possui conta?{" "}
-        <Link to="/cadastrar" className="ui-link">
-          Cadastre-se gratuitamente
-        </Link>
-      </p>
+          <div className="grid grid-cols-2 gap-3">
+            <UIButton type="button" variant="outline" onClick={() => social("google")}>
+              <GoogleGlyph /> Google
+            </UIButton>
+            <UIButton type="button" variant="outline" onClick={() => social("apple")}>
+              <AppleGlyph /> Apple
+            </UIButton>
+          </div>
+
+          <p className="mt-6 text-sm text-muted-foreground text-center">
+            Ainda não possui conta?{" "}
+            <Link to="/cadastrar" className="ui-link">
+              Cadastre-se gratuitamente
+            </Link>
+          </p>
+        </>
+      )}
     </AuthLayout>
   );
 }
