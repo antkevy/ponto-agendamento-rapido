@@ -25,19 +25,23 @@ import {
   MapPin,
   Clock,
   ArrowLeft,
+  ArrowRight,
   User,
   X,
   MessageCircle,
-  Gem,
+  BadgeCheck,
+  Sparkles,
+  Tag,
   ShieldCheck,
   CalendarCheck2,
   Calendar as CalendarIcon,
-  Scissors,
   Mail,
   Pencil,
   Lock,
+  type LucideIcon,
 } from "lucide-react";
 import {
+  UIBadge,
   UIButton,
   UICard,
   UICardHeader,
@@ -48,6 +52,15 @@ import {
 } from "@/components/ui-kit";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ViewToggle, type ViewMode } from "@/components/view-toggle";
+
+/** Diferenciais genéricos exibidos na página pública (sem tema de segmento). */
+const BENEFITS: Array<{ icon: LucideIcon; title: string; text: string }> = [
+  { icon: CalendarCheck2, title: "Agendamento online", text: "Reserve em poucos cliques, 24h por dia" },
+  { icon: Clock, title: "Horários reais", text: "Só aparece o que está mesmo disponível" },
+  { icon: BadgeCheck, title: "Confirmação na hora", text: "Você recebe o resumo do seu horário" },
+  { icon: ShieldCheck, title: "Seus dados seguros", text: "Usamos suas informações só no contato" },
+];
+
 
 /** Dados públicos de um profissional carregados pelo /p/:slug. */
 type PublicPro = {
@@ -257,68 +270,59 @@ function BookingPage() {
       style={{ ["--brand" as string]: brand } as React.CSSProperties}
     >
       <header
-        className="bg-transparent"
-        style={{ backgroundColor: "color-mix(in oklab, var(--header-color) 55%, transparent)" }}
+        className="sticky top-0 z-30 border-b"
+        style={{
+          backgroundColor: "color-mix(in oklab, var(--header-color) 88%, transparent)",
+          borderColor: "color-mix(in oklab, var(--border) 70%, transparent)",
+          backdropFilter: "blur(18px) saturate(140%)",
+        }}
       >
-        <div className="max-w-3xl mx-auto px-4 py-8 sm:py-10 flex items-start gap-4">
+        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center gap-3.5">
           {pro.logo_url ? (
             <img
               src={pro.logo_url}
               alt=""
-              className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl object-cover border border-border shrink-0"
+              className="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl object-cover border border-border shrink-0"
             />
           ) : (
             <div
-              className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl grid place-items-center text-2xl font-bold text-brand-foreground shrink-0 shadow-md"
+              className="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl grid place-items-center text-xl font-black text-brand-foreground shrink-0 shadow-md"
               style={{ backgroundColor: brand }}
             >
               {pro.business_name.charAt(0).toUpperCase()}
             </div>
           )}
           <div className="min-w-0 flex-1">
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground truncate leading-[1.1]">
+            <h1 className="text-lg sm:text-2xl font-black tracking-tight text-foreground truncate leading-tight">
               {pro.business_name}
             </h1>
             {pro.description && (
-              <p className="text-sm text-muted-foreground mt-1.5">{pro.description}</p>
+              <p className="text-xs sm:text-sm mt-0.5 line-clamp-1 flex items-center gap-1.5">
+                <BadgeCheck className="h-3.5 w-3.5 shrink-0 ui-icon-color" />
+                <span className="ui-accent-text font-medium truncate">{pro.description}</span>
+              </p>
             )}
-            {pro.lat && pro.lng ? (
-              <div className="mt-1 space-y-1">
-                <a
-                  href={`https://www.google.com/maps?q=${pro.lat},${pro.lng}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-muted-foreground inline-flex items-center gap-1 hover:text-accent transition-colors"
-                >
-                  <MapPin className="h-3 w-3" /> {pro.address || "Ver no mapa"}
-                </a>
-                <div className="rounded-xl overflow-hidden border border-border h-32 w-full max-w-sm">
-                  <iframe
-                    title="Localização"
-                    loading="lazy"
-                    className="w-full h-full"
-                    src={`https://www.google.com/maps?q=${pro.lat},${pro.lng}&z=15&output=embed`}
-                  />
-                </div>
-              </div>
-            ) : (
-              pro.address && (
-                <a
-                  href={`https://www.google.com/maps/search/${encodeURIComponent(pro.address)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-muted-foreground mt-1 inline-flex items-center gap-1 hover:text-accent transition-colors"
-                >
-                  <MapPin className="h-3 w-3" /> {pro.address}
-                </a>
-              )
+            {pro.address && (
+              <a
+                href={
+                  pro.lat && pro.lng
+                    ? `https://www.google.com/maps?q=${pro.lat},${pro.lng}`
+                    : `https://www.google.com/maps/search/${encodeURIComponent(pro.address)}`
+                }
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-muted-foreground mt-0.5 inline-flex items-center gap-1 hover:text-accent transition-colors max-w-full"
+              >
+                <MapPin className="h-3 w-3 shrink-0" />
+                <span className="truncate">{pro.address}</span>
+              </a>
             )}
           </div>
           <ThemeToggle className="shrink-0" />
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-4 py-6 sm:py-8">
+      <main className="max-w-4xl mx-auto px-4 py-6 sm:py-8">
         {step !== "landing" && step !== "service" && step !== "done" && (
           <button
             onClick={goBack}
@@ -329,13 +333,69 @@ function BookingPage() {
         )}
 
         {step === "landing" && (
-          <section className="animate-fade-in-up space-y-8">
-            {pro.description && (
-              <div className="card-elevated p-6 text-center">
-                <p className="text-lg text-muted-foreground leading-relaxed">{pro.description}</p>
+          <section className="space-y-8 sm:space-y-10">
+            {/* Hero */}
+            <div
+              className="ui-card relative overflow-hidden animate-ui-scale-in"
+              style={{ borderRadius: "1.75rem" }}
+            >
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-0"
+                style={{
+                  backgroundImage:
+                    "radial-gradient(120% 90% at 100% 0%, color-mix(in oklab, var(--accent) 22%, transparent) 0%, transparent 60%)",
+                }}
+              />
+              <div className="relative p-6 sm:p-10">
+                <UIBadge icon={CalendarCheck2}>Agendamento fácil e rápido</UIBadge>
+                <h2 className="mt-5 text-3xl sm:text-5xl font-black tracking-tight leading-[1.05] text-foreground">
+                  Seu tempo é <span className="ui-accent-text">importante.</span>
+                  <br />
+                  Nós cuidamos dele.
+                </h2>
+                <p className="mt-4 text-sm sm:text-base text-muted-foreground leading-relaxed max-w-lg">
+                  Escolha o serviço, o horário e pronto: seu agendamento fica confirmado em poucos
+                  cliques, com toda praticidade e segurança.
+                </p>
+                <UIButton
+                  size="lg"
+                  className="mt-7 w-full sm:w-auto"
+                  icon={CalendarCheck2}
+                  onClick={() => setStep("service")}
+                >
+                  Agendar agora <ArrowRight className="h-5 w-5" />
+                </UIButton>
+                <p className="mt-4 text-xs sm:text-sm text-muted-foreground inline-flex items-center gap-2">
+                  <ShieldCheck className="h-4 w-4 ui-icon-color" /> Ambiente seguro e atendimento de
+                  qualidade
+                </p>
               </div>
-            )}
+            </div>
 
+            {/* Diferenciais */}
+            <div>
+              <h3 className="text-center text-lg sm:text-2xl font-black tracking-tight text-foreground">
+                Por que agendar com a gente?
+              </h3>
+              <div className="mt-6 grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                {BENEFITS.map((b, i) => (
+                  <div
+                    key={b.title}
+                    className="ui-card p-4 sm:p-5 text-center ui-stagger"
+                    style={{ ["--i" as string]: i }}
+                  >
+                    <span className="ui-icon-bubble mx-auto h-11 w-11 grid place-items-center rounded-full">
+                      <b.icon className="h-5 w-5" />
+                    </span>
+                    <p className="mt-3 font-bold text-sm text-foreground">{b.title}</p>
+                    <p className="mt-1 text-xs text-muted-foreground leading-relaxed">{b.text}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Planos */}
             {loadingPlanos ? (
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {[0, 1].map((i) => (
@@ -344,24 +404,26 @@ function BookingPage() {
               </div>
             ) : planos && planos.length > 0 ? (
               <div>
-                <h2 className="text-xl font-bold tracking-tight text-foreground mb-4 flex items-center gap-2">
-                  <Gem className="h-5 w-5" /> Nossos planos
-                </h2>
+                <h3 className="text-lg sm:text-2xl font-black tracking-tight text-foreground mb-5 flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 ui-icon-color" /> Nossos planos
+                </h3>
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {planos.map((p) => (
+                  {planos.map((p, i) => (
                     <div
                       key={p.id}
-                      className="card-elevated p-5 flex flex-col gap-3 hover:-translate-y-0.5 transition-all"
+                      className="ui-card p-5 flex flex-col gap-3 transition-transform hover:-translate-y-0.5 ui-stagger"
+                      style={{ ["--i" as string]: i }}
                     >
                       {p.image_url && (
                         <img
                           src={p.image_url}
                           alt={p.name}
-                          className="w-full aspect-video rounded-lg object-cover"
+                          loading="lazy"
+                          className="w-full aspect-video rounded-xl object-cover"
                         />
                       )}
-                      <p className="font-semibold text-lg">{p.name}</p>
-                      <p className="text-2xl font-black tracking-tight" style={{ color: brand }}>
+                      <p className="font-bold text-lg">{p.name}</p>
+                      <p className="text-2xl font-black tracking-tight ui-accent-text">
                         {formatBRL(p.price_cents)}
                       </p>
                       {p.description && (
@@ -375,19 +437,26 @@ function BookingPage() {
               </div>
             ) : null}
 
-            <div className="text-center pb-4 space-y-3">
-              <button
-                onClick={() => setStep("service")}
-                className="btn-gradient text-lg px-10 py-4 inline-flex items-center gap-2"
-              >
-                Agendar serviço <ArrowLeft className="h-5 w-5 rotate-180" />
-              </button>
-              <div>
+            {/* CTA final */}
+            <div className="ui-card p-5 sm:p-6 flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
+              <span className="ui-icon-bubble h-14 w-14 grid place-items-center rounded-2xl shrink-0">
+                <CalendarCheck2 className="h-6 w-6" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="font-bold text-foreground">Garanta o melhor horário</p>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  Agende online 24h por dia, sem precisar ligar ou esperar resposta.
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                <UIButton onClick={() => setStep("service")} icon={ArrowRight}>
+                  Agendar
+                </UIButton>
                 <a
                   href={`/meus-agendamentos?pro=${encodeURIComponent(pro.slug)}`}
-                  className="ui-link text-sm inline-flex items-center gap-1.5"
+                  className="ui-btn-outline ui-ripple inline-flex items-center justify-center gap-2 font-semibold rounded-2xl min-h-[48px] px-5 text-sm transition-all"
                 >
-                  <CalendarCheck2 className="h-4 w-4" /> Ver meus agendamentos
+                  <CalendarCheck2 className="h-4 w-4" /> Meus agendamentos
                 </a>
               </div>
             </div>
@@ -395,33 +464,41 @@ function BookingPage() {
         )}
 
         {step === "service" && (
-          <section className="animate-fade-in-up">
-            <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
-              <h2 className="text-xl font-bold tracking-tight text-foreground">
-                1. Escolha os serviços
-              </h2>
-              {(services ?? []).length > 0 && (
-                <ViewToggle value={serviceView} onChange={setServiceView} />
-              )}
+          <section className="animate-ui-slide-up space-y-4">
+            <div className="ui-card p-5 sm:p-6">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <h2 className="text-xl sm:text-2xl font-black tracking-tight text-foreground">
+                    1. Escolha os serviços
+                  </h2>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Selecione um ou mais serviços para continuar.
+                  </p>
+                </div>
+                {(services ?? []).length > 0 && (
+                  <ViewToggle value={serviceView} onChange={setServiceView} />
+                )}
+              </div>
             </div>
+
             {loadingServices ? (
               <div className="space-y-3">
                 {[0, 1, 2].map((i) => (
-                  <div key={i} className="skeleton h-20" />
+                  <div key={i} className="skeleton h-24" />
                 ))}
               </div>
             ) : (services ?? []).length === 0 ? (
-              <p className="text-sm text-muted-foreground">
+              <div className="ui-card p-6 text-sm text-muted-foreground text-center">
                 Este profissional ainda não cadastrou serviços.
-              </p>
+              </div>
             ) : (
               <>
                 {serviceView === "list" ? (
                   <ul className="space-y-3">
-                    {services!.map((s) => {
+                    {services!.map((s, i) => {
                       const selected = selectedServices.some((x) => x.id === s.id);
                       return (
-                        <li key={s.id}>
+                        <li key={s.id} className="ui-stagger" style={{ ["--i" as string]: i }}>
                           <div
                             role="button"
                             tabIndex={0}
@@ -433,47 +510,52 @@ function BookingPage() {
                               }
                             }}
                             data-selected={selected || undefined}
-                            className="w-full text-left cursor-pointer card-elevated p-4 hover:border-accent transition-all hover:-translate-y-0.5 data-[selected]:border-accent data-[selected]:ring-2 data-[selected]:ring-accent/30"
+                            className="ui-card ui-ripple w-full text-left cursor-pointer p-4 transition-all hover:-translate-y-0.5 active:scale-[0.99] data-[selected]:border-accent data-[selected]:ring-2 data-[selected]:ring-accent/30"
                           >
-                            <div className="flex items-start gap-3">
-                              {s.image_url && (
+                            <div className="flex items-center gap-3.5">
+                              {s.image_url ? (
                                 <img
                                   src={s.image_url}
                                   alt={s.name}
-                                  className="h-16 w-16 rounded-lg object-cover shrink-0 aspect-square"
+                                  loading="lazy"
+                                  className="h-16 w-16 rounded-2xl object-cover shrink-0 aspect-square border border-border"
                                 />
+                              ) : (
+                                <span className="ui-icon-bubble h-16 w-16 grid place-items-center rounded-2xl shrink-0">
+                                  <Tag className="h-6 w-6" />
+                                </span>
                               )}
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2">
                                   {selected && (
-                                    <CheckCircle2 className="h-5 w-5 text-accent shrink-0" />
+                                    <CheckCircle2 className="h-5 w-5 ui-accent-text shrink-0" />
                                   )}
-                                  <p className="font-semibold">{s.name}</p>
+                                  <p className="font-bold text-foreground truncate">{s.name}</p>
                                 </div>
                                 {s.description && (
-                                  <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                                  <p className="text-sm text-muted-foreground mt-0.5 line-clamp-1">
                                     {s.description}
                                   </p>
                                 )}
-                                <div className="flex items-center gap-3 mt-2">
-                                  <span className="text-sm text-muted-foreground inline-flex items-center gap-1">
-                                    <Clock className="h-3 w-3" /> {s.duration_minutes} min
+                                <div className="flex items-center gap-3 mt-2 flex-wrap">
+                                  <span className="text-xs text-muted-foreground inline-flex items-center gap-1">
+                                    <Clock className="h-3.5 w-3.5" /> {s.duration_minutes} min
                                   </span>
-                                  <span className="font-semibold text-primary">
+                                  <span className="font-black tracking-tight ui-accent-text">
                                     {formatBRL(s.price_cents)}
                                   </span>
                                 </div>
                               </div>
-                              <button
-                                type="button"
+                              <UIButton
+                                variant="outline"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setDetailService(s);
                                 }}
-                                className="btn-outline-brand !py-1 !px-2 text-xs shrink-0 mt-1"
+                                className="!min-h-[38px] !px-3 text-xs shrink-0"
                               >
                                 Ver mais
-                              </button>
+                              </UIButton>
                             </div>
                           </div>
                         </li>
@@ -482,10 +564,10 @@ function BookingPage() {
                   </ul>
                 ) : (
                   <ul className="grid gap-3 grid-cols-2 lg:grid-cols-3">
-                    {services!.map((s) => {
+                    {services!.map((s, i) => {
                       const selected = selectedServices.some((x) => x.id === s.id);
                       return (
-                        <li key={s.id}>
+                        <li key={s.id} className="ui-stagger" style={{ ["--i" as string]: i }}>
                           <div
                             role="button"
                             tabIndex={0}
@@ -497,74 +579,99 @@ function BookingPage() {
                               }
                             }}
                             data-selected={selected || undefined}
-                            className="w-full h-full text-left cursor-pointer card-elevated p-4 hover:border-accent transition-all hover:-translate-y-0.5 flex flex-col gap-2 data-[selected]:border-accent data-[selected]:ring-2 data-[selected]:ring-accent/30"
+                            className="ui-card ui-ripple w-full h-full text-left cursor-pointer p-3.5 transition-all hover:-translate-y-0.5 active:scale-[0.99] flex flex-col gap-2 data-[selected]:border-accent data-[selected]:ring-2 data-[selected]:ring-accent/30"
                           >
-                            {s.image_url && (
+                            {s.image_url ? (
                               <img
                                 src={s.image_url}
                                 alt={s.name}
-                                className="w-full aspect-square rounded-lg object-cover"
+                                loading="lazy"
+                                className="w-full aspect-square rounded-xl object-cover"
                               />
+                            ) : (
+                              <span className="ui-icon-bubble w-full aspect-square grid place-items-center rounded-xl">
+                                <Tag className="h-7 w-7" />
+                              </span>
                             )}
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1.5">
                               {selected && (
-                                <CheckCircle2 className="h-4 w-4 text-accent shrink-0" />
+                                <CheckCircle2 className="h-4 w-4 ui-accent-text shrink-0" />
                               )}
-                              <p className="font-semibold truncate">{s.name}</p>
+                              <p className="font-bold truncate text-sm">{s.name}</p>
                             </div>
                             <p className="text-xs text-muted-foreground inline-flex items-center gap-1">
                               <Clock className="h-3 w-3" /> {s.duration_minutes} min
                             </p>
-                            <p className="text-lg font-black tracking-tight text-primary">
+                            <p className="text-lg font-black tracking-tight ui-accent-text">
                               {formatBRL(s.price_cents)}
                             </p>
-                            {s.description && (
-                              <p className="text-xs text-muted-foreground line-clamp-2">
-                                {s.description}
-                              </p>
-                            )}
-                            <button
-                              type="button"
+                            <UIButton
+                              variant="outline"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setDetailService(s);
                               }}
-                              className="btn-outline-brand !py-1.5 !px-3 text-xs w-full mt-auto"
+                              className="!min-h-[36px] w-full text-xs mt-auto"
                             >
                               Ver mais
-                            </button>
+                            </UIButton>
                           </div>
                         </li>
                       );
                     })}
                   </ul>
                 )}
-                <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-3 p-4 card-elevated">
-                  <div className="text-sm">
-                    {selectedServices.length === 0 ? (
-                      <span className="text-muted-foreground">Nenhum serviço selecionado</span>
-                    ) : (
-                      <span>
-                        <strong>{selectedServices.length}</strong> serviço(s) ·{" "}
-                        <strong>
-                          {formatBRL(selectedServices.reduce((a, s) => a + s.price_cents, 0))}
-                        </strong>{" "}
-                        total · {selectedServices.reduce((a, s) => a + s.duration_minutes, 0)} min
+
+                <div className="ui-card p-4 sm:p-5 space-y-3 sticky bottom-3 z-20">
+                  {selectedServices.length === 0 ? (
+                    <div
+                      className="rounded-2xl border border-dashed p-4 text-center"
+                      style={{ borderColor: "color-mix(in oklab, var(--border) 90%, transparent)" }}
+                    >
+                      <p className="text-sm text-muted-foreground">Nenhum serviço selecionado</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Adicione serviços para continuar
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between gap-3 text-sm flex-wrap">
+                      <span className="text-muted-foreground">
+                        <strong className="text-foreground">{selectedServices.length}</strong>{" "}
+                        serviço(s) ·{" "}
+                        {selectedServices.reduce((a, s) => a + s.duration_minutes, 0)} min
                       </span>
-                    )}
-                  </div>
-                  <button
+                      <span className="text-lg font-black tracking-tight ui-accent-text">
+                        {formatBRL(selectedServices.reduce((a, s) => a + s.price_cents, 0))}
+                      </span>
+                    </div>
+                  )}
+                  <UIButton
+                    size="lg"
+                    fullWidth
+                    icon={CalendarCheck2}
                     disabled={selectedServices.length === 0}
                     onClick={proceedFromServices}
-                    className="btn-brand disabled:opacity-50 w-full sm:w-auto"
                   >
-                    Continuar
-                  </button>
+                    Continuar <ArrowRight className="h-5 w-5" />
+                  </UIButton>
+                </div>
+
+                <div className="ui-card grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-border overflow-hidden">
+                  {BENEFITS.map((b) => (
+                    <div key={b.title} className="p-4 text-center">
+                      <b.icon className="h-5 w-5 mx-auto ui-icon-color" />
+                      <p className="mt-2 text-xs font-bold text-foreground">{b.title}</p>
+                      <p className="mt-1 text-[11px] text-muted-foreground leading-snug">
+                        {b.text}
+                      </p>
+                    </div>
+                  ))}
                 </div>
               </>
             )}
           </section>
         )}
+
 
         {step === "employee" && selectedServices.length > 0 && (
           <section className="animate-fade-in-up">
@@ -1139,7 +1246,7 @@ function FormStep({
                   />
                 ) : (
                   <span className="ui-icon-bubble h-14 w-14 grid place-items-center rounded-2xl shrink-0">
-                    <Scissors className="h-6 w-6" />
+                    <Tag className="h-6 w-6" />
                   </span>
                 )}
                 <div className="min-w-0">
