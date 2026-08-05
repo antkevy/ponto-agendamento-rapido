@@ -15,7 +15,6 @@ import {
   Sun,
   X,
   BarChart3,
-  User,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -23,7 +22,6 @@ const links: Array<{ to: string; label: string; icon: typeof Calendar; exact?: b
   { to: "/app", label: "Painel", icon: LayoutDashboard, exact: true },
   { to: "/app/agendamentos", label: "Agendamentos", icon: Calendar },
   { to: "/app/servicos", label: "Serviços", icon: Briefcase },
-  { to: "/app/clientes", label: "Clientes", icon: User },
   { to: "/app/relatorio", label: "Relatório", icon: BarChart3 },
   { to: "/app/configuracoes", label: "Configurações", icon: Settings },
 ];

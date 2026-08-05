@@ -762,7 +762,7 @@ function NewAppointmentForm({
               )}
               {clientOptions.length === 0 && (
                 <UINotice icon={Info} title="Nenhum cliente cadastrado">
-                  Escolha "Cliente novo" ou cadastre na aba Clientes.
+                  Escolha "Cliente novo" — o cliente é cadastrado automaticamente ao agendar.
                 </UINotice>
               )}
             </>
