@@ -41,7 +41,9 @@ function AppearancePreview({ colors }: { colors: Appearance }) {
             {/* Cabeçalho */}
             <div
               className="px-4 pt-4 pb-2 rounded-t-3xl"
-              style={{ backgroundColor: "color-mix(in oklab, var(--header-color) 55%, transparent)" }}
+              style={{
+                backgroundColor: "color-mix(in oklab, var(--header-color) 55%, transparent)",
+              }}
             >
               <div className="flex items-center gap-3">
                 <div
@@ -63,15 +65,22 @@ function AppearancePreview({ colors }: { colors: Appearance }) {
                 <CheckCircle2 className="h-5 w-5 shrink-0 ui-accent-text mt-0.5" />
                 <div className="min-w-0">
                   <p className="font-semibold text-foreground text-sm">Confirmação automática</p>
-                  <p className="text-sm text-muted-foreground leading-relaxed mt-0.5">Aviso do estabelecimento</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed mt-0.5">
+                    Aviso do estabelecimento
+                  </p>
                 </div>
               </div>
 
               {/* Cartão com preço + profissional */}
-              <div className="rounded-2xl border border-[var(--border)] p-3" style={{ background: "var(--card)" }}>
+              <div
+                className="rounded-2xl border border-[var(--border)] p-3"
+                style={{ background: "var(--card)" }}
+              >
                 <div className="flex items-center justify-between gap-2">
                   <div className="h-2.5 w-24 rounded bg-muted-foreground/30"></div>
-                  <div className="text-base font-black" style={{ color: "var(--brand)" }}>R$ 59,90</div>
+                  <div className="text-base font-black" style={{ color: "var(--brand)" }}>
+                    R$ 59,90
+                  </div>
                 </div>
                 <div className="my-3 border-t border-[var(--border)]"></div>
                 <div className="flex items-center gap-2">
@@ -88,11 +97,17 @@ function AppearancePreview({ colors }: { colors: Appearance }) {
 
               {/* Chips */}
               <div className="flex flex-wrap gap-1.5">
-                <button type="button" data-selected="true" className="chip">Corte</button>
+                <button type="button" data-selected="true" className="chip">
+                  Corte
+                </button>
                 <button
                   type="button"
                   className="chip"
-                  style={{ backgroundColor: "var(--hover-color)", color: "var(--foreground)", filter: "brightness(1.03)" }}
+                  style={{
+                    backgroundColor: "var(--hover-color)",
+                    color: "var(--foreground)",
+                    filter: "brightness(1.03)",
+                  }}
                 >
                   Barba
                 </button>
@@ -107,7 +122,10 @@ function AppearancePreview({ colors }: { colors: Appearance }) {
               </span>
 
               {/* Botão principal */}
-              <button type="button" className="ui-btn-primary w-full min-h-[48px] px-5 text-sm font-semibold rounded-2xl">
+              <button
+                type="button"
+                className="ui-btn-primary w-full min-h-[48px] px-5 text-sm font-semibold rounded-2xl"
+              >
                 Confirmar agendamento
               </button>
             </div>
@@ -150,9 +168,12 @@ export function AppearanceSettings({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => () => {
-    if (saveTimer.current) window.clearTimeout(saveTimer.current);
-  }, []);
+  useEffect(
+    () => () => {
+      if (saveTimer.current) window.clearTimeout(saveTimer.current);
+    },
+    [],
+  );
 
   function persistToDb(nextLight: Appearance, nextDark: Appearance) {
     if (!proId) return;
@@ -174,7 +195,14 @@ export function AppearanceSettings({
     // A cor da marca vale para os DOIS temas (claro e escuro). Assim, trocar o
     // tema na página pública mantém a cor escolhida — antes ela só era gravada
     // no modo ativo e o outro voltava ao padrão.
-    const branded: Partial<Appearance> = { primary: hex, accent: hex, button: hex, icon: hex, link: hex, badge: hex };
+    const branded: Partial<Appearance> = {
+      primary: hex,
+      accent: hex,
+      button: hex,
+      icon: hex,
+      link: hex,
+      badge: hex,
+    };
     const lightNext: Appearance = { ...light, ...branded };
     const darkNext: Appearance = { ...dark, ...branded };
     setLight(lightNext);
@@ -204,15 +232,20 @@ export function AppearanceSettings({
         icon={Palette}
         title="Aparência — Cor da Marca"
         action={
-          <UIButton variant="ghost" onClick={reset} icon={RotateCcw} className="!min-h-[40px] !px-3 text-xs">
+          <UIButton
+            variant="ghost"
+            onClick={reset}
+            icon={RotateCcw}
+            className="!min-h-[40px] !px-3 text-xs"
+          >
             Restaurar
           </UIButton>
         }
       />
 
       <p className="text-sm text-muted-foreground -mt-2 mb-5">
-        Escolha a cor da sua marca. Ela é aplicada em tempo real na sua página pública de agendamento, para o tema
-        selecionado. O painel e o resto do sistema não mudam.
+        Escolha a cor da sua marca. Ela é aplicada em tempo real na sua página pública de
+        agendamento, para o tema selecionado. O painel e o resto do sistema não mudam.
       </p>
 
       <div className="grid grid-cols-2 gap-2 mb-6 max-w-xs">
@@ -237,7 +270,9 @@ export function AppearanceSettings({
         <div>
           <div className="flex items-baseline gap-2 mb-3">
             <span className="text-sm font-semibold">Cores predefinidas</span>
-            <span className="text-xs text-muted-foreground">escolha uma e ela é aplicada na hora</span>
+            <span className="text-xs text-muted-foreground">
+              escolha uma e ela é aplicada na hora
+            </span>
           </div>
           <div className="grid gap-2 sm:grid-cols-2">
             {COLOR_PRESETS.map((p) => {
@@ -254,7 +289,9 @@ export function AppearanceSettings({
                     className="h-9 w-9 shrink-0 rounded-lg border border-border grid place-items-center"
                     style={{ backgroundColor: p.color }}
                   >
-                    {selected && <Check className="h-4 w-4" style={{ color: foregroundFor(p.color) }} />}
+                    {selected && (
+                      <Check className="h-4 w-4" style={{ color: foregroundFor(p.color) }} />
+                    )}
                   </span>
                   <span className="text-sm font-medium">{p.name}</span>
                   {selected && <Check className="ml-auto h-4 w-4 ui-accent-text" />}
@@ -263,7 +300,8 @@ export function AppearanceSettings({
             })}
           </div>
           <p className="text-xs text-muted-foreground mt-4">
-            A cor escolhida é salva no servidor e vale para todos os visitantes da sua página de agendamento.
+            A cor escolhida é salva no servidor e vale para todos os visitantes da sua página de
+            agendamento.
           </p>
         </div>
       </div>

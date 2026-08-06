@@ -59,6 +59,7 @@ import {
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ViewToggle, type ViewMode } from "@/components/view-toggle";
 import { ServiceCard, type ServiceVariant } from "@/components/service-card";
+import { BorderBeam, Magnet, ShineBorder, TextReveal } from "@/components/effects";
 
 /** Cores dos cards de planos (ciclam pelas variantes do ServiceCard). */
 const PLANO_VARIANTS: ServiceVariant[] = ["brand", "accent", "success", "warning"];
@@ -392,27 +393,38 @@ function BookingPage() {
               <div className="relative p-6 sm:p-10">
                 <UIBadge icon={CalendarCheck2}>Agendamento fácil e rápido</UIBadge>
                 <h2 className="mt-5 text-3xl sm:text-5xl font-black tracking-tight leading-[1.05] text-foreground">
-                  Seu tempo é <span className="ui-accent-text">importante.</span>
+                  <TextReveal text="Seu tempo é importante." accentWords={["importante."]} />
                   <br />
-                  Na {pro.business_name}, cuidamos dele.
+                  <TextReveal text={`Na ${pro.business_name}, cuidamos dele.`} delay={220} />
                 </h2>
                 <p className="mt-4 text-sm sm:text-base text-muted-foreground leading-relaxed max-w-lg">
                   Escolha o serviço, o horário e pronto: seu agendamento fica agendado em poucos
                   cliques, com toda praticidade e segurança.
                 </p>
-                <UIButton
-                  size="lg"
-                  className="mt-7 w-full sm:w-auto"
-                  icon={CalendarCheck2}
-                  onClick={() => setStep("service")}
-                >
-                  Agendar agora <ArrowRight className="h-5 w-5" />
-                </UIButton>
+                <Magnet className="mt-7 w-full sm:w-auto">
+                  <UIButton
+                    size="lg"
+                    className="w-full sm:w-auto"
+                    icon={CalendarCheck2}
+                    onClick={() => setStep("service")}
+                  >
+                    Agendar agora <ArrowRight className="h-5 w-5" />
+                  </UIButton>
+                </Magnet>
                 <p className="mt-4 sm:mt-10 text-xs sm:text-sm text-muted-foreground inline-flex items-center gap-2">
                   <ShieldCheck className="h-4 w-4 ui-icon-color" /> Ambiente seguro e atendimento de
                   qualidade
                 </p>
               </div>
+              <BorderBeam
+                duration={9}
+                delay={0.5}
+                size={48}
+                borderWidth={1}
+                colorFrom="var(--accent)"
+                colorTo="var(--brand)"
+              />
+              <ShineBorder duration={11} borderWidth={1} shineColor="var(--accent)" />
             </div>
 
             {/* Diferenciais */}
@@ -459,6 +471,7 @@ function BookingPage() {
                       image={p.image_url}
                       imageAlt={p.name}
                       variant={PLANO_VARIANTS[i % PLANO_VARIANTS.length]}
+                      shine
                       className="ui-stagger"
                       style={{ ["--i" as string]: i }}
                     />

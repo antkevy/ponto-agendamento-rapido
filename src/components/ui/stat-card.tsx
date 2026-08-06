@@ -1,5 +1,6 @@
 import { ArrowDownRight, ArrowUpRight, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { NumberTicker } from "@/components/effects";
 
 type StatTone = "brand" | "accent" | "success" | "warning" | "destructive";
 
@@ -18,25 +19,34 @@ export function StatCard({
   hint,
   tone = "accent",
   trend,
+  ticker = false,
+  formatTicker,
   className,
 }: {
   icon: LucideIcon;
   label: string;
-  value: string;
+  value: string | number;
   hint?: string;
   tone?: StatTone;
   trend?: number | null;
+  ticker?: boolean;
+  formatTicker?: (n: number) => string;
   className?: string;
 }) {
   const color = TONE_VAR[tone];
   const trendUp = (trend ?? 0) >= 0;
+  const tickerValue = ticker && typeof value === "number" ? value : null;
   return (
     <div className={cn("card-elevated p-5 animate-fade-in-up", className)}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <span className="text-sm font-medium text-muted-foreground">{label}</span>
           <p className="mt-2 text-3xl font-black tracking-tight text-foreground truncate">
-            {value}
+            {tickerValue === null ? (
+              value
+            ) : (
+              <NumberTicker value={tickerValue} format={formatTicker} />
+            )}
           </p>
           {hint && <p className="text-xs text-muted-foreground mt-1">{hint}</p>}
         </div>

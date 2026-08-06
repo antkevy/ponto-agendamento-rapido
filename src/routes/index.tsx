@@ -237,7 +237,6 @@ function BookingPreview() {
   );
 }
 
-
 function Landing() {
   return (
     <div className="min-h-screen bg-background overflow-x-clip">
@@ -347,7 +346,6 @@ function Landing() {
           <BookingPreview />
         </div>
       </section>
-
 
       {/* Categories marquee */}
       <section className="border-y border-border bg-card/60">

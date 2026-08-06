@@ -79,9 +79,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Agendaí — Agendamento online simples para o seu negócio" },
-      { name: "description", content: "Plataforma brasileira de agendamento online. Deixe seus clientes marcarem horário 24h por dia, sem WhatsApp, sem confusão." },
+      {
+        name: "description",
+        content:
+          "Plataforma brasileira de agendamento online. Deixe seus clientes marcarem horário 24h por dia, sem WhatsApp, sem confusão.",
+      },
       { property: "og:title", content: "Agendaí — Agendamento online simples" },
-      { property: "og:description", content: "Sua agenda online, sempre aberta. Menos mensagens, mais clientes." },
+      {
+        property: "og:description",
+        content: "Sua agenda online, sempre aberta. Menos mensagens, mais clientes.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],

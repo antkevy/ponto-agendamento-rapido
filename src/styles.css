@@ -792,6 +792,80 @@
   animation-delay: calc(var(--i, 0) * 45ms);
 }
 
+/* --- Efeitos: ShineBorder (borda com brilho que percorre) --- */
+.ui-shine-border {
+  padding: var(--border-width, 1px);
+  background-image: radial-gradient(
+    farthest-side,
+    color-mix(in oklab, var(--shine-color, var(--accent)) 55%, transparent),
+    transparent
+  );
+  background-size: 300% 300%;
+  background-position: 0% 0%;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: ui-shine var(--duration, 8s) linear infinite;
+}
+@keyframes ui-shine {
+  0% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 100% 100%;
+  }
+}
+
+/* --- Efeitos: BorderBeam (ponto de luz que percorre a borda) --- */
+.ui-border-beam {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: inherit;
+  padding: var(--beam-width, 1px);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+.ui-border-beam__dot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--beam-size, 40px);
+  height: var(--beam-size, 40px);
+  background: linear-gradient(
+    to left,
+    var(--beam-from, var(--accent)),
+    var(--beam-to, var(--brand)),
+    transparent
+  );
+  offset-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+  offset-rotate: 0deg;
+  offset-anchor: center;
+  animation: ui-beam-rotate var(--beam-duration, 6s) linear infinite;
+  animation-delay: var(--beam-delay, 0s);
+  animation-direction: var(--beam-direction, normal);
+}
+@keyframes ui-beam-rotate {
+  from {
+    offset-distance: 0%;
+  }
+  to {
+    offset-distance: 100%;
+  }
+}
+
 @utility scrollbar-slim {
   scrollbar-width: thin;
   scrollbar-color: color-mix(in oklab, var(--muted-foreground) 35%, transparent) transparent;
@@ -817,5 +891,12 @@
   *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+  }
+  .ui-shine-border {
+    animation: none;
+    background-position: 50% 50%;
+  }
+  .ui-border-beam__dot {
+    display: none;
   }
 }

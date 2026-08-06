@@ -2,6 +2,7 @@ import { ArrowRight, Sparkles } from "lucide-react";
 import type { CSSProperties, ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
+import { ShineBorder } from "@/components/effects";
 
 export type ServiceVariant = "brand" | "accent" | "success" | "warning";
 
@@ -20,6 +21,7 @@ export function ServiceCard({
   imageAlt,
   variant = "brand",
   href,
+  shine = false,
   className,
   style,
 }: {
@@ -30,6 +32,7 @@ export function ServiceCard({
   imageAlt?: string;
   variant?: ServiceVariant;
   href?: string;
+  shine?: boolean;
   className?: string;
   style?: CSSProperties;
 }) {
@@ -45,6 +48,12 @@ export function ServiceCard({
         className,
       )}
     >
+      {shine && (
+        <ShineBorder
+          shineColor={color}
+          className="opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+        />
+      )}
       <span aria-hidden="true" className="h-1.5 block" style={{ backgroundColor: color }} />
       {image ? (
         <div className="relative overflow-hidden">

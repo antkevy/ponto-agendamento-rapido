@@ -62,7 +62,6 @@ export function ImageUpload({
     <div className="space-y-2">
       <span className="text-sm font-medium block">{label}</span>
       <div className="flex items-start gap-3 pt-3">
-
         {preview ? (
           <div className="relative shrink-0">
             <img src={preview} alt="" className={previewCls} />
@@ -76,7 +75,9 @@ export function ImageUpload({
             </button>
           </div>
         ) : (
-          <div className={`${previewCls} grid place-items-center bg-secondary text-muted-foreground`}>
+          <div
+            className={`${previewCls} grid place-items-center bg-secondary text-muted-foreground`}
+          >
             <ImageIcon className="h-6 w-6" />
           </div>
         )}
@@ -117,7 +118,9 @@ export function ImageUpload({
               >
                 {uploading ? "Enviando..." : "Selecionar imagem"}
               </button>
-              <p className="text-xs text-muted-foreground mt-1">PNG, JPG ou WEBP — até 3 MB. Recomendado: 600×600.</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                PNG, JPG ou WEBP — até 3 MB. Recomendado: 600×600.
+              </p>
             </div>
           ) : (
             <input

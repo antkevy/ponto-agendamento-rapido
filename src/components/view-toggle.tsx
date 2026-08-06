@@ -2,7 +2,13 @@ import { LayoutGrid, List } from "lucide-react";
 
 export type ViewMode = "grid" | "list";
 
-export function ViewToggle({ value, onChange }: { value: ViewMode; onChange: (v: ViewMode) => void }) {
+export function ViewToggle({
+  value,
+  onChange,
+}: {
+  value: ViewMode;
+  onChange: (v: ViewMode) => void;
+}) {
   return (
     <div className="inline-flex rounded-lg border border-border bg-background overflow-hidden">
       <button

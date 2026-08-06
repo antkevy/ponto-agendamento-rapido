@@ -241,32 +241,38 @@ function Dashboard() {
             <StatCard
               icon={Calendar}
               label="Hoje"
-              value={String(stats?.today.length ?? 0)}
+              value={stats?.today.length ?? 0}
               hint="agendamentos"
               tone="accent"
+              ticker
             />
             <StatCard
               icon={CheckCircle2}
               label="Atendimentos"
-              value={String(stats?.monthCount ?? 0)}
+              value={stats?.monthCount ?? 0}
               hint="no mês"
               tone="brand"
               trend={pct(stats?.monthCount ?? 0, stats?.prevCount ?? 0)}
+              ticker
             />
             <StatCard
               icon={DollarSign}
               label="Receita"
-              value={formatBRL(stats?.totalRevenue ?? 0)}
+              value={stats?.totalRevenue ?? 0}
               hint="agendado + concluído"
               tone="success"
               trend={pct(stats?.totalRevenue ?? 0, stats?.prevRevenue ?? 0)}
+              ticker
+              formatTicker={(n) => formatBRL(Math.round(n))}
             />
             <StatCard
               icon={TrendingUp}
               label="Ticket médio"
-              value={formatBRL(stats?.avgTicket ?? 0)}
+              value={stats?.avgTicket ?? 0}
               hint="por concluído"
               tone="warning"
+              ticker
+              formatTicker={(n) => formatBRL(Math.round(n))}
             />
           </div>
 

@@ -1,4 +1,9 @@
-import type { ReactNode, ButtonHTMLAttributes, InputHTMLAttributes, TextareaHTMLAttributes } from "react";
+import type {
+  ReactNode,
+  ButtonHTMLAttributes,
+  InputHTMLAttributes,
+  TextareaHTMLAttributes,
+} from "react";
 import { forwardRef, useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -53,9 +58,7 @@ export function UICard({
   children: ReactNode;
   glass?: boolean;
 }) {
-  return (
-    <div className={cn(glass ? "ui-card-glass" : "ui-card", className)}>{children}</div>
-  );
+  return <div className={cn(glass ? "ui-card-glass" : "ui-card", className)}>{children}</div>;
 }
 
 export function UICardHeader({
@@ -78,7 +81,13 @@ export function UICardHeader({
 
 /* --------------------------------- Ícones --------------------------------- */
 
-export function UIIconBubble({ icon: Icon, size = "md" }: { icon: LucideIcon; size?: "sm" | "md" }) {
+export function UIIconBubble({
+  icon: Icon,
+  size = "md",
+}: {
+  icon: LucideIcon;
+  size?: "sm" | "md";
+}) {
   return (
     <span
       className={cn(
@@ -194,9 +203,34 @@ export function UIPasswordInput(props: Omit<FieldProps, "type" | "trailing">) {
 
 function EyeGlyph({ open }: { open: boolean }) {
   return open ? (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9.9 4.24A9.1 9.1 0 0 1 12 4c7 0 10 8 10 8a18.5 18.5 0 0 1-2.16 3.19M6.61 6.61A18.5 18.5 0 0 0 2 12s3 8 10 8a9.7 9.7 0 0 0 5.39-1.61" /><path d="m2 2 20 20" /><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24" /></svg>
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M9.9 4.24A9.1 9.1 0 0 1 12 4c7 0 10 8 10 8a18.5 18.5 0 0 1-2.16 3.19M6.61 6.61A18.5 18.5 0 0 0 2 12s3 8 10 8a9.7 9.7 0 0 0 5.39-1.61" />
+      <path d="m2 2 20 20" />
+      <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24" />
+    </svg>
   ) : (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-8 10-8 10 8 10 8-3 8-10 8-10-8-10-8Z" /><circle cx="12" cy="12" r="3" /></svg>
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M2 12s3-8 10-8 10 8 10 8-3 8-10 8-10-8-10-8Z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
   );
 }
 
@@ -272,7 +306,9 @@ export function UIPageHeader({
     <header className="ui-header grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4 py-4 sm:px-6">
       {left}
       <div className="min-w-0 text-center sm:text-left">
-        <h2 className="truncate text-base sm:text-lg font-bold tracking-tight text-foreground">{title}</h2>
+        <h2 className="truncate text-base sm:text-lg font-bold tracking-tight text-foreground">
+          {title}
+        </h2>
         {subtitle && <div className="text-xs text-muted-foreground mt-0.5">{subtitle}</div>}
       </div>
       <div className="justify-self-end">{right}</div>

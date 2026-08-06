@@ -23,7 +23,7 @@ function effectiveBrand(brandColor: string | null | undefined, a?: Appearance): 
   const appearance = a ?? loadAppearance(mode);
   const preset = mode === "dark" ? DARK_PRESET : LIGHT_PRESET;
   const customizedPrimary = appearance.primary !== preset.primary;
-  return customizedPrimary ? appearance.primary : (brandColor || "#0284C7");
+  return customizedPrimary ? appearance.primary : brandColor || "#0284C7";
 }
 
 /**
