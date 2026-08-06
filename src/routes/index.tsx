@@ -146,111 +146,70 @@ const WEEK_DAYS = ["S", "T", "Q", "Q", "S", "S", "D"];
 const WEEK_DATES = ["19", "20", "21", "22", "23", "24", "25"];
 const TIME_SLOTS = ["09:00", "09:30", "10:00", "10:30", "11:00", "11:30"];
 
-function PhoneMockup() {
+function BookingPreview() {
   return (
-    <div
-      aria-hidden="true"
-      className="relative mx-auto mt-16 sm:mt-20 w-[300px] sm:w-[320px] select-none pointer-events-none"
-    >
-      <div className="absolute -inset-8 rounded-[3.5rem] bg-gradient-to-b from-accent/30 via-accent/10 to-transparent blur-2xl" />
+    <div aria-hidden="true" className="relative select-none">
+      <div className="absolute -inset-6 rounded-[3rem] bg-gradient-to-br from-accent/25 via-accent/10 to-transparent blur-3xl" />
 
-      <div className="relative rounded-[2.2rem] border border-border bg-card p-2.5 shadow-2xl ring-1 ring-black/5">
-        <div className="overflow-hidden rounded-[1.7rem] bg-card">
-          {/* status bar */}
-          <div className="flex items-center justify-between px-4 pt-3 text-[10px] text-muted-foreground">
-            <span className="font-semibold">09:41</span>
-            <span className="flex gap-1">
-              <span className="h-2 w-2 rounded-full bg-accent" />
-              <span className="h-2 w-2 rounded-full bg-warning" />
-              <span className="h-2 w-2 rounded-full bg-success" />
+      <div className="relative rounded-3xl border border-border bg-card p-6 sm:p-7 shadow-2xl ring-1 ring-black/5">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Terça-feira
+            </p>
+            <p className="mt-1 text-2xl sm:text-3xl font-black tracking-tight text-foreground">
+              18 de novembro
+            </p>
+          </div>
+          <span className="badge-pill shrink-0 text-xs">Corte + Barba · 45 min</span>
+        </div>
+
+        <div className="mt-6">
+          <div className="grid grid-cols-7 gap-1.5 text-center text-[11px] text-muted-foreground">
+            {WEEK_DAYS.map((d, i) => (
+              <span key={`${d}${i}`}>{d}</span>
+            ))}
+          </div>
+          <div className="mt-1.5 grid grid-cols-7 gap-1.5">
+            {WEEK_DATES.map((d, i) => (
+              <span
+                key={d}
+                className={cn(
+                  "aspect-square grid place-items-center rounded-full text-xs font-semibold",
+                  i === 5
+                    ? "bg-accent text-accent-foreground shadow-lg shadow-accent/30"
+                    : "text-foreground",
+                )}
+              >
+                {d}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-6 grid grid-cols-3 gap-2">
+          {TIME_SLOTS.map((t, i) => (
+            <span
+              key={t}
+              className={cn(
+                "rounded-xl border py-2.5 text-center text-sm font-medium",
+                i === 3
+                  ? "border-accent bg-accent text-accent-foreground shadow-md shadow-accent/25"
+                  : "border-border text-foreground",
+              )}
+            >
+              {t}
             </span>
-          </div>
+          ))}
+        </div>
 
-          {/* header */}
-          <div className="px-4 py-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[13px] font-bold text-foreground">Barbearia Estilo</p>
-                <p className="mt-0.5 flex items-center gap-1 text-[11px] text-muted-foreground">
-                  <Star className="h-3 w-3 fill-warning text-warning" />
-                  4,9 · 320 avaliações
-                </p>
-              </div>
-              <span className="grid h-9 w-9 place-items-center rounded-full bg-accent/12 text-accent">
-                <CalendarCheck2 className="h-4.5 w-4.5" />
-              </span>
-            </div>
-          </div>
-
-          {/* service chips */}
-          <div className="px-4 flex gap-1.5">
-            {["Corte", "Barba", "Corte + Barba"].map((s, i) => (
-              <span
-                key={s}
-                className={cn(
-                  "rounded-full border px-2.5 py-1 text-[11px] font-semibold",
-                  i === 1
-                    ? "border-accent bg-accent text-accent-foreground"
-                    : "border-border text-muted-foreground",
-                )}
-              >
-                {s}
-              </span>
-            ))}
-          </div>
-
-          {/* mini week */}
-          <div className="px-4 pt-4">
-            <div className="grid grid-cols-7 gap-1 text-center text-[10px] text-muted-foreground">
-              {WEEK_DAYS.map((d, i) => (
-                <span key={`${d}${i}`}>{d}</span>
-              ))}
-            </div>
-            <div className="mt-1 grid grid-cols-7 gap-1">
-              {WEEK_DATES.map((d, i) => (
-                <span
-                  key={d}
-                  className={cn(
-                    "aspect-square grid place-items-center rounded-full text-[11px] font-semibold",
-                    i === 5
-                      ? "bg-accent text-accent-foreground shadow-lg shadow-accent/30"
-                      : "text-foreground",
-                  )}
-                >
-                  {d}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          {/* time slots */}
-          <div className="px-4 pt-4 grid grid-cols-3 gap-1.5">
-            {TIME_SLOTS.map((t, i) => (
-              <span
-                key={t}
-                className={cn(
-                  "rounded-lg border py-1.5 text-center text-[11px] font-medium",
-                  i === 3
-                    ? "border-accent bg-accent/12 text-accent"
-                    : "border-border text-foreground",
-                )}
-              >
-                {t}
-              </span>
-            ))}
-          </div>
-
-          {/* confirm */}
-          <div className="px-4 py-4">
-            <div className="rounded-xl bg-accent py-2.5 text-center text-[12px] font-bold text-accent-foreground shadow-lg shadow-accent/30">
-              Confirmar agendamento
-            </div>
-          </div>
+        <div className="mt-6 rounded-xl bg-accent py-3 text-center text-sm font-bold text-accent-foreground shadow-lg shadow-accent/30">
+          Confirmar 10:30
         </div>
       </div>
 
       {/* floating: confirmed */}
-      <div className="ui-card-glass absolute left-0 sm:-left-16 top-16 flex items-center gap-2.5 rounded-2xl px-3.5 py-2.5 motion-safe:animate-float">
+      <div className="ui-card-glass absolute -left-3 sm:-left-8 top-10 flex items-center gap-2.5 rounded-2xl px-3.5 py-2.5 motion-safe:animate-float">
         <span className="grid h-8 w-8 place-items-center rounded-full bg-success/15 text-success">
           <CircleCheck className="h-4 w-4" />
         </span>
@@ -263,7 +222,7 @@ function PhoneMockup() {
       </div>
 
       {/* floating: new booking */}
-      <div className="ui-card-glass absolute right-0 sm:-right-14 bottom-8 flex items-center gap-2.5 rounded-2xl px-3.5 py-2.5 motion-safe:animate-float-delay">
+      <div className="ui-card-glass absolute -right-3 sm:-right-8 bottom-10 flex items-center gap-2.5 rounded-2xl px-3.5 py-2.5 motion-safe:animate-float-delay">
         <span className="grid h-8 w-8 place-items-center rounded-full bg-[#25D366]/15 text-[#25D366]">
           <MessageCircle className="h-4 w-4" />
         </span>
@@ -277,6 +236,7 @@ function PhoneMockup() {
     </div>
   );
 }
+
 
 function Landing() {
   return (
@@ -330,61 +290,64 @@ function Landing() {
 
       {/* Hero */}
       <section className="relative bg-page-gradient">
-        <div className="max-w-3xl mx-auto px-5 sm:px-8 pt-14 pb-16 sm:pt-20 sm:pb-24 text-center">
-          <div className="animate-fade-in-up inline-flex">
-            <span className="badge-pill">
-              <Sparkles className="h-4 w-4 text-accent" />
-              <span className="text-muted-foreground">
-                <span className="text-foreground font-semibold">Novo</span> · Confirmações
-                automáticas por WhatsApp
+        <div className="max-w-6xl mx-auto px-5 sm:px-8 pt-14 pb-16 sm:pt-20 sm:pb-24 grid gap-12 lg:gap-16 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+          <div className="text-center lg:text-left">
+            <div className="animate-fade-in-up inline-flex">
+              <span className="badge-pill">
+                <Sparkles className="h-4 w-4 text-accent" />
+                <span className="text-muted-foreground">
+                  <span className="text-foreground font-semibold">Novo</span> · Confirmações
+                  automáticas por WhatsApp
+                </span>
               </span>
-            </span>
+            </div>
+
+            <h1 className="mt-8 text-5xl sm:text-6xl font-sans font-black tracking-tight text-foreground leading-[1.02]">
+              Gerencie seus agendamentos{" "}
+              <span style={{ color: "oklch(0.62 0.19 250)" }}>de forma simples.</span>
+            </h1>
+
+            <p className="mt-6 sm:mt-8 text-lg sm:text-xl text-muted-foreground leading-relaxed max-w-xl mx-auto lg:mx-0">
+              Organize seus clientes, horários e serviços em um único lugar. Uma plataforma
+              minimalista, rápida e feita para profissionais como você.
+            </p>
+
+            <div className="mt-10 flex flex-col sm:flex-row items-center lg:justify-start justify-center gap-3">
+              <Link
+                to="/cadastrar"
+                className="btn-gradient inline-flex items-center gap-2 w-full sm:w-auto justify-center"
+              >
+                Agendar agora
+                <ArrowRight className="h-5 w-5" />
+              </Link>
+              <Link
+                to="/entrar"
+                className="btn-pill-outline inline-flex items-center w-full sm:w-auto justify-center"
+              >
+                Conhecer plataforma
+              </Link>
+            </div>
+
+            <ul className="mt-10 flex flex-wrap items-center lg:justify-start justify-center gap-x-8 gap-y-3 text-sm text-muted-foreground">
+              {["Sem cartão de crédito", "Configuração em 2 min", "Cancele quando quiser"].map(
+                (item) => (
+                  <li key={item} className="inline-flex items-center gap-2">
+                    <Check
+                      className="h-4 w-4"
+                      style={{ color: "oklch(0.6 0.15 155)" }}
+                      strokeWidth={3}
+                    />
+                    {item}
+                  </li>
+                ),
+              )}
+            </ul>
           </div>
 
-          <h1 className="mt-8 text-5xl sm:text-6xl lg:text-7xl font-sans font-black tracking-tight text-foreground leading-[1.02]">
-            Gerencie seus agendamentos{" "}
-            <span style={{ color: "oklch(0.62 0.19 250)" }}>de forma simples.</span>
-          </h1>
-
-          <p className="mt-6 sm:mt-8 text-lg sm:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-            Organize seus clientes, horários e serviços em um único lugar. Uma plataforma
-            minimalista, rápida e feita para profissionais como você.
-          </p>
-
-          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Link
-              to="/cadastrar"
-              className="btn-gradient inline-flex items-center gap-2 w-full sm:w-auto justify-center"
-            >
-              Agendar agora
-              <ArrowRight className="h-5 w-5" />
-            </Link>
-            <Link
-              to="/entrar"
-              className="btn-pill-outline inline-flex items-center w-full sm:w-auto justify-center"
-            >
-              Conhecer plataforma
-            </Link>
-          </div>
-
-          <ul className="mt-12 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm text-muted-foreground">
-            {["Sem cartão de crédito", "Configuração em 2 min", "Cancele quando quiser"].map(
-              (item) => (
-                <li key={item} className="inline-flex items-center gap-2">
-                  <Check
-                    className="h-4 w-4"
-                    style={{ color: "oklch(0.6 0.15 155)" }}
-                    strokeWidth={3}
-                  />
-                  {item}
-                </li>
-              ),
-            )}
-          </ul>
-
-          <PhoneMockup />
+          <BookingPreview />
         </div>
       </section>
+
 
       {/* Categories marquee */}
       <section className="border-y border-border bg-card/60">
