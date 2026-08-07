@@ -31,7 +31,44 @@ export const Route = createFileRoute("/")({
         content: "Menos mensagens no WhatsApp, mais horários preenchidos.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://agendai-br.lovable.app/" },
       { name: "twitter:card", content: "summary_large_image" },
+    ],
+    links: [{ rel: "canonical", href: "https://agendai-br.lovable.app/" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "Organization",
+              name: "Agendaí",
+              url: "https://agendai-br.lovable.app/",
+              description:
+                "Plataforma brasileira de agendamento online para profissionais e pequenos negócios.",
+            },
+            {
+              "@type": "WebSite",
+              name: "Agendaí",
+              url: "https://agendai-br.lovable.app/",
+              inLanguage: "pt-BR",
+            },
+          ],
+        }),
+      },
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: FAQ.map((f) => ({
+            "@type": "Question",
+            name: f.q,
+            acceptedAnswer: { "@type": "Answer", text: f.a },
+          })),
+        }),
+      },
     ],
   }),
   component: Landing,
