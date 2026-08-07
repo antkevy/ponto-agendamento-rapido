@@ -360,13 +360,13 @@ function Landing() {
         <div className="max-w-6xl mx-auto px-5 sm:px-8">
           <Reveal>
             <div className="max-w-2xl">
-              <p
-                className="text-sm font-semibold uppercase tracking-widest"
-                style={{ color: "oklch(0.55 0.18 250)" }}
-              >
-                Recursos
-              </p>
-              <h2 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-foreground">
+              <span className="badge-pill text-xs">
+                <Sparkles className="h-3.5 w-3.5 text-accent" />
+                <span className="font-semibold uppercase tracking-widest text-muted-foreground">
+                  Recursos
+                </span>
+              </span>
+              <h2 className="mt-5 text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-foreground">
                 Tudo que você precisa para{" "}
                 <span style={{ color: "oklch(0.62 0.19 250)" }}>lotar sua agenda.</span>
               </h2>
@@ -378,22 +378,36 @@ function Landing() {
           <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map(({ icon: Icon, title, desc }, i) => (
               <Reveal key={title} delay={(i % 3) * 90}>
-                <div className="card-elevated p-6 hover:-translate-y-0.5 hover:shadow-lg transition-all">
-                  <div
-                    className="w-11 h-11 rounded-xl grid place-items-center mb-4"
-                    style={{
-                      backgroundImage:
-                        "linear-gradient(135deg, oklch(0.95 0.03 250), oklch(0.92 0.04 250))",
-                    }}
-                  >
-                    <Icon
-                      className="h-5 w-5"
-                      style={{ color: "oklch(0.55 0.18 250)" }}
-                      strokeWidth={2.25}
-                    />
+                <div className="group relative h-full overflow-hidden card-elevated p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+                  <span
+                    className="pointer-events-none absolute -top-16 -right-16 h-40 w-40 rounded-full opacity-0 blur-3xl transition-opacity duration-500 group-hover:opacity-100"
+                    style={{ background: "oklch(0.62 0.19 250 / 0.18)" }}
+                  />
+                  <span className="pointer-events-none absolute inset-x-0 top-0 h-px scale-x-0 bg-gradient-to-r from-transparent via-accent to-transparent transition-transform duration-500 group-hover:scale-x-100" />
+                  <div className="relative flex items-start justify-between">
+                    <div
+                      className="w-12 h-12 rounded-2xl grid place-items-center ring-1 ring-inset ring-border/60 transition-transform duration-300 group-hover:scale-105"
+                      style={{
+                        backgroundImage:
+                          "linear-gradient(135deg, oklch(0.95 0.03 250), oklch(0.9 0.05 250))",
+                      }}
+                    >
+                      <Icon
+                        className="h-5 w-5"
+                        style={{ color: "oklch(0.45 0.16 250)" }}
+                        strokeWidth={2.25}
+                      />
+                    </div>
+                    <span className="text-xs font-black tabular-nums text-muted-foreground/40">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
                   </div>
-                  <h3 className="text-lg font-bold tracking-tight text-foreground">{title}</h3>
-                  <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{desc}</p>
+                  <h3 className="relative mt-5 text-lg font-bold tracking-tight text-foreground">
+                    {title}
+                  </h3>
+                  <p className="relative mt-2 text-sm text-muted-foreground leading-relaxed">
+                    {desc}
+                  </p>
                 </div>
               </Reveal>
             ))}
@@ -405,29 +419,37 @@ function Landing() {
       <section id="como-funciona" className="py-20 sm:py-28 bg-section-soft">
         <div className="max-w-5xl mx-auto px-5 sm:px-8 text-center">
           <Reveal>
-            <p
-              className="text-sm font-semibold uppercase tracking-widest"
-              style={{ color: "oklch(0.55 0.18 250)" }}
-            >
-              Como funciona
-            </p>
-            <h2 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-foreground">
+            <span className="badge-pill text-xs">
+              <CalendarCheck2 className="h-3.5 w-3.5 text-accent" />
+              <span className="font-semibold uppercase tracking-widest text-muted-foreground">
+                Como funciona
+              </span>
+            </span>
+            <h2 className="mt-5 text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-foreground">
               Comece em <span style={{ color: "oklch(0.62 0.19 250)" }}>3 passos.</span>
             </h2>
+            <p className="mt-4 text-muted-foreground text-lg max-w-lg mx-auto">
+              Do cadastro ao primeiro cliente marcado em menos de cinco minutos.
+            </p>
           </Reveal>
-          <div className="relative mt-14 grid gap-8 md:grid-cols-3 text-left">
-            <div className="hidden md:block absolute top-6 left-[16%] right-[16%] border-t-2 border-dashed border-border" />
+          <div className="relative mt-14 grid gap-5 md:grid-cols-3 text-left">
+            <div className="hidden md:block absolute top-16 left-[16%] right-[16%] border-t-2 border-dashed border-border" />
             {STEPS.map(({ n, title, desc }, i) => (
               <Reveal key={n} delay={i * 110}>
-                <div className="relative">
-                  <div
-                    className="w-12 h-12 rounded-full grid place-items-center text-white font-black text-lg shadow-md"
-                    style={{
-                      backgroundImage:
-                        "linear-gradient(180deg, oklch(0.62 0.17 250), oklch(0.55 0.18 250))",
-                    }}
-                  >
-                    {n}
+                <div className="group relative h-full card-elevated p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-12 h-12 rounded-full grid place-items-center text-white font-black text-lg shadow-md ring-4 ring-background transition-transform duration-300 group-hover:scale-105"
+                      style={{
+                        backgroundImage:
+                          "linear-gradient(180deg, oklch(0.62 0.17 250), oklch(0.55 0.18 250))",
+                      }}
+                    >
+                      {n}
+                    </div>
+                    {i < STEPS.length - 1 && (
+                      <ArrowRight className="hidden md:block h-4 w-4 text-muted-foreground/40 transition-transform duration-300 group-hover:translate-x-1" />
+                    )}
                   </div>
                   <h3 className="mt-5 text-xl font-bold tracking-tight text-foreground">{title}</h3>
                   <p className="mt-2 text-muted-foreground leading-relaxed">{desc}</p>
@@ -437,6 +459,7 @@ function Landing() {
           </div>
         </div>
       </section>
+
 
 
       {/* FAQ */}
