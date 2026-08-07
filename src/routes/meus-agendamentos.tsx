@@ -254,12 +254,18 @@ function Page() {
         <form
           onSubmit={(e) => {
             e.preventDefault();
+            const digitsCode = onlyDigits(code);
+            if (digitsCode.length !== 6) {
+              toast.error("Informe o código de confirmação de 6 dígitos do seu agendamento.");
+              return;
+            }
             if (mode === "phone") {
               const digits = normalizeBRNumber(contact);
               if (digits.length < 10 || digits.length > 11) {
                 toast.error("Informe um WhatsApp válido no formato (XX) XXXXX-XXXX.");
                 return;
               }
+              setSubmittedCode(digitsCode);
               setSubmitted(digits);
               return;
             }
@@ -267,35 +273,51 @@ function Page() {
               toast.error("Informe um email válido.");
               return;
             }
+            setSubmittedCode(digitsCode);
             setSubmitted(normalizeContact(contact, "email"));
           }}
-          className="bg-card border border-border rounded-2xl p-4 flex flex-col sm:flex-row gap-3 shadow-[0_20px_60px_-30px_var(--brand)]"
+          className="bg-card border border-border rounded-2xl p-4 flex flex-col gap-3 shadow-[0_20px_60px_-30px_var(--brand)]"
         >
-          {mode === "phone" ? (
+          <div className="flex flex-col sm:flex-row gap-3">
+            {mode === "phone" ? (
+              <input
+                required
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                value={formatPhoneBRTolerant(contact)}
+                onChange={(e) => setContact(onlyDigits(e.target.value).slice(0, 13))}
+                placeholder="(11) 91234-5678"
+                className="flex-1 min-h-[48px] px-4 py-3 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            ) : (
+              <input
+                required
+                type="email"
+                inputMode="email"
+                value={contact}
+                onChange={(e) => setContact(e.target.value)}
+                placeholder="seu@email.com"
+                className="flex-1 min-h-[48px] px-4 py-3 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            )}
             <input
               required
-              type="tel"
-              inputMode="tel"
-              autoComplete="tel"
-              value={formatPhoneBRTolerant(contact)}
-              onChange={(e) => setContact(onlyDigits(e.target.value).slice(0, 13))}
-              placeholder="(11) 91234-5678"
-              className="flex-1 min-h-[48px] px-4 py-3 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-ring"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              value={code}
+              onChange={(e) => setCode(onlyDigits(e.target.value).slice(0, 6))}
+              placeholder="Código (6 dígitos)"
+              className="sm:w-52 min-h-[48px] px-4 py-3 rounded-xl border border-border tracking-[0.25em] focus:outline-none focus:ring-2 focus:ring-ring"
             />
-          ) : (
-            <input
-              required
-              type="email"
-              inputMode="email"
-              value={contact}
-              onChange={(e) => setContact(e.target.value)}
-              placeholder="seu@email.com"
-              className="flex-1 min-h-[48px] px-4 py-3 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-          )}
-          <button className="btn-gradient inline-flex items-center justify-center">
-            Consultar
-          </button>
+            <button className="btn-gradient inline-flex items-center justify-center">
+              Consultar
+            </button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            O código de confirmação foi mostrado na tela após o agendamento. Não tem o código? Fale
+            direto com o estabelecimento.
+          </p>
         </form>
 
         {submitted && (
