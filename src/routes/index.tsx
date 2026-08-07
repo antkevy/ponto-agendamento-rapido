@@ -13,7 +13,7 @@ import {
   Shield,
   Smartphone,
   MessageCircle,
-  Star,
+  
   CircleCheck,
 } from "lucide-react";
 
