@@ -360,13 +360,13 @@ function Landing() {
         <div className="max-w-6xl mx-auto px-5 sm:px-8">
           <Reveal>
             <div className="max-w-2xl">
-              <p
-                className="text-sm font-semibold uppercase tracking-widest"
-                style={{ color: "oklch(0.55 0.18 250)" }}
-              >
-                Recursos
-              </p>
-              <h2 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-foreground">
+              <span className="badge-pill text-xs">
+                <Sparkles className="h-3.5 w-3.5 text-accent" />
+                <span className="font-semibold uppercase tracking-widest text-muted-foreground">
+                  Recursos
+                </span>
+              </span>
+              <h2 className="mt-5 text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-foreground">
                 Tudo que você precisa para{" "}
                 <span style={{ color: "oklch(0.62 0.19 250)" }}>lotar sua agenda.</span>
               </h2>
@@ -378,22 +378,36 @@ function Landing() {
           <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map(({ icon: Icon, title, desc }, i) => (
               <Reveal key={title} delay={(i % 3) * 90}>
-                <div className="card-elevated p-6 hover:-translate-y-0.5 hover:shadow-lg transition-all">
-                  <div
-                    className="w-11 h-11 rounded-xl grid place-items-center mb-4"
-                    style={{
-                      backgroundImage:
-                        "linear-gradient(135deg, oklch(0.95 0.03 250), oklch(0.92 0.04 250))",
-                    }}
-                  >
-                    <Icon
-                      className="h-5 w-5"
-                      style={{ color: "oklch(0.55 0.18 250)" }}
-                      strokeWidth={2.25}
-                    />
+                <div className="group relative h-full overflow-hidden card-elevated p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+                  <span
+                    className="pointer-events-none absolute -top-16 -right-16 h-40 w-40 rounded-full opacity-0 blur-3xl transition-opacity duration-500 group-hover:opacity-100"
+                    style={{ background: "oklch(0.62 0.19 250 / 0.18)" }}
+                  />
+                  <span className="pointer-events-none absolute inset-x-0 top-0 h-px scale-x-0 bg-gradient-to-r from-transparent via-accent to-transparent transition-transform duration-500 group-hover:scale-x-100" />
+                  <div className="relative flex items-start justify-between">
+                    <div
+                      className="w-12 h-12 rounded-2xl grid place-items-center ring-1 ring-inset ring-border/60 transition-transform duration-300 group-hover:scale-105"
+                      style={{
+                        backgroundImage:
+                          "linear-gradient(135deg, oklch(0.95 0.03 250), oklch(0.9 0.05 250))",
+                      }}
+                    >
+                      <Icon
+                        className="h-5 w-5"
+                        style={{ color: "oklch(0.45 0.16 250)" }}
+                        strokeWidth={2.25}
+                      />
+                    </div>
+                    <span className="text-xs font-black tabular-nums text-muted-foreground/40">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
                   </div>
-                  <h3 className="text-lg font-bold tracking-tight text-foreground">{title}</h3>
-                  <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{desc}</p>
+                  <h3 className="relative mt-5 text-lg font-bold tracking-tight text-foreground">
+                    {title}
+                  </h3>
+                  <p className="relative mt-2 text-sm text-muted-foreground leading-relaxed">
+                    {desc}
+                  </p>
                 </div>
               </Reveal>
             ))}
@@ -405,29 +419,37 @@ function Landing() {
       <section id="como-funciona" className="py-20 sm:py-28 bg-section-soft">
         <div className="max-w-5xl mx-auto px-5 sm:px-8 text-center">
           <Reveal>
-            <p
-              className="text-sm font-semibold uppercase tracking-widest"
-              style={{ color: "oklch(0.55 0.18 250)" }}
-            >
-              Como funciona
-            </p>
-            <h2 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-foreground">
+            <span className="badge-pill text-xs">
+              <CalendarCheck2 className="h-3.5 w-3.5 text-accent" />
+              <span className="font-semibold uppercase tracking-widest text-muted-foreground">
+                Como funciona
+              </span>
+            </span>
+            <h2 className="mt-5 text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-foreground">
               Comece em <span style={{ color: "oklch(0.62 0.19 250)" }}>3 passos.</span>
             </h2>
+            <p className="mt-4 text-muted-foreground text-lg max-w-lg mx-auto">
+              Do cadastro ao primeiro cliente marcado em menos de cinco minutos.
+            </p>
           </Reveal>
-          <div className="relative mt-14 grid gap-8 md:grid-cols-3 text-left">
-            <div className="hidden md:block absolute top-6 left-[16%] right-[16%] border-t-2 border-dashed border-border" />
+          <div className="relative mt-14 grid gap-5 md:grid-cols-3 text-left">
+            <div className="hidden md:block absolute top-16 left-[16%] right-[16%] border-t-2 border-dashed border-border" />
             {STEPS.map(({ n, title, desc }, i) => (
               <Reveal key={n} delay={i * 110}>
-                <div className="relative">
-                  <div
-                    className="w-12 h-12 rounded-full grid place-items-center text-white font-black text-lg shadow-md"
-                    style={{
-                      backgroundImage:
-                        "linear-gradient(180deg, oklch(0.62 0.17 250), oklch(0.55 0.18 250))",
-                    }}
-                  >
-                    {n}
+                <div className="group relative h-full card-elevated p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-12 h-12 rounded-full grid place-items-center text-white font-black text-lg shadow-md ring-4 ring-background transition-transform duration-300 group-hover:scale-105"
+                      style={{
+                        backgroundImage:
+                          "linear-gradient(180deg, oklch(0.62 0.17 250), oklch(0.55 0.18 250))",
+                      }}
+                    >
+                      {n}
+                    </div>
+                    {i < STEPS.length - 1 && (
+                      <ArrowRight className="hidden md:block h-4 w-4 text-muted-foreground/40 transition-transform duration-300 group-hover:translate-x-1" />
+                    )}
                   </div>
                   <h3 className="mt-5 text-xl font-bold tracking-tight text-foreground">{title}</h3>
                   <p className="mt-2 text-muted-foreground leading-relaxed">{desc}</p>
@@ -439,18 +461,19 @@ function Landing() {
       </section>
 
 
+
       {/* FAQ */}
       <section id="faq" className="py-20 sm:py-28 bg-section-soft-reverse">
         <div className="max-w-3xl mx-auto px-5 sm:px-8">
           <Reveal>
             <div className="text-center">
-              <p
-                className="text-sm font-semibold uppercase tracking-widest"
-                style={{ color: "oklch(0.55 0.18 250)" }}
-              >
-                Perguntas frequentes
-              </p>
-              <h2 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-foreground">
+              <span className="badge-pill text-xs">
+                <MessageCircle className="h-3.5 w-3.5 text-accent" />
+                <span className="font-semibold uppercase tracking-widest text-muted-foreground">
+                  Perguntas frequentes
+                </span>
+              </span>
+              <h2 className="mt-5 text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-foreground">
                 Tudo claro <span style={{ color: "oklch(0.62 0.19 250)" }}>antes de começar.</span>
               </h2>
             </div>
@@ -458,18 +481,33 @@ function Landing() {
           <div className="mt-10 space-y-3">
             {FAQ.map((f, i) => (
               <Reveal key={f.q} delay={i * 60}>
-                <details className="card-elevated p-5 group">
-                  <summary className="cursor-pointer font-semibold text-foreground list-none flex items-center justify-between">
-                    {f.q}
-                    <span className="ml-4 text-muted-foreground group-open:rotate-45 transition-transform text-xl leading-none">
+                <details className="card-elevated group overflow-hidden p-0 transition-all duration-300 hover:shadow-lg open:shadow-lg">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5 font-semibold text-foreground transition-colors group-hover:text-accent">
+                    <span className="flex items-center gap-3">
+                      <span className="h-6 w-1 rounded-full bg-border transition-colors group-open:bg-accent" />
+                      {f.q}
+                    </span>
+                    <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-border text-lg leading-none text-muted-foreground transition-all duration-300 group-open:rotate-45 group-open:border-accent group-open:bg-accent group-open:text-accent-foreground">
                       +
                     </span>
                   </summary>
-                  <p className="mt-3 text-muted-foreground leading-relaxed">{f.a}</p>
+                  <p className="px-5 pb-5 pl-9 text-muted-foreground leading-relaxed">{f.a}</p>
                 </details>
               </Reveal>
             ))}
           </div>
+          <Reveal>
+            <p className="mt-8 text-center text-sm text-muted-foreground">
+              Ainda com dúvidas?{" "}
+              <Link
+                to="/cadastrar"
+                className="font-semibold text-foreground underline underline-offset-4"
+              >
+                Crie sua conta e teste grátis
+              </Link>
+              .
+            </p>
+          </Reveal>
         </div>
       </section>
 
@@ -478,38 +516,58 @@ function Landing() {
         <div className="max-w-4xl mx-auto px-5 sm:px-8">
           <Reveal>
             <div
-              className="rounded-3xl p-10 sm:p-16 text-center text-white shadow-2xl"
+              className="relative overflow-hidden rounded-3xl p-10 sm:p-16 text-center text-white shadow-2xl"
               style={{
                 backgroundImage:
                   "linear-gradient(135deg, oklch(0.55 0.18 250), oklch(0.45 0.14 245))",
               }}
             >
-              <h2 className="text-3xl sm:text-5xl font-black tracking-tight leading-tight">
-                Pronto para uma agenda que trabalha por você?
-              </h2>
-              <p className="mt-4 text-white/85 text-lg max-w-xl mx-auto">
-                Crie sua conta em menos de dois minutos e compartilhe seu link ainda hoje.
-              </p>
-              <div className="mt-8 flex flex-col sm:flex-row gap-3 items-center justify-center">
-                <Link
-                  to="/cadastrar"
-                  className="inline-flex items-center gap-2 bg-white text-[#0F172A] font-semibold px-7 py-3.5 rounded-full hover:bg-white/95 hover:text-[#0F172A] transition-colors"
-                >
-                  Criar minha conta grátis
-                  <ArrowRight className="h-5 w-5" />
-                </Link>
-                <Link
-                  to="/meus-agendamentos"
-                  search={{ pro: undefined }}
-                  className="inline-flex items-center text-white/90 hover:text-white text-sm underline underline-offset-4"
-                >
-                  Sou cliente, quero consultar meu agendamento
-                </Link>
+              <span className="pointer-events-none absolute -top-24 -left-16 h-64 w-64 rounded-full bg-white/15 blur-3xl" />
+              <span className="pointer-events-none absolute -bottom-24 -right-10 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
+
+              <div className="relative">
+                <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest ring-1 ring-inset ring-white/25">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Comece hoje
+                </span>
+                <h2 className="mt-6 text-3xl sm:text-5xl font-black tracking-tight leading-tight">
+                  Pronto para uma agenda que trabalha por você?
+                </h2>
+                <p className="mt-4 text-white/85 text-lg max-w-xl mx-auto">
+                  Crie sua conta em menos de dois minutos e compartilhe seu link ainda hoje.
+                </p>
+                <div className="mt-8 flex flex-col sm:flex-row gap-3 items-center justify-center">
+                  <Link
+                    to="/cadastrar"
+                    className="group inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-full bg-white px-7 py-3.5 font-semibold text-[#0F172A] shadow-lg transition-all hover:bg-white/95 hover:text-[#0F172A] hover:shadow-xl active:scale-[0.98]"
+                  >
+                    Criar minha conta grátis
+                    <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+                  </Link>
+                  <Link
+                    to="/meus-agendamentos"
+                    search={{ pro: undefined }}
+                    className="inline-flex items-center rounded-full px-5 py-3 text-sm text-white/90 ring-1 ring-inset ring-white/25 transition-colors hover:bg-white/10 hover:text-white"
+                  >
+                    Sou cliente, quero consultar meu agendamento
+                  </Link>
+                </div>
+                <ul className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-white/80">
+                  {["Sem cartão de crédito", "Cancele quando quiser", "Suporte em português"].map(
+                    (item) => (
+                      <li key={item} className="inline-flex items-center gap-2">
+                        <Check className="h-4 w-4" strokeWidth={3} />
+                        {item}
+                      </li>
+                    ),
+                  )}
+                </ul>
               </div>
             </div>
           </Reveal>
         </div>
       </section>
+
 
       <footer className="border-t border-border">
         <div className="max-w-6xl mx-auto px-5 sm:px-8 py-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-muted-foreground">
