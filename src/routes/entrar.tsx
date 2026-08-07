@@ -23,13 +23,20 @@ export const Route = createFileRoute("/entrar")({
       { title: "Entrar — Agendaí" },
       {
         name: "description",
-        content: "Acesse seu painel Agendaí e gerencie agendamentos, serviços e horários.",
+        content:
+          "Acesse seu painel Agendaí para gerenciar seus agendamentos, serviços, equipe e horários de atendimento com facilidade.",
       },
       { property: "og:title", content: "Entrar no Agendaí" },
-      { property: "og:description", content: "Acesse seu painel e gerencie sua agenda online." },
+      {
+        property: "og:description",
+        content:
+          "Acesse seu painel Agendaí e gerencie agendamentos, serviços e horários em um só lugar.",
+      },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://agendai-br.lovable.app/entrar" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
+    links: [{ rel: "canonical", href: "https://agendai-br.lovable.app/entrar" }],
   }),
   component: SignIn,
 });
