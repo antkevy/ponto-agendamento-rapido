@@ -219,6 +219,7 @@ function BookingPage() {
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [when, setWhen] = useState<Date | null>(null);
   const [confirmedId, setConfirmedId] = useState<string | null>(null);
+  const [confirmedCode, setConfirmedCode] = useState<string | null>(null);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -322,6 +323,7 @@ function BookingPage() {
       setEmployee(null);
       setWhen(null);
       setConfirmedId(null);
+      setConfirmedCode(null);
       setStep("landing");
     }
   }
@@ -880,8 +882,9 @@ function BookingPage() {
             employee={employee}
             when={when}
             brand={brand}
-            onDone={(id) => {
+            onDone={(id, code) => {
               setConfirmedId(id);
+              setConfirmedCode(code);
               setStep("done");
             }}
           />
@@ -893,11 +896,13 @@ function BookingPage() {
             selectedServices={selectedServices}
             employee={employee}
             when={when}
+            accessCode={confirmedCode}
             onReset={() => {
               setSelectedServices([]);
               setEmployee(null);
               setWhen(null);
               setConfirmedId(null);
+              setConfirmedCode(null);
               setStep("service");
             }}
           />
