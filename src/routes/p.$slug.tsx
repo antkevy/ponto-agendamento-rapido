@@ -502,10 +502,12 @@ function BookingPage() {
                   className="hidden sm:block absolute top-7 left-[16%] right-[16%] border-t-2 border-dashed border-border"
                 />
                 {HOW_IT_WORKS.map((s, i) => (
-                  <div
+                  <SpotlightCard
                     key={s.title}
-                    className="ui-card p-5 relative ui-stagger"
+                    className="ui-card p-5 ui-stagger"
                     style={{ ["--i" as string]: i }}
+                    glow="var(--accent)"
+                    dotColor="var(--border)"
                   >
                     <div className="flex items-center justify-between">
                       <span className="ui-icon-bubble h-12 w-12 grid place-items-center rounded-2xl">
@@ -519,7 +521,7 @@ function BookingPage() {
                       {s.title}
                     </h4>
                     <p className="mt-1 text-sm text-muted-foreground leading-relaxed">{s.text}</p>
-                  </div>
+                  </SpotlightCard>
                 ))}
               </div>
             </div>

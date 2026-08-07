@@ -17,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { db } from "@/lib/db-tables";
 import { formatBRL } from "@/lib/booking";
 import { CardTable, DataTableHead, DataTableRow, DataTableCell } from "@/components/ui/data-table";
+import { NumberTicker } from "@/components/effects";
 
 export const Route = createFileRoute("/app/relatorio")({
   head: () => ({ meta: [{ title: "Relatório — Agendaí" }] }),
@@ -245,9 +246,11 @@ function Page() {
                       <DataTableCell className="font-medium truncate max-w-[200px]">
                         {c.name}
                       </DataTableCell>
-                      <DataTableCell className="text-right">{c.visits}x</DataTableCell>
+                      <DataTableCell className="text-right">
+                        <NumberTicker value={c.visits} format={(n) => `${Math.round(n)}x`} />
+                      </DataTableCell>
                       <DataTableCell className="text-right font-semibold">
-                        {formatBRL(c.total)}
+                        <NumberTicker value={c.total} format={(n) => formatBRL(Math.round(n))} />
                       </DataTableCell>
                     </DataTableRow>
                   ))}
@@ -282,9 +285,11 @@ function Page() {
                       <DataTableCell className="font-medium truncate max-w-[200px]">
                         {s.name}
                       </DataTableCell>
-                      <DataTableCell className="text-right">{s.qtd}</DataTableCell>
+                      <DataTableCell className="text-right">
+                        <NumberTicker value={s.qtd} />
+                      </DataTableCell>
                       <DataTableCell className="text-right font-semibold">
-                        {formatBRL(s.receita)}
+                        <NumberTicker value={s.receita} format={(n) => formatBRL(Math.round(n))} />
                       </DataTableCell>
                     </DataTableRow>
                   ))}
@@ -334,9 +339,11 @@ function Page() {
                       <DataTableCell className="text-muted-foreground truncate max-w-[150px]">
                         {e.especialidade}
                       </DataTableCell>
-                      <DataTableCell className="text-right">{e.servicos}</DataTableCell>
+                      <DataTableCell className="text-right">
+                        <NumberTicker value={e.servicos} />
+                      </DataTableCell>
                       <DataTableCell className="text-right font-semibold">
-                        {formatBRL(e.receita)}
+                        <NumberTicker value={e.receita} format={(n) => formatBRL(Math.round(n))} />
                       </DataTableCell>
                     </DataTableRow>
                   ))}
