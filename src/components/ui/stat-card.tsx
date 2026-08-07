@@ -41,11 +41,15 @@ export function StatCard({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <span className="text-sm font-medium text-muted-foreground">{label}</span>
-          <p className="mt-2 text-2xl sm:text-3xl font-black tracking-tight leading-tight break-words text-foreground">
+          <p className="mt-2 text-xl sm:text-3xl font-black tracking-tight leading-tight text-foreground">
             {tickerValue === null ? (
-              value
+              <span className="whitespace-nowrap tabular-nums">{value}</span>
             ) : (
-              <NumberTicker value={tickerValue} format={formatTicker} />
+              <NumberTicker
+                value={tickerValue}
+                format={formatTicker}
+                className="whitespace-nowrap tabular-nums"
+              />
             )}
           </p>
           {hint && <p className="text-xs text-muted-foreground mt-1">{hint}</p>}
