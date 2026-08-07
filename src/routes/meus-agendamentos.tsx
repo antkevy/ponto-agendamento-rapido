@@ -110,7 +110,7 @@ function Page() {
     queryFn: async () => {
       const { data, error } = await supabase.rpc("lookup_client_appointments", {
         _contact: submitted!,
-        _code: submittedCode || null,
+        _code: submittedCode || undefined,
       });
       if (error) throw error;
       return data as Row[];
@@ -122,7 +122,7 @@ function Page() {
       const { data, error } = await supabase.rpc("client_cancel_appointment", {
         _id: id,
         _contact: submitted!,
-        _code: submittedCode || null,
+        _code: submittedCode || undefined,
       });
       if (error) throw error;
       if (!data) throw new Error("Não foi possível cancelar.");
@@ -140,7 +140,7 @@ function Page() {
         _id: id,
         _contact: submitted!,
         _starts_at: startsAt,
-        _code: submittedCode || null,
+        _code: submittedCode || undefined,
       });
       if (error) throw error;
       if (!data) throw new Error("Não foi possível reagendar.");
