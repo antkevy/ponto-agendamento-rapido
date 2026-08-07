@@ -1,18 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  CartesianGrid,
-} from "recharts";
 import { AppShell } from "@/components/app-shell";
 import { useMyProfessional } from "@/hooks/use-my-professional";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,6 +18,8 @@ import {
 } from "lucide-react";
 import { OnboardingCard } from "@/components/onboarding-card";
 import { StatCard } from "@/components/ui/stat-card";
+
+const COLORS = ["#0284C7", "#16A34A", "#DC2626", "#F59E0B", "#8B5CF6", "#EC4899", "#14B8A6"];
 
 export const Route = createFileRoute("/app/")({
   head: () => ({ meta: [{ title: "Painel — Agendaí" }] }),
@@ -184,8 +174,6 @@ function Dashboard() {
     return ((current - previous) / previous) * 100;
   };
 
-  const COLORS = ["#0284C7", "#16A34A", "#DC2626", "#F59E0B", "#8B5CF6", "#EC4899", "#14B8A6"];
-
   return (
     <AppShell title="Painel">
       {isLoading ? (
@@ -230,7 +218,7 @@ function Dashboard() {
               }`}
             >
               <RefreshCw
-                className={`h-4 w-4 transition-colors ${
+                className={`h-4 w-4 origin-center transition-colors ${
                   isFetching ? "animate-spin text-accent" : "text-muted-foreground"
                 }`}
               />
@@ -287,41 +275,7 @@ function Dashboard() {
                     Nenhum dado no período.
                   </p>
                 ) : (
-                  <ResponsiveContainer width="100%" height={220}>
-                    <BarChart data={stats.dailyData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border, #E2E8F0)" />
-                      <XAxis
-                        dataKey="day"
-                        tick={{ fontSize: 11 }}
-                        stroke="var(--color-muted-foreground, #94A3B8)"
-                        tickLine={false}
-                      />
-                      <YAxis
-                        tick={{ fontSize: 11 }}
-                        stroke="var(--color-muted-foreground, #94A3B8)"
-                        tickLine={false}
-                        tickFormatter={(v: number) => `R${(v / 100).toFixed(0)}`}
-                      />
-                      <Tooltip
-                        formatter={(v: number) => [formatBRL(v), "Receita"]}
-                        labelFormatter={(l: number) => `Dia ${l}`}
-                        contentStyle={{
-                          borderRadius: "12px",
-                          border: "1px solid var(--color-border, #E2E8F0)",
-                          background: "var(--color-background, #FFF)",
-                          fontSize: "13px",
-                        }}
-                        itemStyle={{ color: "var(--color-foreground, #0F172A)" }}
-                        labelStyle={{ color: "var(--color-foreground, #0F172A)" }}
-                      />
-                      <Bar
-                        dataKey="receita"
-                        fill="oklch(0.55 0.18 250)"
-                        radius={[4, 4, 0, 0]}
-                        maxBarSize={32}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
+                  <DailyRevenueChart data={stats.dailyData} />
                 )}
               </div>
 
@@ -334,49 +288,7 @@ function Dashboard() {
                     Nenhum dado no período.
                   </p>
                 ) : (
-                  <div className="flex flex-col sm:flex-row items-center gap-4">
-                    <ResponsiveContainer width="100%" height={200}>
-                      <PieChart>
-                        <Pie
-                          data={stats.serviceData}
-                          dataKey="receita"
-                          nameKey="name"
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={50}
-                          outerRadius={80}
-                          paddingAngle={3}
-                        >
-                          {stats.serviceData.map((_, i) => (
-                            <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip
-                          formatter={(v: number) => [formatBRL(v), "Receita"]}
-                          contentStyle={{
-                            borderRadius: "12px",
-                            border: "1px solid var(--color-border, #E2E8F0)",
-                            background: "var(--color-background, #FFF)",
-                            fontSize: "13px",
-                          }}
-                          itemStyle={{ color: "var(--color-foreground, #0F172A)" }}
-                          labelStyle={{ color: "var(--color-foreground, #0F172A)" }}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
-                    <div className="shrink-0 space-y-1.5 text-sm w-full sm:w-auto">
-                      {stats.serviceData.map((s, i) => (
-                        <div key={s.name} className="flex items-center gap-2">
-                          <span
-                            className="h-2.5 w-2.5 rounded-full shrink-0"
-                            style={{ backgroundColor: COLORS[i % COLORS.length] }}
-                          />
-                          <span className="truncate max-w-[120px]">{s.name}</span>
-                          <span className="font-semibold ml-auto">{formatBRL(s.receita)}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                  <ServiceBars data={stats.serviceData} />
                 )}
               </div>
             </div>
@@ -411,48 +323,7 @@ function Dashboard() {
                     Nenhum dado no período.
                   </p>
                 ) : (
-                  <div className="flex items-center gap-4">
-                    <ResponsiveContainer width="100%" height={160}>
-                      <PieChart>
-                        <Pie
-                          data={stats.statusData}
-                          dataKey="value"
-                          nameKey="name"
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={40}
-                          outerRadius={65}
-                          paddingAngle={3}
-                        >
-                          {stats.statusData.map((_, i) => (
-                            <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip
-                          contentStyle={{
-                            borderRadius: "12px",
-                            border: "1px solid var(--color-border, #E2E8F0)",
-                            background: "var(--color-background, #FFF)",
-                            fontSize: "13px",
-                          }}
-                          itemStyle={{ color: "var(--color-foreground, #0F172A)" }}
-                          labelStyle={{ color: "var(--color-foreground, #0F172A)" }}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
-                    <div className="shrink-0 space-y-2 text-sm">
-                      {stats.statusData.map((s, i) => (
-                        <div key={s.name} className="flex items-center gap-2">
-                          <span
-                            className="h-2.5 w-2.5 rounded-full shrink-0"
-                            style={{ backgroundColor: COLORS[i % COLORS.length] }}
-                          />
-                          <span>{s.name}</span>
-                          <span className="font-semibold">{s.value}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                  <StatusBars data={stats.statusData} />
                 )}
               </div>
             </div>
@@ -538,5 +409,97 @@ function ComparisonBadge({ current, previous }: { current: number; previous: num
       {pct.toFixed(1)}%
       <Percent className="h-3 w-3" />
     </span>
+  );
+}
+
+function DailyRevenueChart({ data }: { data: { day: number; receita: number }[] }) {
+  const max = Math.max(...data.map((d) => d.receita), 0);
+  return (
+    <div className="flex items-end gap-[3px] sm:gap-1 h-40 sm:h-48">
+      {data.map((d) => {
+        const isZero = d.receita === 0;
+        const height = isZero ? 3 : Math.max((d.receita / max) * 100, 8);
+        const isPeak = !isZero && d.receita === max;
+        return (
+          <div key={d.day} className="group relative flex-1 h-full flex items-end">
+            <div
+              className={`w-full rounded-t-[3px] transition-colors ${
+                isPeak
+                  ? "bg-accent"
+                  : isZero
+                    ? "bg-muted-foreground/15"
+                    : "bg-accent/45 group-hover:bg-accent/80"
+              }`}
+              style={{ height: `${height}%` }}
+              title={`Dia ${d.day} — ${formatBRL(d.receita)}`}
+            />
+            <div className="pointer-events-none absolute -top-1 left-1/2 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-md border border-border bg-background px-2 py-1 text-[11px] font-semibold opacity-0 transition-opacity group-hover:opacity-100 z-10 shadow-lg">
+              {formatBRL(d.receita)}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function ServiceBars({ data }: { data: { name: string; receita: number; count: number }[] }) {
+  const total = data.reduce((s, d) => s + d.receita, 0) || 1;
+  return (
+    <div className="space-y-3.5">
+      {data.map((s, i) => {
+        const pct = (s.receita / total) * 100;
+        return (
+          <div key={s.name} className="space-y-1.5">
+            <div className="flex items-center justify-between gap-2 text-sm">
+              <span className="truncate">{s.name}</span>
+              <span className="font-semibold shrink-0 tabular-nums">{formatBRL(s.receita)}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="h-2 flex-1 rounded-full bg-muted overflow-hidden">
+                <div
+                  className="h-full rounded-full"
+                  style={{ width: `${pct}%`, backgroundColor: COLORS[i % COLORS.length] }}
+                />
+              </div>
+              <span className="text-xs text-muted-foreground w-9 text-right tabular-nums shrink-0">
+                {pct.toFixed(0)}%
+              </span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function StatusBars({ data }: { data: { name: string; value: number; color: string }[] }) {
+  const total = data.reduce((s, d) => s + d.value, 0) || 1;
+  return (
+    <div className="space-y-3.5">
+      {data.map((s) => {
+        const pct = (s.value / total) * 100;
+        return (
+          <div key={s.name} className="space-y-1.5">
+            <div className="flex items-center justify-between gap-2 text-sm">
+              <span className="inline-flex items-center gap-2 truncate">
+                <span
+                  className="h-2.5 w-2.5 rounded-full shrink-0"
+                  style={{ backgroundColor: s.color }}
+                />
+                {s.name}
+              </span>
+              <span className="font-semibold shrink-0 tabular-nums">{s.value}</span>
+            </div>
+            <div className="h-2 rounded-full bg-muted overflow-hidden">
+              <div
+                className="h-full rounded-full"
+                style={{ width: `${pct}%`, backgroundColor: s.color }}
+              />
+            </div>
+          </div>
+        );
+      })}
+    </div>
   );
 }

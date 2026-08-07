@@ -9,6 +9,7 @@ import { useUserRole } from "@/hooks/use-user-role";
 import { supabase } from "@/integrations/supabase/client";
 import { db } from "@/lib/db-tables";
 import { formatBRL, WEEKDAYS_PT } from "@/lib/booking";
+import { optimizedImageUrl } from "@/lib/image";
 import { cn } from "@/lib/utils";
 import { ViewToggle, type ViewMode } from "@/components/view-toggle";
 import { ImageUpload } from "@/components/image-upload";
@@ -632,9 +633,10 @@ function CatalogRow({
       <div className="flex items-center gap-3 sm:gap-4">
         {item.image_url ? (
           <img
-            src={item.image_url}
+            src={optimizedImageUrl(item.image_url, 128) ?? item.image_url}
             alt={item.name}
             loading="lazy"
+            decoding="async"
             className="h-14 w-14 rounded-xl object-cover shrink-0 aspect-square border border-border"
           />
         ) : (
@@ -708,9 +710,10 @@ function CatalogCard({
       <div className="relative overflow-hidden">
         {item.image_url ? (
           <img
-            src={item.image_url}
+            src={optimizedImageUrl(item.image_url, 800) ?? item.image_url}
             alt={item.name}
             loading="lazy"
+            decoding="async"
             className="w-full aspect-[4/3] object-cover transition-transform duration-500 group-hover:scale-[1.04]"
           />
         ) : (
@@ -1064,8 +1067,10 @@ function FuncionariosTab({ pro, readOnly }: { pro: Pro; readOnly?: boolean }) {
               <div className="flex items-center gap-3 min-w-0 flex-1">
                 {e.photo_url ? (
                   <img
-                    src={e.photo_url}
+                    src={optimizedImageUrl(e.photo_url, 128) ?? e.photo_url}
                     alt=""
+                    loading="lazy"
+                    decoding="async"
                     className="h-12 w-12 rounded-full object-cover border border-border shrink-0"
                   />
                 ) : (
@@ -1125,8 +1130,10 @@ function FuncionariosTab({ pro, readOnly }: { pro: Pro; readOnly?: boolean }) {
             >
               {e.photo_url ? (
                 <img
-                  src={e.photo_url}
+                  src={optimizedImageUrl(e.photo_url, 160) ?? e.photo_url}
                   alt=""
+                  loading="lazy"
+                  decoding="async"
                   className="h-20 w-20 rounded-full object-cover border border-border"
                 />
               ) : (

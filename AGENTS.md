@@ -16,6 +16,13 @@
 > global `21st-dev` (busca `--free`, cota, mapa de tradução para o design system nativo e
 > log vivo de componentes reutilizáveis em qualquer projeto).
 
+> [!IMPORTANT]
+> Referências de design/animação que o usuário pediu para SEMPRE buscar primeiro
+> (não pedir de novo): `https://kokonutui.com/`, `https://reactbits.dev/`,
+> `https://animejs.com/`, `https://motion.dev/`, `https://magicui.design/`,
+> `https://uiverse.io/`. Preferir componentes sem dependências pesadas, portados
+> para o design system nativo (tokens CSS), como já feito em `src/components/effects.tsx`.
+
 # Segurança (implementado — código)
 
 Stack real: **auth = Supabase Auth**, **banco = Supabase Postgres + RLS**, **deploy = Cloudflare Workers** (preset `cloudflare-module`, sem `wrangler.toml` — o nitro gera `.output/server/wrangler.json`).

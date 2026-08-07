@@ -16,6 +16,7 @@ import { useMyProfessional } from "@/hooks/use-my-professional";
 import { supabase } from "@/integrations/supabase/client";
 import { db } from "@/lib/db-tables";
 import { formatBRL } from "@/lib/booking";
+import { optimizedImageUrl } from "@/lib/image";
 import { CardTable, DataTableHead, DataTableRow, DataTableCell } from "@/components/ui/data-table";
 import { NumberTicker } from "@/components/effects";
 
@@ -324,8 +325,10 @@ function Page() {
                         <div className="flex items-center gap-2">
                           {e.photo ? (
                             <img
-                              src={e.photo}
+                              src={optimizedImageUrl(e.photo, 96) ?? e.photo}
                               alt=""
+                              loading="lazy"
+                              decoding="async"
                               className="h-8 w-8 rounded-full object-cover border border-border"
                             />
                           ) : (

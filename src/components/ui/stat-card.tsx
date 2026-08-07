@@ -41,7 +41,7 @@ export function StatCard({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <span className="text-sm font-medium text-muted-foreground">{label}</span>
-          <p className="mt-2 text-3xl font-black tracking-tight text-foreground truncate">
+          <p className="mt-2 text-2xl sm:text-3xl font-black tracking-tight leading-tight break-words text-foreground">
             {tickerValue === null ? (
               value
             ) : (
