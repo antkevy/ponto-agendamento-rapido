@@ -130,7 +130,7 @@ export function TextReveal({
   const accents = useMemo(() => new Set(accentWords), [accentWords]);
 
   return (
-    <Tag ref={ref} className={className}>
+    <Tag ref={ref as React.Ref<never>} className={className}>
       {words.map((word, i) => {
         const hidden = mounted && !visible;
         return (

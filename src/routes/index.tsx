@@ -13,7 +13,7 @@ import {
   Shield,
   Smartphone,
   MessageCircle,
-  Star,
+  
   CircleCheck,
 } from "lucide-react";
 
@@ -89,26 +89,6 @@ const STEPS = [
   },
 ];
 
-const TESTIMONIALS = [
-  {
-    name: "Marina S.",
-    role: "Cabeleireira",
-    quote:
-      "Antes eu perdia horários por confusão no WhatsApp. Agora meus clientes marcam sozinhos e eu só olho a agenda.",
-  },
-  {
-    name: "Rafael T.",
-    role: "Personal trainer",
-    quote:
-      "Ter cada aluno vendo minha disponibilidade real economiza horas do meu dia. Simples e rápido.",
-  },
-  {
-    name: "Ana P.",
-    role: "Estética avançada",
-    quote:
-      "O visual é bonito e passa profissionalismo. Meus clientes elogiam a experiência de marcar.",
-  },
-];
 
 const FAQ = [
   {
@@ -262,9 +242,6 @@ function Landing() {
             <a href="#como-funciona" className="hover:text-foreground transition-colors">
               Como funciona
             </a>
-            <a href="#depoimentos" className="hover:text-foreground transition-colors">
-              Depoimentos
-            </a>
             <a href="#faq" className="hover:text-foreground transition-colors">
               Perguntas
             </a>
@@ -367,7 +344,7 @@ function Landing() {
           {[
             ["+2 mil", "Profissionais"],
             ["+80 mil", "Agendamentos"],
-            ["4,9/5", "Avaliação média"],
+            ["+15 mil", "Clientes atendidos"],
             ["24h", "Sua agenda online"],
           ].map(([n, l]) => (
             <div key={l}>
@@ -461,47 +438,6 @@ function Landing() {
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section id="depoimentos" className="py-20 sm:py-28">
-        <div className="max-w-6xl mx-auto px-5 sm:px-8">
-          <Reveal>
-            <div className="text-center max-w-2xl mx-auto">
-              <p
-                className="text-sm font-semibold uppercase tracking-widest"
-                style={{ color: "oklch(0.55 0.18 250)" }}
-              >
-                Depoimentos
-              </p>
-              <h2 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-foreground">
-                Profissionais que{" "}
-                <span style={{ color: "oklch(0.62 0.19 250)" }}>respiram melhor.</span>
-              </h2>
-            </div>
-          </Reveal>
-          <div className="mt-12 grid gap-5 md:grid-cols-3">
-            {TESTIMONIALS.map((t, i) => (
-              <Reveal key={t.name} delay={(i % 3) * 90}>
-                <div className="card-elevated p-6 flex flex-col">
-                  <div className="flex gap-0.5 mb-3">
-                    {Array.from({ length: 5 }).map((_, j) => (
-                      <Star
-                        key={j}
-                        className="h-4 w-4 fill-current"
-                        style={{ color: "oklch(0.75 0.15 80)" }}
-                      />
-                    ))}
-                  </div>
-                  <p className="text-foreground leading-relaxed flex-1">"{t.quote}"</p>
-                  <div className="mt-5 pt-4 border-t border-border">
-                    <p className="font-semibold text-sm">{t.name}</p>
-                    <p className="text-xs text-muted-foreground">{t.role}</p>
-                  </div>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* FAQ */}
       <section id="faq" className="py-20 sm:py-28 bg-section-soft-reverse">
