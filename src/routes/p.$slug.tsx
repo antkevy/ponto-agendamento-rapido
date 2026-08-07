@@ -351,7 +351,7 @@ function BookingPage() {
           {pro.logo_url ? (
             <img
               src={optimizedImageUrl(pro.logo_url, 192) ?? pro.logo_url}
-              alt=""
+              alt={`Logo de ${pro.business_name}`}
               decoding="async"
               fetchPriority="high"
               className="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl object-cover border border-border shrink-0"
@@ -843,7 +843,7 @@ function BookingPage() {
                       {emp.photo_url ? (
                         <img
                           src={optimizedImageUrl(emp.photo_url, 128) ?? emp.photo_url}
-                          alt=""
+                          alt={`Foto de ${emp.name}`}
                           loading="lazy"
                           decoding="async"
                           className="h-12 w-12 rounded-full object-cover border border-border shrink-0"
@@ -1186,6 +1186,7 @@ function WhenStep({
                   if (d >= new Date(today.getFullYear(), today.getMonth(), 1)) setMonthStart(d);
                 }}
                 className="p-2 min-h-[44px] min-w-[44px] grid place-items-center rounded-md hover:bg-muted"
+                aria-label="Mês anterior"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
@@ -1199,6 +1200,7 @@ function WhenStep({
                   setMonthStart(d);
                 }}
                 className="p-2 min-h-[44px] min-w-[44px] grid place-items-center rounded-md hover:bg-muted"
+                aria-label="Próximo mês"
               >
                 <ChevronRight className="h-4 w-4" />
               </button>

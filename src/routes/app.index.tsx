@@ -187,6 +187,7 @@ function Dashboard() {
               <button
                 onClick={() => setMonthOffset((p) => p - 1)}
                 className="p-2 min-h-[40px] min-w-[40px] grid place-items-center rounded-lg hover:bg-muted border border-border"
+                aria-label="Mês anterior"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
@@ -194,6 +195,7 @@ function Dashboard() {
               <button
                 onClick={() => setMonthOffset((p) => p + 1)}
                 className="p-2 min-h-[40px] min-w-[40px] grid place-items-center rounded-lg hover:bg-muted border border-border"
+                aria-label="Próximo mês"
               >
                 <ChevronRight className="h-4 w-4" />
               </button>

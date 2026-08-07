@@ -677,6 +677,7 @@ function RescheduleModal({
                   if (d >= new Date(today.getFullYear(), today.getMonth(), 1)) setMonthStart(d);
                 }}
                 className="p-2 min-h-[44px] min-w-[44px] grid place-items-center rounded-md hover:bg-muted"
+                aria-label="Mês anterior"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
@@ -690,6 +691,7 @@ function RescheduleModal({
                   setMonthStart(d);
                 }}
                 className="p-2 min-h-[44px] min-w-[44px] grid place-items-center rounded-md hover:bg-muted"
+                aria-label="Próximo mês"
               >
                 <ChevronRight className="h-4 w-4" />
               </button>
