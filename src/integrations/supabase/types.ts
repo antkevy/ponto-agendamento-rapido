@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       agendamentos: {
         Row: {
+          access_code: string | null
           client_email: string | null
           client_id: string | null
           client_name: string
@@ -34,6 +35,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          access_code?: string | null
           client_email?: string | null
           client_id?: string | null
           client_name: string
@@ -52,6 +54,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          access_code?: string | null
           client_email?: string | null
           client_id?: string | null
           client_name?: string
@@ -836,11 +839,16 @@ export type Database = {
         Returns: boolean
       }
       client_cancel_appointment: {
-        Args: { _contact: string; _id: string }
+        Args: { _code?: string; _contact: string; _id: string }
         Returns: boolean
       }
       client_reschedule_appointment: {
-        Args: { _contact: string; _id: string; _starts_at: string }
+        Args: {
+          _code?: string
+          _contact: string
+          _id: string
+          _starts_at: string
+        }
         Returns: boolean
       }
       current_user_role: { Args: never; Returns: string }
@@ -864,8 +872,9 @@ export type Database = {
         Returns: boolean
       }
       lookup_client_appointments: {
-        Args: { _contact: string }
+        Args: { _code?: string; _contact: string }
         Returns: {
+          access_code: string
           client_name: string
           duration_minutes: number
           employee_id: string
