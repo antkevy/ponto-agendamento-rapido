@@ -159,21 +159,44 @@ export const Route = createFileRoute("/p/$slug")({
       };
     const p = loaderData.pro;
     const logo = optimizedImageUrl(p.logo_url, 192);
+    const url = `https://agendai-br.lovable.app/p/${p.slug}`;
+    const description =
+      p.description || `Agende seu horário com ${p.business_name} online, 24h por dia.`;
     return {
       meta: [
         { title: `Agendar com ${p.business_name} — Agendaí` },
-        {
-          name: "description",
-          content:
-            p.description || `Agende seu horário com ${p.business_name} online, 24h por dia.`,
-        },
+        { name: "description", content: description },
         { property: "og:title", content: `Agendar com ${p.business_name}` },
         {
           property: "og:description",
           content: p.description || `Marque seu horário online com ${p.business_name}.`,
         },
+        { property: "og:type", content: "website" },
+        { property: "og:url", content: url },
+        { name: "twitter:card", content: "summary_large_image" },
       ],
-      links: logo ? [{ rel: "preload", as: "image", href: logo }] : [],
+      links: [
+        { rel: "canonical", href: url },
+        ...(logo ? [{ rel: "preload", as: "image", href: logo }] : []),
+      ],
+      scripts: [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "LocalBusiness",
+            name: p.business_name,
+            description,
+            url,
+            ...(logo ? { image: logo } : {}),
+            ...(p.phone ? { telephone: p.phone } : {}),
+            ...(p.address ? { address: { "@type": "PostalAddress", streetAddress: p.address } } : {}),
+            ...(p.lat != null && p.lng != null
+              ? { geo: { "@type": "GeoCoordinates", latitude: p.lat, longitude: p.lng } }
+              : {}),
+          }),
+        },
+      ],
     };
   },
   component: BookingPage,
