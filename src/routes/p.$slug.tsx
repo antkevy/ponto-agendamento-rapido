@@ -1501,12 +1501,14 @@ function DoneStep({
   selectedServices,
   employee,
   when,
+  accessCode,
   onReset,
 }: {
   pro: { business_name: string; slug: string };
   selectedServices: Service[];
   employee: Employee | null;
   when: Date;
+  accessCode: string | null;
   onReset: () => void;
 }) {
   const combinedName = useMemo(
@@ -1533,6 +1535,18 @@ function DoneStep({
         <p className="text-sm text-muted-foreground">às {formatTime(when)}</p>
         {employee && <p className="text-sm text-muted-foreground">com {employee.name}</p>}
       </div>
+      {accessCode && (
+        <div className="mt-4 card-elevated p-4 max-w-sm mx-auto text-center">
+          <p className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+            <ShieldCheck className="h-4 w-4 ui-icon-color" /> Código de confirmação
+          </p>
+          <p className="mt-2 text-3xl font-black tracking-[0.35em] ui-accent-text">{accessCode}</p>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Guarde este código: ele é necessário para consultar, remarcar ou cancelar seu
+            agendamento.
+          </p>
+        </div>
+      )}
       <div className="mt-6 flex flex-col sm:flex-row justify-center gap-2">
         <button onClick={onReset} className="btn-gradient inline-flex items-center justify-center">
           Fazer outro agendamento
