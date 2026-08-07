@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as MeusAgendamentosRouteImport } from './routes/meus-agendamentos'
 import { Route as EntrarRouteImport } from './routes/entrar'
 import { Route as CadastrarRouteImport } from './routes/cadastrar'
@@ -21,6 +22,11 @@ import { Route as AppConfiguracoesRouteImport } from './routes/app.configuracoes
 import { Route as AppClientesRouteImport } from './routes/app.clientes'
 import { Route as AppAgendamentosRouteImport } from './routes/app.agendamentos'
 
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MeusAgendamentosRoute = MeusAgendamentosRouteImport.update({
   id: '/meus-agendamentos',
   path: '/meus-agendamentos',
@@ -82,6 +88,7 @@ export interface FileRoutesByFullPath {
   '/cadastrar': typeof CadastrarRoute
   '/entrar': typeof EntrarRoute
   '/meus-agendamentos': typeof MeusAgendamentosRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/app/agendamentos': typeof AppAgendamentosRoute
   '/app/clientes': typeof AppClientesRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
@@ -95,6 +102,7 @@ export interface FileRoutesByTo {
   '/cadastrar': typeof CadastrarRoute
   '/entrar': typeof EntrarRoute
   '/meus-agendamentos': typeof MeusAgendamentosRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/app/agendamentos': typeof AppAgendamentosRoute
   '/app/clientes': typeof AppClientesRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
@@ -109,6 +117,7 @@ export interface FileRoutesById {
   '/cadastrar': typeof CadastrarRoute
   '/entrar': typeof EntrarRoute
   '/meus-agendamentos': typeof MeusAgendamentosRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/app/agendamentos': typeof AppAgendamentosRoute
   '/app/clientes': typeof AppClientesRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
@@ -124,6 +133,7 @@ export interface FileRouteTypes {
     | '/cadastrar'
     | '/entrar'
     | '/meus-agendamentos'
+    | '/sitemap.xml'
     | '/app/agendamentos'
     | '/app/clientes'
     | '/app/configuracoes'
@@ -137,6 +147,7 @@ export interface FileRouteTypes {
     | '/cadastrar'
     | '/entrar'
     | '/meus-agendamentos'
+    | '/sitemap.xml'
     | '/app/agendamentos'
     | '/app/clientes'
     | '/app/configuracoes'
@@ -150,6 +161,7 @@ export interface FileRouteTypes {
     | '/cadastrar'
     | '/entrar'
     | '/meus-agendamentos'
+    | '/sitemap.xml'
     | '/app/agendamentos'
     | '/app/clientes'
     | '/app/configuracoes'
@@ -164,6 +176,7 @@ export interface RootRouteChildren {
   CadastrarRoute: typeof CadastrarRoute
   EntrarRoute: typeof EntrarRoute
   MeusAgendamentosRoute: typeof MeusAgendamentosRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   AppAgendamentosRoute: typeof AppAgendamentosRoute
   AppClientesRoute: typeof AppClientesRoute
   AppConfiguracoesRoute: typeof AppConfiguracoesRoute
@@ -175,6 +188,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/meus-agendamentos': {
       id: '/meus-agendamentos'
       path: '/meus-agendamentos'
@@ -260,6 +280,7 @@ const rootRouteChildren: RootRouteChildren = {
   CadastrarRoute: CadastrarRoute,
   EntrarRoute: EntrarRoute,
   MeusAgendamentosRoute: MeusAgendamentosRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   AppAgendamentosRoute: AppAgendamentosRoute,
   AppClientesRoute: AppClientesRoute,
   AppConfiguracoesRoute: AppConfiguracoesRoute,
