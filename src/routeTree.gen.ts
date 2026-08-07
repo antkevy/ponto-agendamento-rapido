@@ -9,26 +9,21 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as CadastrarRouteImport } from './routes/cadastrar'
-import { Route as EntrarRouteImport } from './routes/entrar'
 import { Route as MeusAgendamentosRouteImport } from './routes/meus-agendamentos'
+import { Route as EntrarRouteImport } from './routes/entrar'
+import { Route as CadastrarRouteImport } from './routes/cadastrar'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
-import { Route as AppAgendamentosRouteImport } from './routes/app.agendamentos'
-import { Route as AppClientesRouteImport } from './routes/app.clientes'
-import { Route as AppConfiguracoesRouteImport } from './routes/app.configuracoes'
-import { Route as AppRelatorioRouteImport } from './routes/app.relatorio'
-import { Route as AppServicosRouteImport } from './routes/app.servicos'
 import { Route as PSlugRouteImport } from './routes/p.$slug'
+import { Route as AppServicosRouteImport } from './routes/app.servicos'
+import { Route as AppRelatorioRouteImport } from './routes/app.relatorio'
+import { Route as AppConfiguracoesRouteImport } from './routes/app.configuracoes'
+import { Route as AppClientesRouteImport } from './routes/app.clientes'
+import { Route as AppAgendamentosRouteImport } from './routes/app.agendamentos'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CadastrarRoute = CadastrarRouteImport.update({
-  id: '/cadastrar',
-  path: '/cadastrar',
+const MeusAgendamentosRoute = MeusAgendamentosRouteImport.update({
+  id: '/meus-agendamentos',
+  path: '/meus-agendamentos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EntrarRoute = EntrarRouteImport.update({
@@ -36,9 +31,14 @@ const EntrarRoute = EntrarRouteImport.update({
   path: '/entrar',
   getParentRoute: () => rootRouteImport,
 } as any)
-const MeusAgendamentosRoute = MeusAgendamentosRouteImport.update({
-  id: '/meus-agendamentos',
-  path: '/meus-agendamentos',
+const CadastrarRoute = CadastrarRouteImport.update({
+  id: '/cadastrar',
+  path: '/cadastrar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppIndexRoute = AppIndexRouteImport.update({
@@ -46,24 +46,9 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/app/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AppAgendamentosRoute = AppAgendamentosRouteImport.update({
-  id: '/app/agendamentos',
-  path: '/app/agendamentos',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppClientesRoute = AppClientesRouteImport.update({
-  id: '/app/clientes',
-  path: '/app/clientes',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppConfiguracoesRoute = AppConfiguracoesRouteImport.update({
-  id: '/app/configuracoes',
-  path: '/app/configuracoes',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppRelatorioRoute = AppRelatorioRouteImport.update({
-  id: '/app/relatorio',
-  path: '/app/relatorio',
+const PSlugRoute = PSlugRouteImport.update({
+  id: '/p/$slug',
+  path: '/p/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppServicosRoute = AppServicosRouteImport.update({
@@ -71,9 +56,24 @@ const AppServicosRoute = AppServicosRouteImport.update({
   path: '/app/servicos',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PSlugRoute = PSlugRouteImport.update({
-  id: '/p/$slug',
-  path: '/p/$slug',
+const AppRelatorioRoute = AppRelatorioRouteImport.update({
+  id: '/app/relatorio',
+  path: '/app/relatorio',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppConfiguracoesRoute = AppConfiguracoesRouteImport.update({
+  id: '/app/configuracoes',
+  path: '/app/configuracoes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppClientesRoute = AppClientesRouteImport.update({
+  id: '/app/clientes',
+  path: '/app/clientes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppAgendamentosRoute = AppAgendamentosRouteImport.update({
+  id: '/app/agendamentos',
+  path: '/app/agendamentos',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -175,18 +175,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/cadastrar': {
-      id: '/cadastrar'
-      path: '/cadastrar'
-      fullPath: '/cadastrar'
-      preLoaderRoute: typeof CadastrarRouteImport
+    '/meus-agendamentos': {
+      id: '/meus-agendamentos'
+      path: '/meus-agendamentos'
+      fullPath: '/meus-agendamentos'
+      preLoaderRoute: typeof MeusAgendamentosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/entrar': {
@@ -196,11 +189,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EntrarRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/meus-agendamentos': {
-      id: '/meus-agendamentos'
-      path: '/meus-agendamentos'
-      fullPath: '/meus-agendamentos'
-      preLoaderRoute: typeof MeusAgendamentosRouteImport
+    '/cadastrar': {
+      id: '/cadastrar'
+      path: '/cadastrar'
+      fullPath: '/cadastrar'
+      preLoaderRoute: typeof CadastrarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app/': {
@@ -210,32 +210,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/app/agendamentos': {
-      id: '/app/agendamentos'
-      path: '/app/agendamentos'
-      fullPath: '/app/agendamentos'
-      preLoaderRoute: typeof AppAgendamentosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/app/clientes': {
-      id: '/app/clientes'
-      path: '/app/clientes'
-      fullPath: '/app/clientes'
-      preLoaderRoute: typeof AppClientesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/app/configuracoes': {
-      id: '/app/configuracoes'
-      path: '/app/configuracoes'
-      fullPath: '/app/configuracoes'
-      preLoaderRoute: typeof AppConfiguracoesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/app/relatorio': {
-      id: '/app/relatorio'
-      path: '/app/relatorio'
-      fullPath: '/app/relatorio'
-      preLoaderRoute: typeof AppRelatorioRouteImport
+    '/p/$slug': {
+      id: '/p/$slug'
+      path: '/p/$slug'
+      fullPath: '/p/$slug'
+      preLoaderRoute: typeof PSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app/servicos': {
@@ -245,11 +224,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppServicosRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/p/$slug': {
-      id: '/p/$slug'
-      path: '/p/$slug'
-      fullPath: '/p/$slug'
-      preLoaderRoute: typeof PSlugRouteImport
+    '/app/relatorio': {
+      id: '/app/relatorio'
+      path: '/app/relatorio'
+      fullPath: '/app/relatorio'
+      preLoaderRoute: typeof AppRelatorioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/configuracoes': {
+      id: '/app/configuracoes'
+      path: '/app/configuracoes'
+      fullPath: '/app/configuracoes'
+      preLoaderRoute: typeof AppConfiguracoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/clientes': {
+      id: '/app/clientes'
+      path: '/app/clientes'
+      fullPath: '/app/clientes'
+      preLoaderRoute: typeof AppClientesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/agendamentos': {
+      id: '/app/agendamentos'
+      path: '/app/agendamentos'
+      fullPath: '/app/agendamentos'
+      preLoaderRoute: typeof AppAgendamentosRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
