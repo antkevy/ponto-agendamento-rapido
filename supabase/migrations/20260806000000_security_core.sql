@@ -85,7 +85,7 @@ AS $$
     'user'
   );
 $$;
-REVOKE ALL ON FUNCTION public.current_user_role() FROM anon;
+REVOKE ALL ON FUNCTION public.current_user_role() FROM anon, PUBLIC;
 GRANT EXECUTE ON FUNCTION public.current_user_role() TO authenticated;
 
 CREATE OR REPLACE FUNCTION public.has_role(p_role TEXT)
@@ -94,7 +94,7 @@ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
 AS $$
   SELECT public.current_user_role() = p_role;
 $$;
-REVOKE ALL ON FUNCTION public.has_role(TEXT) FROM anon;
+REVOKE ALL ON FUNCTION public.has_role(TEXT) FROM anon, PUBLIC;
 GRANT EXECUTE ON FUNCTION public.has_role(TEXT) TO authenticated;
 
 -- Só o próprio usuário atualiza o próprio mfa_enabled (nunca a role).
@@ -109,7 +109,7 @@ BEGIN
   RETURN FOUND;
 END;
 $$;
-REVOKE ALL ON FUNCTION public.set_mfa_enabled(BOOLEAN) FROM anon;
+REVOKE ALL ON FUNCTION public.set_mfa_enabled(BOOLEAN) FROM anon, PUBLIC;
 GRANT EXECUTE ON FUNCTION public.set_mfa_enabled(BOOLEAN) TO authenticated;
 
 -- Marca a troca de senha feita pelo app (a senha em si é definida via
@@ -125,7 +125,7 @@ BEGIN
   RETURN FOUND;
 END;
 $$;
-REVOKE ALL ON FUNCTION public.touch_password_change() FROM anon;
+REVOKE ALL ON FUNCTION public.touch_password_change() FROM anon, PUBLIC;
 GRANT EXECUTE ON FUNCTION public.touch_password_change() TO authenticated;
 
 -- Admin define/ajusta a role de OUTRO usuário (não pode mexer na própria).
@@ -149,7 +149,7 @@ BEGIN
   RETURN FOUND;
 END;
 $$;
-REVOKE ALL ON FUNCTION public.set_user_role(UUID, TEXT) FROM anon;
+REVOKE ALL ON FUNCTION public.set_user_role(UUID, TEXT) FROM anon, PUBLIC;
 GRANT EXECUTE ON FUNCTION public.set_user_role(UUID, TEXT) TO authenticated;
 
 -- ************************************************************
@@ -179,6 +179,12 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+
+-- Funções de trigger e helpers: só executam via trigger/RPC (sem grant a anon/PUBLIC).
+REVOKE ALL ON FUNCTION public.handle_new_user_security() FROM anon, authenticated, PUBLIC;
+REVOKE ALL ON FUNCTION public.handle_auth_user_password_change() FROM anon, authenticated, PUBLIC;
+REVOKE ALL ON FUNCTION public.require_editor_role() FROM anon, authenticated, PUBLIC;
+REVOKE ALL ON FUNCTION public.require_admin_role() FROM anon, authenticated, PUBLIC;
 
 -- Catálogo: escrever (insert/update) exige admin|editor
 DO $$
