@@ -1331,7 +1331,7 @@ function FormStep({
   selectedServices: Service[];
   employee: Employee | null;
   when: Date;
-  onDone: (id: string) => void;
+  onDone: (id: string, accessCode: string) => void;
   brand: string;
 }) {
   const [name, setName] = useState("");
@@ -1359,6 +1359,11 @@ function FormStep({
         throw new Error("Informe um WhatsApp válido no formato (XX) XXXXX-XXXX.");
       const ends = new Date(when.getTime() + combinedDuration * 60 * 1000);
       const appointmentId = crypto.randomUUID();
+      // Código de confirmação: prova de posse para consultar/cancelar depois
+      const accessCode = String(crypto.getRandomValues(new Uint32Array(1))[0] % 1_000_000).padStart(
+        6,
+        "0",
+      );
       const { error } = await supabase.from(db.agendamentos).insert({
         id: appointmentId,
         professional_id: pro.id,
@@ -1372,11 +1377,12 @@ function FormStep({
         notes: notes.trim() || null,
         service_snapshot_name: combinedName,
         service_snapshot_price_cents: combinedPrice,
+        access_code: accessCode,
       });
       if (error) throw error;
-      return appointmentId;
+      return { id: appointmentId, accessCode };
     },
-    onSuccess: (id) => onDone(id),
+    onSuccess: ({ id, accessCode }) => onDone(id, accessCode),
     onError: (e: Error) => {
       const msg =
         e.message.includes("no_overlap_confirmed") || e.message.includes("exclusion")
