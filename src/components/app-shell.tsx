@@ -82,13 +82,14 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
           <div
             onClick={() => setOpen(false)}
             aria-hidden="true"
-            className="lg:hidden fixed inset-0 z-20 bg-foreground/40 backdrop-blur-sm animate-in fade-in-0 duration-200"
+            className="lg:hidden fixed inset-0 z-20 bg-foreground/40 animate-in fade-in-0 duration-200"
           />
         )}
 
         {/* Sidebar */}
         <aside
-          className={`${open ? "block animate-in fade-in-0 slide-in-from-left-4 duration-300 ease-out" : "hidden"} lg:block fixed lg:sticky top-14 lg:top-0 inset-x-0 lg:inset-auto bottom-0 lg:bottom-auto z-30 lg:h-screen w-full lg:w-64 bg-sidebar border-r border-sidebar-border overflow-y-auto`}
+          aria-hidden={!open}
+          className={`fixed lg:sticky top-14 lg:top-0 inset-x-0 lg:inset-auto bottom-0 lg:bottom-auto z-30 lg:h-screen w-full lg:w-64 bg-sidebar border-r border-sidebar-border overflow-y-auto transition-transform duration-300 ease-in-out lg:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full pointer-events-none"}`}
         >
           <div className="hidden lg:flex items-center justify-between h-20 px-6 border-b border-sidebar-border">
             <BrandLogo to="/app" />
