@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { OnboardingCard } from "@/components/onboarding-card";
 import { useMyProfessional } from "@/hooks/use-my-professional";
+import { useUserRole } from "@/hooks/use-user-role";
 import { supabase } from "@/integrations/supabase/client";
 import { db } from "@/lib/db-tables";
 import { formatBRL, WEEKDAYS_PT } from "@/lib/booking";
@@ -68,6 +69,7 @@ type EmployeeBlockRow = { id: string; starts_at: string; ends_at: string; reason
 
 function Page() {
   const { data: pro, isLoading } = useMyProfessional();
+  const { canEdit } = useUserRole();
 
   return (
     <AppShell title="Serviços">
@@ -87,22 +89,22 @@ function Page() {
           </TabsList>
 
           <TabsContent value="servicos" className="space-y-4">
-            <ServicosTab pro={pro} />
+            <ServicosTab pro={pro} readOnly={!canEdit} />
           </TabsContent>
           <TabsContent value="planos" className="space-y-4">
-            <PlanosTab pro={pro} />
+            <PlanosTab pro={pro} readOnly={!canEdit} />
           </TabsContent>
           <TabsContent value="produtos" className="space-y-4">
-            <ProdutosTab pro={pro} />
+            <ProdutosTab pro={pro} readOnly={!canEdit} />
           </TabsContent>
           <TabsContent value="bloqueios" className="space-y-4">
-            <BloqueiosTab pro={pro} />
+            <BloqueiosTab pro={pro} readOnly={!canEdit} />
           </TabsContent>
           <TabsContent value="horarios" className="space-y-4">
-            <HorariosTab pro={pro} />
+            <HorariosTab pro={pro} readOnly={!canEdit} />
           </TabsContent>
           <TabsContent value="funcionarios" className="space-y-4">
-            <FuncionariosTab pro={pro} />
+            <FuncionariosTab pro={pro} readOnly={!canEdit} />
           </TabsContent>
         </Tabs>
       )}
@@ -110,7 +112,7 @@ function Page() {
   );
 }
 
-function ServicosTab({ pro }: { pro: Pro }) {
+function ServicosTab({ pro, readOnly }: { pro: Pro; readOnly?: boolean }) {
   const qc = useQueryClient();
   const [editing, setEditing] = useState<Partial<Service> | null>(null);
   const [view, setView] = useState<ViewMode>("list");
@@ -197,18 +199,21 @@ function ServicosTab({ pro }: { pro: Pro }) {
 
   return (
     <>
+      {readOnly && <ReadOnlyNotice />}
       <CatalogHeader
         countLabel={`${services?.length ?? 0} ${(services?.length ?? 0) === 1 ? "serviço" : "serviços"}`}
         onCreateLabel="Novo serviço"
         onCreate={() => setEditing({ duration_minutes: 30 })}
         view={view}
         onViewChange={setView}
+        readOnly={readOnly}
       />
       {(services ?? []).length === 0 ? (
         <CatalogEmpty
           message="Crie o primeiro serviço para começar a receber agendamentos."
           actionLabel="Criar serviço"
           onAction={() => setEditing({ duration_minutes: 30 })}
+          readOnly={readOnly}
         />
       ) : view === "list" ? (
         <div className="grid gap-3">
@@ -216,6 +221,7 @@ function ServicosTab({ pro }: { pro: Pro }) {
             <CatalogRow
               key={s.id}
               item={s}
+              readOnly={readOnly}
               onEdit={() => setEditing(s)}
               onDelete={() => {
                 if (confirm("Excluir este serviço?")) remove.mutate(s.id);
@@ -229,6 +235,7 @@ function ServicosTab({ pro }: { pro: Pro }) {
             <CatalogCard
               key={s.id}
               item={s}
+              readOnly={readOnly}
               onEdit={() => setEditing(s)}
               onDelete={() => {
                 if (confirm("Excluir este serviço?")) remove.mutate(s.id);
@@ -247,7 +254,7 @@ function ServicosTab({ pro }: { pro: Pro }) {
   );
 }
 
-function PlanosTab({ pro }: { pro: Pro }) {
+function PlanosTab({ pro, readOnly }: { pro: Pro; readOnly?: boolean }) {
   const qc = useQueryClient();
   const [editing, setEditing] = useState<Partial<Plano> | null>(null);
   const [view, setView] = useState<ViewMode>("list");
@@ -332,18 +339,21 @@ function PlanosTab({ pro }: { pro: Pro }) {
 
   return (
     <>
+      {readOnly && <ReadOnlyNotice />}
       <CatalogHeader
         countLabel={`${planos?.length ?? 0} ${(planos?.length ?? 0) === 1 ? "plano" : "planos"}`}
         onCreateLabel="Novo plano"
         onCreate={() => setEditing({})}
         view={view}
         onViewChange={setView}
+        readOnly={readOnly}
       />
       {(planos ?? []).length === 0 ? (
         <CatalogEmpty
           message="Crie o primeiro plano para oferecer assinaturas ou pacotes."
           actionLabel="Criar plano"
           onAction={() => setEditing({})}
+          readOnly={readOnly}
         />
       ) : view === "list" ? (
         <div className="grid gap-3">
@@ -351,6 +361,7 @@ function PlanosTab({ pro }: { pro: Pro }) {
             <CatalogRow
               key={p.id}
               item={p}
+              readOnly={readOnly}
               onEdit={() => setEditing(p)}
               onDelete={() => {
                 if (confirm("Excluir este plano?")) remove.mutate(p.id);
@@ -364,6 +375,7 @@ function PlanosTab({ pro }: { pro: Pro }) {
             <CatalogCard
               key={p.id}
               item={p}
+              readOnly={readOnly}
               onEdit={() => setEditing(p)}
               onDelete={() => {
                 if (confirm("Excluir este plano?")) remove.mutate(p.id);
@@ -382,7 +394,7 @@ function PlanosTab({ pro }: { pro: Pro }) {
   );
 }
 
-function ProdutosTab({ pro }: { pro: Pro }) {
+function ProdutosTab({ pro, readOnly }: { pro: Pro; readOnly?: boolean }) {
   const qc = useQueryClient();
   const [editing, setEditing] = useState<Partial<Produto> | null>(null);
   const [view, setView] = useState<ViewMode>("list");
@@ -467,18 +479,21 @@ function ProdutosTab({ pro }: { pro: Pro }) {
 
   return (
     <>
+      {readOnly && <ReadOnlyNotice />}
       <CatalogHeader
         countLabel={`${produtos?.length ?? 0} ${(produtos?.length ?? 0) === 1 ? "produto" : "produtos"}`}
         onCreateLabel="Novo produto"
         onCreate={() => setEditing({})}
         view={view}
         onViewChange={setView}
+        readOnly={readOnly}
       />
       {(produtos ?? []).length === 0 ? (
         <CatalogEmpty
           message="Cadastre itens para vender no seu estabelecimento."
           actionLabel="Criar produto"
           onAction={() => setEditing({})}
+          readOnly={readOnly}
         />
       ) : view === "list" ? (
         <div className="grid gap-3">
@@ -486,6 +501,7 @@ function ProdutosTab({ pro }: { pro: Pro }) {
             <CatalogRow
               key={p.id}
               item={p}
+              readOnly={readOnly}
               onEdit={() => setEditing(p)}
               onDelete={() => {
                 if (confirm("Excluir este produto?")) remove.mutate(p.id);
@@ -499,6 +515,7 @@ function ProdutosTab({ pro }: { pro: Pro }) {
             <CatalogCard
               key={p.id}
               item={p}
+              readOnly={readOnly}
               onEdit={() => setEditing(p)}
               onDelete={() => {
                 if (confirm("Excluir este produto?")) remove.mutate(p.id);
@@ -527,27 +544,39 @@ type CatalogItem = {
   is_active: boolean;
 };
 
+function ReadOnlyNotice() {
+  return (
+    <div className="rounded-xl border border-[var(--warning)]/40 bg-[var(--warning)]/10 px-4 py-3 text-sm">
+      Você está em modo somente leitura. Apenas o administrador pode criar ou editar itens.
+    </div>
+  );
+}
+
 function CatalogHeader({
   countLabel,
   onCreateLabel,
   onCreate,
   view,
   onViewChange,
+  readOnly,
 }: {
   countLabel: string;
   onCreateLabel: string;
   onCreate: () => void;
   view: ViewMode;
   onViewChange: (v: ViewMode) => void;
+  readOnly?: boolean;
 }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
       <span className="ui-badge">{countLabel}</span>
       <div className="flex items-center gap-2">
         <ViewToggle value={view} onChange={onViewChange} />
-        <button onClick={onCreate} className="btn-brand inline-flex items-center gap-2">
-          <Plus className="h-4 w-4" /> {onCreateLabel}
-        </button>
+        {!readOnly && (
+          <button onClick={onCreate} className="btn-brand inline-flex items-center gap-2">
+            <Plus className="h-4 w-4" /> {onCreateLabel}
+          </button>
+        )}
       </div>
     </div>
   );
@@ -557,10 +586,12 @@ function CatalogEmpty({
   message,
   actionLabel,
   onAction,
+  readOnly,
 }: {
   message: string;
   actionLabel: string;
   onAction: () => void;
+  readOnly?: boolean;
 }) {
   return (
     <div className="card-elevated py-14 px-6 text-center">
@@ -571,9 +602,11 @@ function CatalogEmpty({
       <p className="text-sm text-muted-foreground mt-1 max-w-xs mx-auto leading-relaxed">
         {message}
       </p>
-      <button onClick={onAction} className="btn-brand inline-flex items-center gap-2 mt-5">
-        <Plus className="h-4 w-4" /> {actionLabel}
-      </button>
+      {!readOnly && (
+        <button onClick={onAction} className="btn-brand inline-flex items-center gap-2 mt-5">
+          <Plus className="h-4 w-4" /> {actionLabel}
+        </button>
+      )}
     </div>
   );
 }
@@ -582,10 +615,12 @@ function CatalogRow({
   item,
   onEdit,
   onDelete,
+  readOnly,
 }: {
   item: CatalogItem;
   onEdit: () => void;
   onDelete: () => void;
+  readOnly?: boolean;
 }) {
   return (
     <div
@@ -632,20 +667,24 @@ function CatalogRow({
             <NumberTicker value={item.price_cents} format={(n) => formatBRL(Math.round(n))} />
           </span>
           <div className="flex gap-1">
-            <button
-              onClick={onEdit}
-              title="Editar"
-              className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-            >
-              <Pencil className="h-4 w-4" />
-            </button>
-            <button
-              onClick={onDelete}
-              title="Excluir"
-              className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
+            {!readOnly && (
+              <>
+                <button
+                  onClick={onEdit}
+                  title="Editar"
+                  className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                >
+                  <Pencil className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={onDelete}
+                  title="Excluir"
+                  className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -657,10 +696,12 @@ function CatalogCard({
   item,
   onEdit,
   onDelete,
+  readOnly,
 }: {
   item: CatalogItem;
   onEdit: () => void;
   onDelete: () => void;
+  readOnly?: boolean;
 }) {
   return (
     <div className="card-elevated overflow-hidden flex flex-col group">
@@ -698,28 +739,30 @@ function CatalogCard({
             {item.description}
           </p>
         )}
-        <div className="flex gap-2 mt-auto pt-3">
-          <button
-            onClick={onEdit}
-            className="btn-outline-brand inline-flex items-center justify-center gap-1.5 text-sm !py-2 flex-1"
-          >
-            <Pencil className="h-4 w-4 shrink-0" />
-            <span className="max-sm:sr-only">Editar</span>
-          </button>
-          <button
-            onClick={onDelete}
-            title="Excluir"
-            className="btn-outline-brand inline-flex items-center justify-center !py-2 px-3 text-destructive"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
-        </div>
+        {!readOnly && (
+          <div className="flex gap-2 mt-auto pt-3">
+            <button
+              onClick={onEdit}
+              className="btn-outline-brand inline-flex items-center justify-center gap-1.5 text-sm !py-2 flex-1"
+            >
+              <Pencil className="h-4 w-4 shrink-0" />
+              <span className="max-sm:sr-only">Editar</span>
+            </button>
+            <button
+              onClick={onDelete}
+              title="Excluir"
+              className="btn-outline-brand inline-flex items-center justify-center !py-2 px-3 text-destructive"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-function BloqueiosTab({ pro }: { pro: Pro }) {
+function BloqueiosTab({ pro, readOnly }: { pro: Pro; readOnly?: boolean }) {
   const qc = useQueryClient();
   const [showForm, setShowForm] = useState(false);
 
@@ -760,15 +803,18 @@ function BloqueiosTab({ pro }: { pro: Pro }) {
 
   return (
     <>
+      {readOnly && <ReadOnlyNotice />}
       <p className="text-sm text-muted-foreground">
         Bloqueie períodos em que você não estará disponível (férias, feriados, imprevistos).
       </p>
-      <button
-        onClick={() => setShowForm((v) => !v)}
-        className="btn-brand inline-flex items-center gap-2"
-      >
-        <Plus className="h-4 w-4" /> Novo bloqueio
-      </button>
+      {!readOnly && (
+        <button
+          onClick={() => setShowForm((v) => !v)}
+          className="btn-brand inline-flex items-center gap-2"
+        >
+          <Plus className="h-4 w-4" /> Novo bloqueio
+        </button>
+      )}
       {showForm && <BlockForm onSubmit={(v) => add.mutate(v)} saving={add.isPending} />}
       <ul className="space-y-2">
         {(blocks ?? []).length === 0 && (
@@ -783,12 +829,14 @@ function BloqueiosTab({ pro }: { pro: Pro }) {
               </p>
               {b.reason && <p className="text-sm text-muted-foreground truncate">{b.reason}</p>}
             </div>
-            <button
-              onClick={() => remove.mutate(b.id)}
-              className="text-destructive shrink-0 p-2 min-h-[44px] min-w-[44px] grid place-items-center"
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
+            {!readOnly && (
+              <button
+                onClick={() => remove.mutate(b.id)}
+                className="text-destructive shrink-0 p-2 min-h-[44px] min-w-[44px] grid place-items-center"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            )}
           </li>
         ))}
       </ul>
@@ -796,7 +844,7 @@ function BloqueiosTab({ pro }: { pro: Pro }) {
   );
 }
 
-function HorariosTab({ pro }: { pro: Pro }) {
+function HorariosTab({ pro, readOnly }: { pro: Pro; readOnly?: boolean }) {
   const qc = useQueryClient();
   const [addingWeekday, setAddingWeekday] = useState<number | null>(null);
 
@@ -878,13 +926,15 @@ function HorariosTab({ pro }: { pro: Pro }) {
                       <span className="font-mono font-semibold tracking-tight">
                         {r.start_time.slice(0, 5)}–{r.end_time.slice(0, 5)}
                       </span>
-                      <button
-                        onClick={() => remove.mutate(r.id)}
-                        aria-label={`Remover faixa das ${r.start_time.slice(0, 5)}`}
-                        className="grid place-items-center rounded-full p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                      >
-                        <X className="h-3.5 w-3.5" />
-                      </button>
+                      {!readOnly && (
+                        <button
+                          onClick={() => remove.mutate(r.id)}
+                          aria-label={`Remover faixa das ${r.start_time.slice(0, 5)}`}
+                          className="grid place-items-center rounded-full p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      )}
                     </span>
                   ))}
                   {dayRows.length === 0 && !adding && (
@@ -895,7 +945,7 @@ function HorariosTab({ pro }: { pro: Pro }) {
                 </div>
 
                 <div className="sm:shrink-0">
-                  {!adding && (
+                  {!adding && !readOnly && (
                     <button
                       onClick={() => setAddingWeekday(wd)}
                       className="btn-outline-brand inline-flex items-center justify-center gap-1 text-sm !py-2 !min-h-[40px] w-full sm:w-auto"
@@ -906,7 +956,7 @@ function HorariosTab({ pro }: { pro: Pro }) {
                 </div>
               </div>
 
-              {adding && (
+              {adding && !readOnly && (
                 <TimeRangeForm
                   onCancel={() => setAddingWeekday(null)}
                   onSave={(s, e) => {
@@ -923,7 +973,7 @@ function HorariosTab({ pro }: { pro: Pro }) {
   );
 }
 
-function FuncionariosTab({ pro }: { pro: Pro }) {
+function FuncionariosTab({ pro, readOnly }: { pro: Pro; readOnly?: boolean }) {
   const qc = useQueryClient();
   const [editing, setEditing] = useState<Employee | null>(null);
   const [creating, setCreating] = useState(false);
@@ -984,17 +1034,20 @@ function FuncionariosTab({ pro }: { pro: Pro }) {
 
   return (
     <>
+      {readOnly && <ReadOnlyNotice />}
       <p className="text-sm text-muted-foreground">
         Cadastre as pessoas que atendem no seu negócio. Cada funcionário tem seus próprios serviços,
         horários e bloqueios de agenda.
       </p>
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <button
-          onClick={() => setCreating(true)}
-          className="btn-brand inline-flex items-center gap-2"
-        >
-          <Plus className="h-4 w-4" /> Novo funcionário
-        </button>
+        {!readOnly && (
+          <button
+            onClick={() => setCreating(true)}
+            className="btn-brand inline-flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" /> Novo funcionário
+          </button>
+        )}
         <ViewToggle value={view} onChange={setView} />
       </div>
 
@@ -1027,32 +1080,36 @@ function FuncionariosTab({ pro }: { pro: Pro }) {
                   </p>
                 </div>
               </div>
-              <div className="flex gap-2 shrink-0">
-                <button
-                  onClick={() => setEditing(e)}
-                  className="btn-outline-brand inline-flex items-center gap-1 text-sm !py-2"
-                >
-                  <Pencil className="h-4 w-4" /> Editar
-                </button>
-                <button
-                  onClick={() => toggle.mutate(e)}
-                  className="btn-outline-brand inline-flex items-center gap-1 text-sm !py-2"
-                  title={e.is_active ? "Desativar" : "Ativar"}
-                >
-                  <Power className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={() => {
-                    if (
-                      confirm(`Excluir ${e.name}? Os agendamentos passados dele serão preservados.`)
-                    )
-                      remove.mutate(e.id);
-                  }}
-                  className="btn-outline-brand inline-flex items-center gap-1 text-sm !py-2 text-destructive"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </div>
+              {!readOnly && (
+                <div className="flex gap-2 shrink-0">
+                  <button
+                    onClick={() => setEditing(e)}
+                    className="btn-outline-brand inline-flex items-center gap-1 text-sm !py-2"
+                  >
+                    <Pencil className="h-4 w-4" /> Editar
+                  </button>
+                  <button
+                    onClick={() => toggle.mutate(e)}
+                    className="btn-outline-brand inline-flex items-center gap-1 text-sm !py-2"
+                    title={e.is_active ? "Desativar" : "Ativar"}
+                  >
+                    <Power className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (
+                        confirm(
+                          `Excluir ${e.name}? Os agendamentos passados dele serão preservados.`,
+                        )
+                      )
+                        remove.mutate(e.id);
+                    }}
+                    className="btn-outline-brand inline-flex items-center gap-1 text-sm !py-2 text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -1079,29 +1136,31 @@ function FuncionariosTab({ pro }: { pro: Pro }) {
               )}
               <p className="font-semibold truncate w-full">{e.name}</p>
               <p className="text-xs text-muted-foreground">{e.is_active ? "Ativo" : "Inativo"}</p>
-              <div className="flex gap-1 mt-1 flex-wrap justify-center">
-                <button
-                  onClick={() => setEditing(e)}
-                  className="btn-outline-brand !py-1.5 !px-2 text-xs"
-                >
-                  <Pencil className="h-3 w-3" />
-                </button>
-                <button
-                  onClick={() => toggle.mutate(e)}
-                  className="btn-outline-brand !py-1.5 !px-2 text-xs"
-                  title={e.is_active ? "Desativar" : "Ativar"}
-                >
-                  <Power className="h-3 w-3" />
-                </button>
-                <button
-                  onClick={() => {
-                    if (confirm(`Excluir ${e.name}?`)) remove.mutate(e.id);
-                  }}
-                  className="btn-outline-brand !py-1.5 !px-2 text-xs text-destructive"
-                >
-                  <Trash2 className="h-3 w-3" />
-                </button>
-              </div>
+              {!readOnly && (
+                <div className="flex gap-1 mt-1 flex-wrap justify-center">
+                  <button
+                    onClick={() => setEditing(e)}
+                    className="btn-outline-brand !py-1.5 !px-2 text-xs"
+                  >
+                    <Pencil className="h-3 w-3" />
+                  </button>
+                  <button
+                    onClick={() => toggle.mutate(e)}
+                    className="btn-outline-brand !py-1.5 !px-2 text-xs"
+                    title={e.is_active ? "Desativar" : "Ativar"}
+                  >
+                    <Power className="h-3 w-3" />
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (confirm(`Excluir ${e.name}?`)) remove.mutate(e.id);
+                    }}
+                    className="btn-outline-brand !py-1.5 !px-2 text-xs text-destructive"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>

@@ -13,7 +13,6 @@ import {
   Shield,
   Smartphone,
   MessageCircle,
-  
   CircleCheck,
 } from "lucide-react";
 
@@ -88,7 +87,6 @@ const STEPS = [
     desc: "Seus clientes marcam sozinhos. Você acompanha tudo pelo painel, em qualquer lugar.",
   },
 ];
-
 
 const FAQ = [
   {
@@ -437,7 +435,6 @@ function Landing() {
           </div>
         </div>
       </section>
-
 
       {/* FAQ */}
       <section id="faq" className="py-20 sm:py-28 bg-section-soft-reverse">

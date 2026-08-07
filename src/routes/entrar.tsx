@@ -14,6 +14,7 @@ import {
   Quote,
 } from "lucide-react";
 import { UIButton, UICard, UIInput, UIPasswordInput, UITitle } from "@/components/ui-kit";
+import { daysUntilPasswordExpiry, isStrongPassword, passwordStrengthHint } from "@/lib/password";
 import authBg from "@/assets/auth-bg.jpg";
 
 export const Route = createFileRoute("/entrar")({
@@ -39,7 +40,11 @@ function SignIn() {
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [recovering, setRecovering] = useState(false);
+  const [mode, setMode] = useState<"signin" | "mfa" | "reset">("signin");
+  const [passwordMode, setPasswordMode] = useState<"recovery" | "expired">("recovery");
+  const [mfaCode, setMfaCode] = useState("");
+  const [mfaFactorId, setMfaFactorId] = useState("");
+  const [mfaLoading, setMfaLoading] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [resetLoading, setResetLoading] = useState(false);
@@ -48,24 +53,25 @@ function SignIn() {
     const { data: subscription } = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY") {
         sessionStorage.setItem("agendai_recovering", "1");
-        setRecovering(true);
+        setPasswordMode("recovery");
+        setMode("reset");
       }
     });
-    if (sessionStorage.getItem("agendai_recovering") === "1") setRecovering(true);
+    if (sessionStorage.getItem("agendai_recovering") === "1") {
+      setPasswordMode("recovery");
+      setMode("reset");
+    }
     return () => subscription.subscription.unsubscribe();
   }, []);
 
-  function finishRecovery() {
+  function finishReset() {
     sessionStorage.removeItem("agendai_recovering");
-    setRecovering(false);
+    setMode("signin");
   }
 
   async function onResetPassword(e: React.FormEvent) {
     e.preventDefault();
-    if (newPassword.length < 6) {
-      toast.error("A senha precisa ter pelo menos 6 caracteres.");
-      return;
-    }
+    if (!isStrongPassword(newPassword)) return toast.error(passwordStrengthHint(newPassword));
     if (newPassword !== confirmPassword) {
       toast.error("As senhas não coincidem.");
       return;
@@ -74,17 +80,104 @@ function SignIn() {
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     setResetLoading(false);
     if (error) return toast.error("Não foi possível atualizar a senha. Tente novamente.");
+    await supabase.rpc("touch_password_change");
+    if (passwordMode === "expired") {
+      finishReset();
+      setNewPassword("");
+      setConfirmPassword("");
+      toast.success("Senha atualizada!");
+      router.navigate({ to: "/app" });
+      return;
+    }
     await supabase.auth.signOut();
-    finishRecovery();
+    finishReset();
     setNewPassword("");
     setConfirmPassword("");
     toast.success("Senha atualizada! Faça login com a nova senha.");
   }
 
+  async function handlePostLogin(user: { id: string; email?: string }) {
+    const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    if (aal?.nextLevel === "aal2") {
+      const { data: list } = await supabase.auth.mfa.listFactors();
+      const factor = list?.all.find((f) => f.factor_type === "totp" && f.status === "verified");
+      if (factor) {
+        setMfaFactorId(factor.id);
+        setMode("mfa");
+        return;
+      }
+    }
+    const { data: sec } = await supabase
+      .from("user_security")
+      .select("password_changed_at")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (!sec?.password_changed_at || daysUntilPasswordExpiry(sec.password_changed_at) > 0) {
+      void supabase
+        .rpc("log_auth_event", {
+          p_kind: "login_success",
+          p_contact: (user.email ?? "").toLowerCase(),
+        })
+        .then(
+          () => {},
+          () => {},
+        );
+      toast.success("Bem-vindo de volta!");
+      router.navigate({ to: "/app" });
+      return;
+    }
+    setPasswordMode("expired");
+    setMode("reset");
+    toast.error("Sua senha expirou. Defina uma nova senha para continuar.");
+  }
+
+  async function onMfaSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setMfaLoading(true);
+    const { data: challenge, error: chalErr } = await supabase.auth.mfa.challenge({
+      factorId: mfaFactorId,
+    });
+    if (chalErr) {
+      setMfaLoading(false);
+      void supabase
+        .rpc("log_auth_event", { p_kind: "mfa_failed", p_contact: email.trim().toLowerCase() })
+        .then(
+          () => {},
+          () => {},
+        );
+      return toast.error("Falha ao iniciar a verificação. Tente novamente.");
+    }
+    const { error } = await supabase.auth.mfa.verify({
+      factorId: mfaFactorId,
+      challengeId: challenge.id,
+      code: mfaCode.trim(),
+    });
+    setMfaLoading(false);
+    if (error) {
+      void supabase
+        .rpc("log_auth_event", { p_kind: "mfa_failed", p_contact: email.trim().toLowerCase() })
+        .then(
+          () => {},
+          () => {},
+        );
+      return toast.error("Código inválido. Confira os 6 dígitos e tente de novo.");
+    }
+    void supabase
+      .rpc("log_auth_event", { p_kind: "mfa_success", p_contact: email.trim().toLowerCase() })
+      .then(
+        () => {},
+        () => {},
+      );
+    const { data: userData } = await supabase.auth.getUser();
+    if (userData?.user) return handlePostLogin(userData.user);
+    toast.success("Bem-vindo de volta!");
+    router.navigate({ to: "/app" });
+  }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) {
       void supabase
@@ -95,8 +188,7 @@ function SignIn() {
         );
       return toast.error("Email ou senha inválidos.");
     }
-    toast.success("Bem-vindo de volta!");
-    router.navigate({ to: "/app" });
+    if (data.user) await handlePostLogin(data.user);
   }
 
   async function onForgot() {
@@ -114,23 +206,55 @@ function SignIn() {
       accent="Entre e continue."
       subtitle="Acesse seu painel para gerenciar agendamentos, serviços e horários."
     >
-      {recovering ? (
+      {mode === "mfa" ? (
+        <form onSubmit={onMfaSubmit} className="space-y-3">
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Sua conta está protegida com autenticação em dois fatores. Digite o código de 6 dígitos
+            gerado pelo seu app autenticador.
+          </p>
+          <UIPasswordInput
+            label="Código de verificação"
+            icon={Lock}
+            required
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            value={mfaCode}
+            onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+            placeholder="000000"
+          />
+          <UIButton type="submit" size="lg" fullWidth disabled={mfaLoading}>
+            {mfaLoading ? "Verificando..." : "Entrar com código"}
+          </UIButton>
+          <button
+            type="button"
+            onClick={finishReset}
+            className="ui-link text-sm w-full text-center"
+          >
+            Voltar ao login
+          </button>
+        </form>
+      ) : mode === "reset" ? (
         <form onSubmit={onResetPassword} className="space-y-3">
+          {passwordMode === "expired" && (
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Sua senha expirou. Defina uma nova senha forte para continuar.
+            </p>
+          )}
           <UIPasswordInput
             label="Nova senha"
             icon={Lock}
             required
-            minLength={6}
+            minLength={8}
             autoComplete="new-password"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-            placeholder="Mínimo de 6 caracteres"
+            placeholder="Mínimo de 8 caracteres, com letras e números"
           />
           <UIPasswordInput
             label="Confirmar nova senha"
             icon={Lock}
             required
-            minLength={6}
+            minLength={8}
             autoComplete="new-password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
@@ -142,7 +266,7 @@ function SignIn() {
           <button
             type="button"
             onClick={() => {
-              void supabase.auth.signOut().then(finishRecovery);
+              void supabase.auth.signOut().then(finishReset);
             }}
             className="ui-link text-sm w-full text-center"
           >

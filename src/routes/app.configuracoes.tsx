@@ -14,6 +14,7 @@ import { ImageUpload } from "@/components/image-upload";
 import { CopyCheck, ExternalLink } from "lucide-react";
 import { AppearanceSettings } from "@/components/appearance-settings";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { SecuritySettings } from "@/components/security-settings";
 import type { ProfessionalTheme } from "@/lib/appearance";
 
 export const Route = createFileRoute("/app/configuracoes")({
@@ -132,6 +133,7 @@ function Page() {
               <TabsTrigger value="localizacao">Localização & Contato</TabsTrigger>
               <TabsTrigger value="mensagens">Mensagens</TabsTrigger>
               <TabsTrigger value="apariencia">Aparência</TabsTrigger>
+              <TabsTrigger value="seguranca">Segurança</TabsTrigger>
             </TabsList>
 
             <TabsContent value="perfil" className="space-y-6">
@@ -247,6 +249,10 @@ function Page() {
                 proId={pro.id}
                 initialTheme={pro.theme_colors as ProfessionalTheme | null}
               />
+            </TabsContent>
+
+            <TabsContent value="seguranca" className="space-y-6">
+              <SecuritySettings />
             </TabsContent>
           </Tabs>
 

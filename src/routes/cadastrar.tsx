@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { db } from "@/lib/db-tables";
 import { AuthLayout, Field } from "./entrar";
 import { slugify } from "@/lib/booking";
+import { isStrongPassword, passwordStrengthHint } from "@/lib/password";
 
 export const Route = createFileRoute("/cadastrar")({
   head: () => ({
@@ -28,7 +29,7 @@ function SignUp() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (password.length < 6) return toast.error("Senha precisa ter ao menos 6 caracteres.");
+    if (!isStrongPassword(password)) return toast.error(passwordStrengthHint(password));
     setLoading(true);
     try {
       const { data, error } = await supabase.auth.signUp({
@@ -63,6 +64,12 @@ function SignUp() {
       }
 
       toast.success("Conta criada! Bem-vindo ao Agendaí.");
+      void supabase
+        .rpc("log_auth_event", { p_kind: "signup_success", p_contact: email.trim().toLowerCase() })
+        .then(
+          () => {},
+          () => {},
+        );
       router.navigate({ to: "/app" });
     } catch (err) {
       void supabase
@@ -121,15 +128,15 @@ function SignUp() {
             className={inputCls}
           />
         </Field>
-        <Field label="Senha (mínimo 6 caracteres)">
+        <Field label="Senha (mínimo 8 caracteres, com letras e números)">
           <input
             type="password"
             required
-            minLength={6}
+            minLength={8}
             autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Mínimo 6 caracteres"
+            placeholder="Ex.: barbearia2026!"
             className={inputCls}
           />
         </Field>
