@@ -60,6 +60,7 @@ function Dashboard() {
   } = useQuery({
     queryKey: ["dashboard-stats", pro?.id, monthOffset],
     enabled: !!pro?.id,
+    placeholderData: (prev) => prev,
     queryFn: async () => {
       const proId = pro!.id;
 
@@ -228,42 +229,54 @@ function Dashboard() {
           </div>
 
           <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-            <StatCard
-              icon={Calendar}
-              label="Hoje"
-              value={stats?.today.length ?? 0}
-              hint="agendamentos"
-              tone="accent"
-              ticker
-            />
-            <StatCard
-              icon={CheckCircle2}
-              label="Atendimentos"
-              value={stats?.monthCount ?? 0}
-              hint="no mês"
-              tone="brand"
-              trend={pct(stats?.monthCount ?? 0, stats?.prevCount ?? 0)}
-              ticker
-            />
-            <StatCard
-              icon={DollarSign}
-              label="Receita"
-              value={stats?.totalRevenue ?? 0}
-              hint="agendado + concluído"
-              tone="success"
-              trend={pct(stats?.totalRevenue ?? 0, stats?.prevRevenue ?? 0)}
-              ticker
-              formatTicker={(n) => formatBRL(Math.round(n))}
-            />
-            <StatCard
-              icon={TrendingUp}
-              label="Ticket médio"
-              value={stats?.avgTicket ?? 0}
-              hint="por concluído"
-              tone="warning"
-              ticker
-              formatTicker={(n) => formatBRL(Math.round(n))}
-            />
+            {!stats ? (
+              Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="card-elevated p-5">
+                  <div className="skeleton h-4 w-20" />
+                  <div className="skeleton h-9 w-28 mt-3" />
+                  <div className="skeleton h-3 w-24 mt-3" />
+                </div>
+              ))
+            ) : (
+              <>
+                <StatCard
+                  icon={Calendar}
+                  label="Hoje"
+                  value={stats.today.length}
+                  hint="agendamentos"
+                  tone="accent"
+                  ticker
+                />
+                <StatCard
+                  icon={CheckCircle2}
+                  label="Atendimentos"
+                  value={stats.monthCount}
+                  hint="no mês"
+                  tone="brand"
+                  trend={pct(stats.monthCount, stats.prevCount)}
+                  ticker
+                />
+                <StatCard
+                  icon={DollarSign}
+                  label="Receita"
+                  value={stats.totalRevenue}
+                  hint="agendado + concluído"
+                  tone="success"
+                  trend={pct(stats.totalRevenue, stats.prevRevenue)}
+                  ticker
+                  formatTicker={(n) => formatBRL(Math.round(n))}
+                />
+                <StatCard
+                  icon={TrendingUp}
+                  label="Ticket médio"
+                  value={stats.avgTicket}
+                  hint="por concluído"
+                  tone="warning"
+                  ticker
+                  formatTicker={(n) => formatBRL(Math.round(n))}
+                />
+              </>
+            )}
           </div>
 
           {stats && (

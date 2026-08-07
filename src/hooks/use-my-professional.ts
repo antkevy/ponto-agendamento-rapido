@@ -8,6 +8,7 @@ export function useMyProfessional() {
   return useQuery({
     queryKey: ["my-professional", user?.id],
     enabled: !!user,
+    placeholderData: (prev) => prev,
     queryFn: async () => {
       if (!user) return null;
       const { data, error } = await supabase

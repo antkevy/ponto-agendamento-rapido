@@ -82,7 +82,7 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
           <div
             onClick={() => setOpen(false)}
             aria-hidden="true"
-            className="lg:hidden fixed inset-0 z-20 bg-foreground/40 animate-in fade-in-0 duration-200"
+            className="lg:hidden fixed inset-0 z-20 bg-black/40 animate-in fade-in-0 duration-200"
           />
         )}
 
