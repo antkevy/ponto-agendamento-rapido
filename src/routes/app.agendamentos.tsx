@@ -123,7 +123,10 @@ function Page() {
       if (range === "today") end.setDate(end.getDate() + 1);
       else if (range === "week") end.setDate(end.getDate() + 7);
       else if (range === "month") end.setMonth(end.getMonth() + 1);
-      else end.setFullYear(end.getFullYear() + 5);
+      else {
+        start.setFullYear(start.getFullYear() - 5);
+        end.setFullYear(end.getFullYear() + 5);
+      }
 
       const { data, error } = await supabase
         .from(db.agendamentos)
