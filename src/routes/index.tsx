@@ -467,13 +467,13 @@ function Landing() {
         <div className="max-w-3xl mx-auto px-5 sm:px-8">
           <Reveal>
             <div className="text-center">
-              <p
-                className="text-sm font-semibold uppercase tracking-widest"
-                style={{ color: "oklch(0.55 0.18 250)" }}
-              >
-                Perguntas frequentes
-              </p>
-              <h2 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-foreground">
+              <span className="badge-pill text-xs">
+                <MessageCircle className="h-3.5 w-3.5 text-accent" />
+                <span className="font-semibold uppercase tracking-widest text-muted-foreground">
+                  Perguntas frequentes
+                </span>
+              </span>
+              <h2 className="mt-5 text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-foreground">
                 Tudo claro <span style={{ color: "oklch(0.62 0.19 250)" }}>antes de começar.</span>
               </h2>
             </div>
@@ -481,18 +481,33 @@ function Landing() {
           <div className="mt-10 space-y-3">
             {FAQ.map((f, i) => (
               <Reveal key={f.q} delay={i * 60}>
-                <details className="card-elevated p-5 group">
-                  <summary className="cursor-pointer font-semibold text-foreground list-none flex items-center justify-between">
-                    {f.q}
-                    <span className="ml-4 text-muted-foreground group-open:rotate-45 transition-transform text-xl leading-none">
+                <details className="card-elevated group overflow-hidden p-0 transition-all duration-300 hover:shadow-lg open:shadow-lg">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5 font-semibold text-foreground transition-colors group-hover:text-accent">
+                    <span className="flex items-center gap-3">
+                      <span className="h-6 w-1 rounded-full bg-border transition-colors group-open:bg-accent" />
+                      {f.q}
+                    </span>
+                    <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-border text-lg leading-none text-muted-foreground transition-all duration-300 group-open:rotate-45 group-open:border-accent group-open:bg-accent group-open:text-accent-foreground">
                       +
                     </span>
                   </summary>
-                  <p className="mt-3 text-muted-foreground leading-relaxed">{f.a}</p>
+                  <p className="px-5 pb-5 pl-9 text-muted-foreground leading-relaxed">{f.a}</p>
                 </details>
               </Reveal>
             ))}
           </div>
+          <Reveal>
+            <p className="mt-8 text-center text-sm text-muted-foreground">
+              Ainda com dúvidas?{" "}
+              <Link
+                to="/cadastrar"
+                className="font-semibold text-foreground underline underline-offset-4"
+              >
+                Crie sua conta e teste grátis
+              </Link>
+              .
+            </p>
+          </Reveal>
         </div>
       </section>
 
@@ -501,38 +516,58 @@ function Landing() {
         <div className="max-w-4xl mx-auto px-5 sm:px-8">
           <Reveal>
             <div
-              className="rounded-3xl p-10 sm:p-16 text-center text-white shadow-2xl"
+              className="relative overflow-hidden rounded-3xl p-10 sm:p-16 text-center text-white shadow-2xl"
               style={{
                 backgroundImage:
                   "linear-gradient(135deg, oklch(0.55 0.18 250), oklch(0.45 0.14 245))",
               }}
             >
-              <h2 className="text-3xl sm:text-5xl font-black tracking-tight leading-tight">
-                Pronto para uma agenda que trabalha por você?
-              </h2>
-              <p className="mt-4 text-white/85 text-lg max-w-xl mx-auto">
-                Crie sua conta em menos de dois minutos e compartilhe seu link ainda hoje.
-              </p>
-              <div className="mt-8 flex flex-col sm:flex-row gap-3 items-center justify-center">
-                <Link
-                  to="/cadastrar"
-                  className="inline-flex items-center gap-2 bg-white text-[#0F172A] font-semibold px-7 py-3.5 rounded-full hover:bg-white/95 hover:text-[#0F172A] transition-colors"
-                >
-                  Criar minha conta grátis
-                  <ArrowRight className="h-5 w-5" />
-                </Link>
-                <Link
-                  to="/meus-agendamentos"
-                  search={{ pro: undefined }}
-                  className="inline-flex items-center text-white/90 hover:text-white text-sm underline underline-offset-4"
-                >
-                  Sou cliente, quero consultar meu agendamento
-                </Link>
+              <span className="pointer-events-none absolute -top-24 -left-16 h-64 w-64 rounded-full bg-white/15 blur-3xl" />
+              <span className="pointer-events-none absolute -bottom-24 -right-10 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
+
+              <div className="relative">
+                <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest ring-1 ring-inset ring-white/25">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Comece hoje
+                </span>
+                <h2 className="mt-6 text-3xl sm:text-5xl font-black tracking-tight leading-tight">
+                  Pronto para uma agenda que trabalha por você?
+                </h2>
+                <p className="mt-4 text-white/85 text-lg max-w-xl mx-auto">
+                  Crie sua conta em menos de dois minutos e compartilhe seu link ainda hoje.
+                </p>
+                <div className="mt-8 flex flex-col sm:flex-row gap-3 items-center justify-center">
+                  <Link
+                    to="/cadastrar"
+                    className="group inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-full bg-white px-7 py-3.5 font-semibold text-[#0F172A] shadow-lg transition-all hover:bg-white/95 hover:text-[#0F172A] hover:shadow-xl active:scale-[0.98]"
+                  >
+                    Criar minha conta grátis
+                    <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+                  </Link>
+                  <Link
+                    to="/meus-agendamentos"
+                    search={{ pro: undefined }}
+                    className="inline-flex items-center rounded-full px-5 py-3 text-sm text-white/90 ring-1 ring-inset ring-white/25 transition-colors hover:bg-white/10 hover:text-white"
+                  >
+                    Sou cliente, quero consultar meu agendamento
+                  </Link>
+                </div>
+                <ul className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-white/80">
+                  {["Sem cartão de crédito", "Cancele quando quiser", "Suporte em português"].map(
+                    (item) => (
+                      <li key={item} className="inline-flex items-center gap-2">
+                        <Check className="h-4 w-4" strokeWidth={3} />
+                        {item}
+                      </li>
+                    ),
+                  )}
+                </ul>
               </div>
             </div>
           </Reveal>
         </div>
       </section>
+
 
       <footer className="border-t border-border">
         <div className="max-w-6xl mx-auto px-5 sm:px-8 py-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-muted-foreground">
