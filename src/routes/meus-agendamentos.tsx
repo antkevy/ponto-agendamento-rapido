@@ -76,7 +76,9 @@ function Page() {
   const rootRef = useRef<HTMLDivElement>(null);
   const [mode, setMode] = useState<Mode>("phone");
   const [contact, setContact] = useState("");
+  const [code, setCode] = useState("");
   const [submitted, setSubmitted] = useState<string | null>(null);
+  const [submittedCode, setSubmittedCode] = useState<string>("");
   const [rescheduling, setRescheduling] = useState<Row | null>(null);
   const qc = useQueryClient();
 
@@ -103,11 +105,12 @@ function Page() {
   const brand = useBookingTheme(rootRef, proTheme?.brand_color, proTheme?.theme_colors ?? null);
 
   const { data, isFetching } = useQuery({
-    queryKey: ["client-appts", submitted],
+    queryKey: ["client-appts", submitted, submittedCode],
     enabled: !!submitted,
     queryFn: async () => {
       const { data, error } = await supabase.rpc("lookup_client_appointments", {
         _contact: submitted!,
+        _code: submittedCode || null,
       });
       if (error) throw error;
       return data as Row[];
@@ -119,6 +122,7 @@ function Page() {
       const { data, error } = await supabase.rpc("client_cancel_appointment", {
         _id: id,
         _contact: submitted!,
+        _code: submittedCode || null,
       });
       if (error) throw error;
       if (!data) throw new Error("Não foi possível cancelar.");
@@ -136,6 +140,7 @@ function Page() {
         _id: id,
         _contact: submitted!,
         _starts_at: startsAt,
+        _code: submittedCode || null,
       });
       if (error) throw error;
       if (!data) throw new Error("Não foi possível reagendar.");
