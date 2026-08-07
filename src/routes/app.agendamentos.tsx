@@ -134,7 +134,7 @@ function Page() {
         .eq("professional_id", pro!.id)
         .gte("starts_at", start.toISOString())
         .lt("starts_at", end.toISOString())
-        .order("starts_at");
+        .order("starts_at", { ascending: range !== "all" });
       if (error) throw error;
       return data as Appt[];
     },
