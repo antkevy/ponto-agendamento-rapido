@@ -11,8 +11,22 @@ export const Route = createFileRoute("/cadastrar")({
   head: () => ({
     meta: [
       { title: "Criar conta — Agendaí" },
-      { name: "description", content: "Comece a receber agendamentos online em minutos." },
+      {
+        name: "description",
+        content:
+          "Crie sua conta no Agendaí e comece a receber agendamentos online dos seus clientes em poucos minutos, sem cartão de crédito.",
+      },
+      { property: "og:title", content: "Criar conta no Agendaí" },
+      {
+        property: "og:description",
+        content:
+          "Crie sua página de agendamento online e receba marcações automáticas 24 horas por dia.",
+      },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://agendai-br.lovable.app/cadastrar" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
+    links: [{ rel: "canonical", href: "https://agendai-br.lovable.app/cadastrar" }],
   }),
   component: SignUp,
 });
