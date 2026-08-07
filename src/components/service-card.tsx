@@ -3,6 +3,7 @@ import type { CSSProperties, ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 import { ShineBorder } from "@/components/effects";
+import { optimizedImageUrl } from "@/lib/image";
 
 export type ServiceVariant = "brand" | "accent" | "success" | "warning";
 
@@ -58,9 +59,10 @@ export function ServiceCard({
       {image ? (
         <div className="relative overflow-hidden">
           <img
-            src={image}
+            src={optimizedImageUrl(image, 800) ?? image}
             alt={imageAlt ?? title}
             loading="lazy"
+            decoding="async"
             className="w-full aspect-video object-cover transition-transform duration-500 group-hover:scale-105"
           />
         </div>

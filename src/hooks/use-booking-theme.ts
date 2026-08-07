@@ -1,4 +1,4 @@
-import { useEffect, useState, type RefObject } from "react";
+import { useLayoutEffect, useState, type RefObject } from "react";
 import {
   applyAppearance,
   DARK_PRESET,
@@ -45,7 +45,9 @@ export function useBookingTheme(
 ): string {
   const [brand, setBrand] = useState<string>(() => brandColor || "#0284C7");
 
-  useEffect(() => {
+  // useLayoutEffect (e não useEffect) para aplicar as cores ANTES do browser
+  // pintar — sem isso, a página pública pisca o tema padrão no primeiro frame.
+  useLayoutEffect(() => {
     const el = rootRef.current;
     if (!el) return;
 

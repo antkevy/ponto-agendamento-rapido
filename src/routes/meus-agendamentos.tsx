@@ -8,6 +8,7 @@ import { BrandLogo } from "@/components/brand-logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useBookingTheme } from "@/hooks/use-booking-theme";
 import type { ProfessionalTheme } from "@/lib/appearance";
+import { optimizedImageUrl } from "@/lib/image";
 import {
   X,
   ArrowLeft,
@@ -163,8 +164,9 @@ function Page() {
             >
               {proTheme.logo_url ? (
                 <img
-                  src={proTheme.logo_url}
+                  src={optimizedImageUrl(proTheme.logo_url, 160) ?? proTheme.logo_url}
                   alt=""
+                  decoding="async"
                   className="h-10 w-10 sm:h-11 sm:w-11 rounded-xl object-cover border border-border shrink-0"
                 />
               ) : (

@@ -6,7 +6,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { db } from "@/lib/db-tables";
 import { cn } from "@/lib/utils";
 import { useBookingTheme } from "@/hooks/use-booking-theme";
-import type { ProfessionalTheme } from "@/lib/appearance";
+import {
+  appearanceCssVars,
+  LIGHT_PRESET,
+  type Appearance,
+  type ProfessionalTheme,
+} from "@/lib/appearance";
+import { optimizedImageUrl } from "@/lib/image";
 import {
   computeSlots,
   formatBRL,
@@ -152,6 +158,7 @@ export const Route = createFileRoute("/p/$slug")({
         ],
       };
     const p = loaderData.pro;
+    const logo = optimizedImageUrl(p.logo_url, 192);
     return {
       meta: [
         { title: `Agendar com ${p.business_name} — Agendaí` },
@@ -166,6 +173,7 @@ export const Route = createFileRoute("/p/$slug")({
           content: p.description || `Marque seu horário online com ${p.business_name}.`,
         },
       ],
+      links: logo ? [{ rel: "preload", as: "image", href: logo }] : [],
     };
   },
   component: BookingPage,
@@ -188,6 +196,21 @@ function BookingPage() {
   const { pro } = Route.useLoaderData();
   const rootRef = useRef<HTMLDivElement>(null);
   const brand = useBookingTheme(rootRef, pro.brand_color, pro.theme_colors);
+
+  // Aparência aplicada já no HTML do servidor (SSR) para não piscar o tema
+  // padrão antes do JS. O hook refine no cliente (dark mode / ajuste local).
+  const ssrAppearance = useMemo<Appearance>(() => {
+    const base: Appearance = { ...LIGHT_PRESET };
+    if (pro.theme_colors?.light) Object.assign(base, pro.theme_colors.light);
+    return base;
+  }, [pro.theme_colors]);
+  const ssrBrand = useMemo(
+    () =>
+      ssrAppearance.primary !== LIGHT_PRESET.primary
+        ? ssrAppearance.primary
+        : pro.brand_color || "#0284C7",
+    [ssrAppearance, pro.brand_color],
+  );
 
   const [step, setStep] = useState<Step>("landing");
   const [selectedServices, setSelectedServices] = useState<Service[]>([]);
@@ -307,7 +330,12 @@ function BookingPage() {
     <div
       ref={rootRef}
       className="booking-page min-h-screen bg-booking-gradient"
-      style={{ ["--brand" as string]: brand } as React.CSSProperties}
+      style={
+        {
+          ...appearanceCssVars(ssrAppearance),
+          ["--brand" as string]: ssrBrand,
+        } as React.CSSProperties
+      }
     >
       <header
         className="sticky top-0 z-30 border-b"
@@ -320,8 +348,10 @@ function BookingPage() {
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center gap-3.5">
           {pro.logo_url ? (
             <img
-              src={pro.logo_url}
+              src={optimizedImageUrl(pro.logo_url, 192) ?? pro.logo_url}
               alt=""
+              decoding="async"
+              fetchPriority="high"
               className="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl object-cover border border-border shrink-0"
             />
           ) : (
@@ -607,9 +637,10 @@ function BookingPage() {
                               <div className="relative shrink-0">
                                 {s.image_url ? (
                                   <img
-                                    src={s.image_url}
+                                    src={optimizedImageUrl(s.image_url, 128) ?? s.image_url}
                                     alt={s.name}
                                     loading="lazy"
+                                    decoding="async"
                                     className="h-16 w-16 rounded-2xl object-cover aspect-square border border-border"
                                   />
                                 ) : (
@@ -680,9 +711,10 @@ function BookingPage() {
                             <div className="relative">
                               {s.image_url ? (
                                 <img
-                                  src={s.image_url}
+                                  src={optimizedImageUrl(s.image_url, 800) ?? s.image_url}
                                   alt={s.name}
                                   loading="lazy"
+                                  decoding="async"
                                   className="w-full aspect-[4/3] object-cover"
                                 />
                               ) : (
@@ -808,8 +840,10 @@ function BookingPage() {
                     >
                       {emp.photo_url ? (
                         <img
-                          src={emp.photo_url}
+                          src={optimizedImageUrl(emp.photo_url, 128) ?? emp.photo_url}
                           alt=""
+                          loading="lazy"
+                          decoding="async"
                           className="h-12 w-12 rounded-full object-cover border border-border shrink-0"
                         />
                       ) : (
@@ -880,8 +914,10 @@ function BookingPage() {
             >
               {detailService.image_url && (
                 <img
-                  src={detailService.image_url}
+                  src={optimizedImageUrl(detailService.image_url, 768) ?? detailService.image_url}
                   alt={detailService.name}
+                  loading="lazy"
+                  decoding="async"
                   className="w-full aspect-square object-cover"
                 />
               )}
@@ -1538,9 +1574,10 @@ function OrderSummary({
             <li key={s.id} className="flex items-center gap-3">
               {s.image_url ? (
                 <img
-                  src={s.image_url}
+                  src={optimizedImageUrl(s.image_url, 128) ?? s.image_url}
                   alt={s.name}
                   loading="lazy"
+                  decoding="async"
                   className="h-10 w-10 rounded-xl object-cover shrink-0 border border-border"
                 />
               ) : (
