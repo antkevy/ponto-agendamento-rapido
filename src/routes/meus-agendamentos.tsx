@@ -325,8 +325,9 @@ function Page() {
             </button>
           </div>
           <p className="text-xs text-muted-foreground">
-            O código de confirmação foi mostrado na tela após o agendamento. Não tem o código? Fale
-            direto com o estabelecimento.
+            O código apareceu na tela logo após o agendamento. Boa prática: tire um print da
+            confirmação pra não perder o código. Não tem o código? Fale direto com o
+            estabelecimento.
           </p>
         </form>
 

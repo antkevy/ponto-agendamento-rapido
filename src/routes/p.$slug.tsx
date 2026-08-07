@@ -1569,8 +1569,8 @@ function DoneStep({
           </p>
           <p className="mt-2 text-3xl font-black tracking-[0.35em] ui-accent-text">{accessCode}</p>
           <p className="mt-2 text-xs text-muted-foreground">
-            Guarde este código: ele é necessário para consultar, remarcar ou cancelar seu
-            agendamento.
+            Guarde este código — tire um print ou anote. Ele é necessário para consultar seu
+            agendamento em "Meus agendamentos".
           </p>
         </div>
       )}
