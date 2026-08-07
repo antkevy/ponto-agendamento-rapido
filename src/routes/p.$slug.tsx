@@ -190,7 +190,9 @@ export const Route = createFileRoute("/p/$slug")({
             url,
             ...(logo ? { image: logo } : {}),
             ...(p.phone ? { telephone: p.phone } : {}),
-            ...(p.address ? { address: { "@type": "PostalAddress", streetAddress: p.address } } : {}),
+            ...(p.address
+              ? { address: { "@type": "PostalAddress", streetAddress: p.address } }
+              : {}),
             ...(p.lat != null && p.lng != null
               ? { geo: { "@type": "GeoCoordinates", latitude: p.lat, longitude: p.lng } }
               : {}),

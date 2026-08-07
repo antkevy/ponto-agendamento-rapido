@@ -25,7 +25,8 @@ export const Route = createFileRoute("/sitemap.xml")({
         try {
           const { data } = await supabase.from(db.profissionais).select("slug");
           for (const row of (data ?? []) as { slug: string | null }[]) {
-            if (row.slug) entries.push({ path: `/p/${row.slug}`, changefreq: "daily", priority: "0.8" });
+            if (row.slug)
+              entries.push({ path: `/p/${row.slug}`, changefreq: "daily", priority: "0.8" });
           }
         } catch {
           // sitemap continua válido apenas com as rotas estáticas

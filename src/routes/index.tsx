@@ -601,7 +601,6 @@ function Landing() {
         </div>
       </section>
 
-
       <footer className="border-t border-border">
         <div className="max-w-6xl mx-auto px-5 sm:px-8 py-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-muted-foreground">
           <span className="font-bold text-foreground text-base">Agendaí</span>
