@@ -40,9 +40,19 @@ export const Route = createFileRoute("/meus-agendamentos")({
       { title: "Meus agendamentos — Agendaí" },
       {
         name: "description",
-        content: "Consulte, cancele ou reagende seus agendamentos usando telefone ou email.",
+        content:
+          "Consulte, cancele ou reagende seus agendamentos usando seu telefone ou email e o código de confirmação.",
       },
+      { property: "og:title", content: "Meus agendamentos — Agendaí" },
+      {
+        property: "og:description",
+        content: "Consulte, cancele ou reagende seus agendamentos online em poucos segundos.",
+      },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://agendai-br.lovable.app/meus-agendamentos" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
+    links: [{ rel: "canonical", href: "https://agendai-br.lovable.app/meus-agendamentos" }],
   }),
   component: Page,
 });
