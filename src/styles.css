@@ -866,6 +866,67 @@
   }
 }
 
+/* --- Efeitos: RotatingText (reactbits.dev) — palavra que roda com slide --- */
+.ui-rotating {
+  position: relative;
+}
+.ui-rotating > .ui-text-out {
+  position: absolute;
+  inset: 0;
+  display: inline-block;
+  white-space: nowrap;
+  animation: ui-text-out 320ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.ui-rotating > .ui-text-in {
+  animation: ui-text-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes ui-text-in {
+  from {
+    transform: translateY(105%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+@keyframes ui-text-out {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-105%);
+    opacity: 0;
+  }
+}
+
+/* --- Efeitos: SpotlightCard (kokonutui) — grid de pontos + brilho que segue o cursor --- */
+.ui-dot-grid {
+  background-image: radial-gradient(
+    circle,
+    color-mix(in oklab, var(--spot-dot, var(--muted-foreground)) 24%, transparent) 1px,
+    transparent 1px
+  );
+  background-size: 22px 22px;
+}
+.ui-spotlight__glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 300ms ease;
+  background: radial-gradient(
+    380px circle at var(--spot-x, 50%) var(--spot-y, 0%),
+    color-mix(in oklab, var(--spot-glow, var(--brand)) 16%, transparent),
+    transparent 65%
+  );
+}
+.ui-spotlight:hover .ui-spotlight__glow,
+.ui-spotlight:focus-within .ui-spotlight__glow {
+  opacity: 1;
+}
+
 @utility scrollbar-slim {
   scrollbar-width: thin;
   scrollbar-color: color-mix(in oklab, var(--muted-foreground) 35%, transparent) transparent;
@@ -898,5 +959,12 @@
   }
   .ui-border-beam__dot {
     display: none;
+  }
+  .ui-spotlight__glow {
+    display: none;
+  }
+  .ui-rotating > .ui-text-in,
+  .ui-rotating > .ui-text-out {
+    animation: none;
   }
 }

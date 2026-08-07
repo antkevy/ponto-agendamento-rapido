@@ -59,7 +59,14 @@ import {
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ViewToggle, type ViewMode } from "@/components/view-toggle";
 import { ServiceCard, type ServiceVariant } from "@/components/service-card";
-import { BorderBeam, Magnet, ShineBorder, TextReveal } from "@/components/effects";
+import {
+  BorderBeam,
+  Magnet,
+  RotatingText,
+  ShineBorder,
+  SpotlightCard,
+  TextReveal,
+} from "@/components/effects";
 
 /** Cores dos cards de planos (ciclam pelas variantes do ServiceCard). */
 const PLANO_VARIANTS: ServiceVariant[] = ["brand", "accent", "success", "warning"];
@@ -378,9 +385,11 @@ function BookingPage() {
         {step === "landing" && (
           <section className="space-y-8 sm:space-y-10">
             {/* Hero */}
-            <div
-              className="ui-card relative overflow-hidden animate-ui-scale-in"
+            <SpotlightCard
+              className="ui-card animate-ui-scale-in"
               style={{ borderRadius: "1.75rem" }}
+              glow="var(--accent)"
+              dotColor="var(--border)"
             >
               <div
                 aria-hidden
@@ -391,7 +400,9 @@ function BookingPage() {
                 }}
               />
               <div className="relative p-6 sm:p-10">
-                <UIBadge icon={CalendarCheck2}>Agendamento fácil e rápido</UIBadge>
+                <UIBadge icon={CalendarCheck2}>
+                  Agendamento <RotatingText texts={["fácil", "rápido", "seguro"]} accent />
+                </UIBadge>
                 <h2 className="mt-5 text-3xl sm:text-5xl font-black tracking-tight leading-[1.05] text-foreground">
                   <TextReveal text="Seu tempo é importante." accentWords={["importante."]} />
                   <br />
@@ -425,7 +436,7 @@ function BookingPage() {
                 colorTo="var(--brand)"
               />
               <ShineBorder duration={11} borderWidth={1} shineColor="var(--accent)" />
-            </div>
+            </SpotlightCard>
 
             {/* Diferenciais */}
             <div>

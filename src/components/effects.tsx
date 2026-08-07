@@ -254,3 +254,92 @@ export function Magnet({
     </div>
   );
 }
+
+/**
+ * Palavra que roda com slide (RotatingText, reactbits.dev), reimplementada com
+ * CSS puro + setInterval (sem motion). No SSR mostra a primeira palavra; parado
+ * em `prefers-reduced-motion`. Palavras em destaque usam `ui-accent-text`.
+ */
+export function RotatingText({
+  texts,
+  className,
+  accent = false,
+  interval = 2200,
+}: {
+  texts: string[];
+  className?: string;
+  accent?: boolean;
+  interval?: number;
+}) {
+  const [current, setCurrent] = useState(0);
+  const [leaving, setLeaving] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const id = setInterval(() => {
+      setLeaving(texts[current]);
+      setCurrent((c) => (c + 1) % texts.length);
+    }, interval);
+    return () => clearInterval(id);
+  }, [texts, current, interval]);
+
+  const wordClass = cn("inline-block whitespace-nowrap", accent && "ui-accent-text");
+
+  return (
+    <span className={cn("ui-rotating inline-block overflow-hidden align-baseline", className)}>
+      {leaving !== null && leaving !== texts[current] && (
+        <span key={`out-${leaving}`} aria-hidden="true" className={cn("ui-text-out", wordClass)}>
+          {leaving}
+        </span>
+      )}
+      <span key={`in-${current}`} className={cn("ui-text-in", wordClass)}>
+        {texts[current]}
+      </span>
+    </span>
+  );
+}
+
+/**
+ * Card com grid de pontos + brilho que segue o cursor (SpotlightCard /
+ * MouseEffectCard, kokonutui.com), reimplementado com CSS puro (sem motion).
+ * Decorativo e silencioso: o brilho só aparece no hover.
+ */
+export function SpotlightCard({
+  children,
+  className,
+  style,
+  glow = "var(--brand)",
+  dotColor,
+}: {
+  children?: ReactNode;
+  className?: string;
+  style?: CSSProperties;
+  glow?: string;
+  dotColor?: string;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const onMove = (e: PointerEvent) => {
+      const r = el.getBoundingClientRect();
+      el.style.setProperty("--spot-x", `${e.clientX - r.left}px`);
+      el.style.setProperty("--spot-y", `${e.clientY - r.top}px`);
+    };
+    el.addEventListener("pointermove", onMove);
+    return () => el.removeEventListener("pointermove", onMove);
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      className={cn("ui-spotlight ui-dot-grid relative overflow-hidden", className)}
+      style={{ "--spot-glow": glow, "--spot-dot": dotColor, ...style } as CSSProperties}
+    >
+      <span aria-hidden="true" className="ui-spotlight__glow" />
+      {children}
+    </div>
+  );
+}
