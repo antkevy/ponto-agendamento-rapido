@@ -37,11 +37,16 @@ function effectiveBrand(brandColor: string | null | undefined, a?: Appearance): 
  *
  * @param savedTheme cores salvas no banco (profissionais.theme_colors); têm
  *   prioridade sobre o localStorage do dono para que visitantes vejam o mesmo.
+ * @param applyCustom quando false, ignora a aparência personalizada do
+ *   localStorage e do banco, mantendo o tema padrão (azul). Usado nas páginas
+ *   de cliente que NÃO vieram da página pública (ex.: "Meus agendamentos"
+ *   acessado pela home), que devem seguir o tema padrão e não o da empresa.
  */
 export function useBookingTheme(
   rootRef: RefObject<HTMLElement | null>,
   brandColor: string | null | undefined,
   savedTheme?: ProfessionalTheme | null,
+  applyCustom = true,
 ): string {
   const [brand, setBrand] = useState<string>(() => brandColor || "#0284C7");
 
@@ -53,11 +58,18 @@ export function useBookingTheme(
 
     const sync = () => {
       const mode = document.documentElement.classList.contains("dark") ? "dark" : "light";
-      const a = loadAppearance(mode, savedTheme?.[mode]);
-      applyAppearance(a, el);
-      const b = effectiveBrand(brandColor, a);
-      el.style.setProperty("--brand", b);
-      setBrand(b);
+      if (applyCustom) {
+        const a = loadAppearance(mode, savedTheme?.[mode]);
+        applyAppearance(a, el);
+        const b = effectiveBrand(brandColor, a);
+        el.style.setProperty("--brand", b);
+        setBrand(b);
+      } else {
+        const preset = mode === "dark" ? DARK_PRESET : LIGHT_PRESET;
+        applyAppearance(preset, el);
+        el.style.setProperty("--brand", brandColor || "#0284C7");
+        setBrand(brandColor || "#0284C7");
+      }
     };
 
     sync();
@@ -71,7 +83,7 @@ export function useBookingTheme(
       window.removeEventListener("storage", sync);
       window.removeEventListener("agendai-appearance-change", sync);
     };
-  }, [rootRef, brandColor, savedTheme]);
+  }, [rootRef, brandColor, savedTheme, applyCustom]);
 
   return brand;
 }
