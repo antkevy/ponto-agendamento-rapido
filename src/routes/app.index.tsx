@@ -228,7 +228,7 @@ function Dashboard() {
             </button>
           </div>
 
-          <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
             {!stats ? (
               Array.from({ length: 4 }).map((_, i) => (
                 <div key={i} className="card-elevated p-5">
