@@ -89,7 +89,7 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
         {/* Sidebar */}
         <aside
           aria-hidden={!open}
-          className={`fixed lg:sticky top-14 lg:top-0 inset-x-0 lg:inset-auto bottom-0 lg:bottom-auto z-30 lg:h-screen w-full lg:w-64 bg-sidebar border-r border-sidebar-border overflow-y-auto transition-transform duration-300 ease-in-out lg:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full pointer-events-none"}`}
+          className={`fixed lg:sticky top-14 lg:top-0 inset-x-0 lg:inset-auto bottom-0 lg:bottom-auto z-30 lg:h-screen w-full lg:w-64 bg-sidebar border-r border-sidebar-border overflow-y-auto transition-transform duration-300 ease-in-out lg:translate-x-0 lg:pointer-events-auto ${open ? "translate-x-0" : "-translate-x-full pointer-events-none"}`}
         >
           <div className="hidden lg:flex items-center justify-between h-20 px-6 border-b border-sidebar-border">
             <BrandLogo to="/app" />
