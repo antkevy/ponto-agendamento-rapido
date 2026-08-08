@@ -13,7 +13,6 @@ import { optimizedImageUrl } from "@/lib/image";
 import { cn } from "@/lib/utils";
 import { ViewToggle, type ViewMode } from "@/components/view-toggle";
 import { ImageUpload } from "@/components/image-upload";
-import { NumberTicker } from "@/components/effects";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Pencil,
@@ -666,7 +665,7 @@ function CatalogRow({
         </div>
         <div className="shrink-0 flex flex-col items-end gap-1.5">
           <span className="text-lg font-black tracking-tight ui-accent-text">
-            <NumberTicker value={item.price_cents} format={(n) => formatBRL(Math.round(n))} />
+            {formatBRL(Math.round(item.price_cents))}
           </span>
           <div className="flex gap-1">
             {!readOnly && (
@@ -735,7 +734,7 @@ function CatalogCard({
       <div className="p-3.5 sm:p-4 flex flex-col gap-1.5 flex-1">
         <p className="font-bold truncate text-sm sm:text-base text-foreground">{item.name}</p>
         <p className="text-lg font-black tracking-tight ui-accent-text">
-          <NumberTicker value={item.price_cents} format={(n) => formatBRL(Math.round(n))} />
+          {formatBRL(Math.round(item.price_cents))}
         </p>
         {item.description && (
           <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
