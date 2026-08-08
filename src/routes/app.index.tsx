@@ -81,7 +81,7 @@ function Dashboard() {
           .from(db.agendamentos)
           .select("id, starts_at, client_name, service_snapshot_name, status")
           .eq("professional_id", proId)
-          .gte("starts_at", today.toISOString())
+          .gte("starts_at", new Date().toISOString())
           .lt("starts_at", new Date(today.getTime() + 86400000).toISOString())
           .order("starts_at"),
         supabase
