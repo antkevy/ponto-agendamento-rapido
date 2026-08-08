@@ -31,7 +31,7 @@ export function OnboardingCard() {
           return;
         }
         if (error.code === "23505") {
-          slug = `${baseSlug}-${Math.floor(Math.random() * 1000)}`;
+          slug = `${baseSlug}-${crypto.getRandomValues(new Uint32Array(1))[0] % 1000}`;
           continue;
         }
         throw error;

@@ -70,7 +70,7 @@ function SignUp() {
         });
         if (!insErr) break;
         if (insErr.code === "23505") {
-          slug = `${baseSlug}-${Math.floor(Math.random() * 1000)}`;
+          slug = `${baseSlug}-${crypto.getRandomValues(new Uint32Array(1))[0] % 1000}`;
           continue;
         }
         // Session may not be ready yet if email confirmation is on; ignore silently — dashboard will handle it.
