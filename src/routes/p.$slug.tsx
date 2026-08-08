@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useMemo, useRef, useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { publicPageClient } from "@/integrations/supabase/public-client";
 import { db } from "@/lib/db-tables";
 import { cn } from "@/lib/utils";
 import { useBookingTheme } from "@/hooks/use-booking-theme";
@@ -125,29 +126,36 @@ type PublicPro = {
 };
 
 export const Route = createFileRoute("/p/$slug")({
-  loader: async ({ params }) => {
+  validateSearch: (search: Record<string, unknown>): { token?: string } => ({
+    token: typeof search.token === "string" ? search.token : undefined,
+  }),
+  loader: async ({ params, location }) => {
+    // Páginas privadas (is_public = false) só abrem com ?token=... na URL.
+    // O token vai no header x-page-token, lido pelas policies do RLS.
+    const token = (location.search as { token?: string }).token;
+    const client = publicPageClient(token);
     const cols =
       "id, slug, business_name, logo_url, brand_color, description, address, phone, lat, lng, timezone";
     // theme_colors só existe depois de aplicar a migração
     // 20260803100000_add_professional_theme_colors. Se a coluna ainda não
     // existir no banco, cai no fallback (página segue funcional, cores padrão).
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from(db.profissionais)
       .select(`${cols}, theme_colors`)
       .eq("slug", params.slug)
       .maybeSingle();
     if (error) {
-      const fb = await supabase
+      const fb = await client
         .from(db.profissionais)
         .select(cols)
         .eq("slug", params.slug)
         .maybeSingle();
       if (fb.error) throw fb.error;
       if (!fb.data) throw notFound();
-      return { pro: { ...fb.data, theme_colors: null } };
+      return { pro: { ...fb.data, theme_colors: null }, token };
     }
     if (!data) throw notFound();
-    return { pro: data as PublicPro };
+    return { pro: data as PublicPro, token };
   },
   head: ({ loaderData }) => {
     if (!loaderData)
@@ -218,9 +226,13 @@ type Employee = { id: string; name: string; photo_url: string | null; is_active:
 type Step = "landing" | "service" | "employee" | "when" | "form" | "done";
 
 function BookingPage() {
-  const { pro } = Route.useLoaderData();
+  const { pro, token } = Route.useLoaderData();
   const rootRef = useRef<HTMLDivElement>(null);
   const brand = useBookingTheme(rootRef, pro.brand_color, pro.theme_colors);
+
+  // Cliente com o token da URL no header — sem token, cai no cliente padrão
+  // (só enxerga páginas públicas).
+  const client = useMemo(() => publicPageClient(token), [token]);
 
   // Aparência aplicada já no HTML do servidor (SSR) para não piscar o tema
   // padrão antes do JS. O hook refine no cliente (dark mode / ajuste local).
@@ -253,7 +265,7 @@ function BookingPage() {
   const { data: planos, isLoading: loadingPlanos } = useQuery({
     queryKey: ["public-planos", pro.id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await client
         .from(db.planos)
         .select("*")
         .eq("professional_id", pro.id)
@@ -273,7 +285,7 @@ function BookingPage() {
   const { data: services, isLoading: loadingServices } = useQuery({
     queryKey: ["public-services", pro.id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await client
         .from(db.servicos)
         .select("*")
         .eq("professional_id", pro.id)
@@ -289,7 +301,7 @@ function BookingPage() {
   const { data: employeesData } = useQuery({
     queryKey: ["public-employees", pro.id],
     queryFn: async () => {
-      const { data: emps, error } = await supabase
+      const { data: emps, error } = await client
         .from(db.funcionarios)
         .select("id, name, photo_url, is_active")
         .eq("professional_id", pro.id)
@@ -302,7 +314,7 @@ function BookingPage() {
           employees: [] as Employee[],
           links: [] as Array<{ employee_id: string; service_id: string }>,
         };
-      const { data: links, error: linkErr } = await supabase
+      const { data: links, error: linkErr } = await client
         .from(db.servicosFuncionario)
         .select("employee_id, service_id")
         .in("employee_id", ids);
@@ -599,7 +611,9 @@ function BookingPage() {
                   Agendar
                 </UIButton>
                 <a
-                  href={`/meus-agendamentos?pro=${encodeURIComponent(pro.slug)}`}
+                  href={`/meus-agendamentos?pro=${encodeURIComponent(pro.slug)}${
+                    token ? `&token=${encodeURIComponent(token)}` : ""
+                  }`}
                   className="ui-btn-outline ui-ripple inline-flex items-center justify-center gap-2 font-semibold rounded-2xl min-h-[48px] px-5 text-sm transition-all"
                 >
                   <CalendarCheck2 className="h-4 w-4" /> Meus agendamentos
@@ -890,6 +904,7 @@ function BookingPage() {
         {step === "when" && selectedServices.length > 0 && (
           <WhenStep
             pro={pro}
+            token={token}
             selectedServices={selectedServices}
             employee={employee}
             onPick={(d) => {
@@ -903,6 +918,7 @@ function BookingPage() {
         {step === "form" && selectedServices.length > 0 && when && (
           <FormStep
             pro={pro}
+            token={token}
             selectedServices={selectedServices}
             employee={employee}
             when={when}
@@ -918,6 +934,7 @@ function BookingPage() {
         {step === "done" && selectedServices.length > 0 && when && confirmedId && (
           <DoneStep
             pro={pro}
+            token={token}
             selectedServices={selectedServices}
             employee={employee}
             when={when}
@@ -1022,12 +1039,14 @@ function WhatsAppFloat({ phone }: { phone: string }) {
 
 function WhenStep({
   pro,
+  token,
   selectedServices,
   employee,
   onPick,
   brand,
 }: {
   pro: { id: string; business_name: string; address?: string | null };
+  token?: string;
   selectedServices: Service[];
   employee: Employee | null;
   onPick: (d: Date) => void;
@@ -1044,12 +1063,13 @@ function WhenStep({
     return d;
   });
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
+  const client = useMemo(() => publicPageClient(token), [token]);
 
   // Professional-wide availability (fallback when employee has none).
   const { data: proAvail } = useQuery({
     queryKey: ["public-avail", pro.id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await client
         .from(db.horarios)
         .select("*")
         .eq("professional_id", pro.id);
@@ -1062,7 +1082,7 @@ function WhenStep({
     queryKey: ["public-emp-avail", employee?.id],
     enabled: !!employee,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await client
         .from(db.disponibilidadeFuncionario)
         .select("weekday, start_time, end_time")
         .eq("employee_id", employee!.id);
@@ -1088,7 +1108,7 @@ function WhenStep({
   const { data: proBlocks } = useQuery({
     queryKey: ["public-blocks", pro.id, monthStart.toISOString()],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await client
         .from(db.bloqueios)
         .select("starts_at,ends_at")
         .eq("professional_id", pro.id)
@@ -1103,7 +1123,7 @@ function WhenStep({
     queryKey: ["public-emp-blocks", employee?.id, monthStart.toISOString()],
     enabled: !!employee,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await client
         .from(db.bloqueiosFuncionario)
         .select("starts_at,ends_at")
         .eq("employee_id", employee!.id)
@@ -1123,7 +1143,7 @@ function WhenStep({
       const to = new Date(from);
       to.setDate(to.getDate() + 1);
       if (employee) {
-        const { data, error } = await supabase.rpc("get_employee_busy_slots", {
+        const { data, error } = await client.rpc("get_employee_busy_slots", {
           _employee_id: employee.id,
           _from: from.toISOString(),
           _to: to.toISOString(),
@@ -1131,7 +1151,7 @@ function WhenStep({
         if (error) throw error;
         return (data as BusySlot[]) ?? [];
       }
-      const { data, error } = await supabase.rpc("get_busy_slots", {
+      const { data, error } = await client.rpc("get_busy_slots", {
         _professional_id: pro.id,
         _from: from.toISOString(),
         _to: to.toISOString(),
@@ -1348,6 +1368,7 @@ function WhenStep({
 
 function FormStep({
   pro,
+  token,
   selectedServices,
   employee,
   when,
@@ -1355,12 +1376,14 @@ function FormStep({
   brand,
 }: {
   pro: { id: string; business_name: string; address?: string | null };
+  token?: string;
   selectedServices: Service[];
   employee: Employee | null;
   when: Date;
   onDone: (id: string, accessCode: string) => void;
   brand: string;
 }) {
+  const client = useMemo(() => publicPageClient(token), [token]);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -1391,7 +1414,7 @@ function FormStep({
         6,
         "0",
       );
-      const { error } = await supabase.from(db.agendamentos).insert({
+      const { error } = await client.from(db.agendamentos).insert({
         id: appointmentId,
         professional_id: pro.id,
         service_id: selectedServices[0].id,
@@ -1525,6 +1548,7 @@ function FormStep({
 
 function DoneStep({
   pro,
+  token,
   selectedServices,
   employee,
   when,
@@ -1532,6 +1556,7 @@ function DoneStep({
   onReset,
 }: {
   pro: { business_name: string; slug: string };
+  token?: string;
   selectedServices: Service[];
   employee: Employee | null;
   when: Date;
@@ -1579,7 +1604,9 @@ function DoneStep({
           Fazer outro agendamento
         </button>
         <a
-          href={`/meus-agendamentos?pro=${encodeURIComponent(pro.slug)}`}
+          href={`/meus-agendamentos?pro=${encodeURIComponent(pro.slug)}${
+            token ? `&token=${encodeURIComponent(token)}` : ""
+          }`}
           className="btn-pill-outline inline-flex items-center justify-center"
         >
           Ver meus agendamentos

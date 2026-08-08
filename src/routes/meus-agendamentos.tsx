@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { publicPageClient, pageTokenFromSearch } from "@/integrations/supabase/public-client";
 import { db } from "@/lib/db-tables";
 import { BrandLogo } from "@/components/brand-logo";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -32,8 +33,9 @@ import {
 } from "@/lib/booking";
 
 export const Route = createFileRoute("/meus-agendamentos")({
-  validateSearch: (search: Record<string, unknown>) => ({
+  validateSearch: (search: Record<string, unknown>): { pro?: string; token?: string } => ({
     pro: typeof search.pro === "string" ? search.pro : undefined,
+    token: typeof search.token === "string" ? search.token : undefined,
   }),
   head: () => ({
     meta: [
@@ -82,7 +84,12 @@ function normalizeContact(raw: string, mode: Mode): string {
 }
 
 function Page() {
-  const { pro: proSlug } = useSearch({ from: "/meus-agendamentos" });
+  const search = useSearch({ from: "/meus-agendamentos" });
+  const { pro: proSlug } = search;
+  // Páginas privadas: o token chega na URL (via link da confirmação) e é
+  // enviado no header x-page-token para liberar horários/agendamento.
+  const token = pageTokenFromSearch(search as Record<string, unknown> | undefined);
+  const client = useMemo(() => publicPageClient(token), [token]);
   const rootRef = useRef<HTMLDivElement>(null);
   const [mode, setMode] = useState<Mode>("phone");
   const [contact, setContact] = useState("");
@@ -96,7 +103,7 @@ function Page() {
     queryKey: ["meus-appts-pro", proSlug],
     enabled: !!proSlug,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await client
         .from(db.profissionais)
         .select("business_name, logo_url, description, brand_color, theme_colors")
         .eq("slug", proSlug!)
@@ -345,6 +352,7 @@ function Page() {
         <RescheduleModal
           row={rescheduling}
           contact={submitted!}
+          token={token}
           onClose={() => setRescheduling(null)}
           onConfirm={(startsAt) => reschedule.mutate({ id: rescheduling.id, startsAt })}
           isPending={reschedule.isPending}
@@ -486,12 +494,14 @@ function AppointmentList({
 function RescheduleModal({
   row,
   contact,
+  token,
   onClose,
   onConfirm,
   isPending,
 }: {
   row: Row;
   contact: string;
+  token?: string;
   onClose: () => void;
   onConfirm: (startsAt: string) => void;
   isPending: boolean;
@@ -503,11 +513,12 @@ function RescheduleModal({
     return d;
   });
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
+  const client = useMemo(() => publicPageClient(token), [token]);
 
   const { data: proAvail } = useQuery({
     queryKey: ["resched-avail", row.professional_id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await client
         .from(db.horarios)
         .select("*")
         .eq("professional_id", row.professional_id);
@@ -520,7 +531,7 @@ function RescheduleModal({
     queryKey: ["resched-emp-avail", row.employee_id],
     enabled: !!row.employee_id,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await client
         .from(db.disponibilidadeFuncionario)
         .select("weekday, start_time, end_time")
         .eq("employee_id", row.employee_id!);
@@ -545,7 +556,7 @@ function RescheduleModal({
   const { data: proBlocks } = useQuery({
     queryKey: ["resched-blocks", row.professional_id, monthStart.toISOString()],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await client
         .from(db.bloqueios)
         .select("starts_at,ends_at")
         .eq("professional_id", row.professional_id)
@@ -560,7 +571,7 @@ function RescheduleModal({
     queryKey: ["resched-emp-blocks", row.employee_id, monthStart.toISOString()],
     enabled: !!row.employee_id,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await client
         .from(db.bloqueiosFuncionario)
         .select("starts_at,ends_at")
         .eq("employee_id", row.employee_id!)
@@ -585,7 +596,7 @@ function RescheduleModal({
       const to = new Date(from);
       to.setDate(to.getDate() + 1);
       if (row.employee_id) {
-        const { data, error } = await supabase.rpc("get_employee_busy_slots", {
+        const { data, error } = await client.rpc("get_employee_busy_slots", {
           _employee_id: row.employee_id,
           _from: from.toISOString(),
           _to: to.toISOString(),
@@ -593,7 +604,7 @@ function RescheduleModal({
         if (error) throw error;
         return (data as BusySlot[]) ?? [];
       }
-      const { data, error } = await supabase.rpc("get_busy_slots", {
+      const { data, error } = await client.rpc("get_busy_slots", {
         _professional_id: row.professional_id,
         _from: from.toISOString(),
         _to: to.toISOString(),
