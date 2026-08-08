@@ -429,29 +429,43 @@ function ComparisonBadge({ current, previous }: { current: number; previous: num
 
 function DailyRevenueChart({ data }: { data: { day: number; receita: number }[] }) {
   const max = Math.max(...data.map((d) => d.receita), 0);
+  const [selected, setSelected] = useState<number | null>(null);
   return (
     <div className="flex items-end gap-[3px] sm:gap-1 h-40 sm:h-48">
       {data.map((d) => {
         const isZero = d.receita === 0;
         const height = isZero ? 3 : Math.max((d.receita / max) * 100, 8);
         const isPeak = !isZero && d.receita === max;
+        const isSelected = selected === d.day;
         return (
-          <div key={d.day} className="group relative flex-1 h-full flex items-end">
+          <button
+            key={d.day}
+            type="button"
+            onClick={() => setSelected(isSelected ? null : d.day)}
+            aria-label={`Dia ${d.day} — ${formatBRL(d.receita)}`}
+            className="group relative flex-1 h-full flex items-end"
+          >
             <div
               className={`w-full rounded-t-[3px] transition-colors ${
                 isPeak
                   ? "bg-accent"
                   : isZero
                     ? "bg-muted-foreground/15"
-                    : "bg-accent/45 group-hover:bg-accent/80"
+                    : "bg-accent/45 group-hover:bg-accent/80 group-active:bg-accent/80"
               }`}
               style={{ height: `${height}%` }}
               title={`Dia ${d.day} — ${formatBRL(d.receita)}`}
             />
-            <div className="pointer-events-none absolute -top-1 left-1/2 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-md border border-border bg-background px-2 py-1 text-[11px] font-semibold opacity-0 transition-opacity group-hover:opacity-100 z-10 shadow-lg">
+            <div
+              className={`pointer-events-none absolute -top-1 left-1/2 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-md border border-border bg-background px-2 py-1 text-[11px] font-semibold z-10 shadow-lg transition-opacity ${
+                isSelected
+                  ? "opacity-100"
+                  : "opacity-0 group-hover:opacity-100 group-active:opacity-100"
+              }`}
+            >
               {formatBRL(d.receita)}
             </div>
-          </div>
+          </button>
         );
       })}
     </div>
