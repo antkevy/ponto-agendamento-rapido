@@ -11,7 +11,7 @@ import { slugify } from "@/lib/booking";
 import { PhoneInput } from "@/components/phone-input";
 import { isValidPhoneBR, onlyDigits } from "@/lib/phone";
 import { ImageUpload } from "@/components/image-upload";
-import { CopyCheck, ExternalLink, Globe, Lock } from "lucide-react";
+import { CopyCheck, ExternalLink } from "lucide-react";
 import { AppearanceSettings } from "@/components/appearance-settings";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { SecuritySettings } from "@/components/security-settings";
@@ -78,30 +78,6 @@ function Page() {
       toast.error(e.message.includes("duplicate") ? "Este endereço já está em uso." : e.message),
   });
 
-  // Publicar / tirar do ar a página. Privada = só abre com o link secreto
-  // (/p/:slug?token=...), o slug sozinho não retorna nada.
-  const togglePublish = useMutation({
-    mutationFn: async (next: boolean) => {
-      const { error } = await supabase
-        .from(db.profissionais)
-        .update({ is_public: next })
-        .eq("id", pro!.id);
-      if (error) throw error;
-    },
-    onSuccess: (_d, next) => {
-      toast.success(next ? "Página publicada!" : "Página tirada do ar.");
-      qc.invalidateQueries({ queryKey: ["my-professional"] });
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  const isPublic = pro?.is_public !== false;
-  const pagePath = isPublic
-    ? `/p/${form.slug || pro?.slug || ""}`
-    : `/p/${form.slug || pro?.slug || ""}?token=${encodeURIComponent(pro?.page_token || "")}`;
-  // Só mostra o toggle quando o banco já tem as colunas (migração aplicada).
-  const canToggle = typeof pro?.is_public === "boolean" && !!pro?.page_token;
-
   return (
     <AppShell title="Configurações">
       {isLoading ? (
@@ -124,32 +100,12 @@ function Page() {
             }}
           >
             <div className="min-w-0">
-              <p className="text-xs opacity-80 inline-flex items-center gap-1.5">
-                {isPublic ? (
-                  <>
-                    <Globe className="h-3.5 w-3.5" /> Sua página pública
-                  </>
-                ) : (
-                  <>
-                    <Lock className="h-3.5 w-3.5" /> Página privada — só abre com o link secreto
-                  </>
-                )}
-              </p>
-              <p className="font-mono text-sm break-all">{pagePath}</p>
+              <p className="text-xs opacity-80">Sua página pública</p>
+              <p className="font-mono text-sm break-all">/p/{form.slug || pro.slug}</p>
             </div>
-            <div className="flex flex-wrap gap-2 shrink-0">
-              {canToggle && (
-                <button
-                  type="button"
-                  onClick={() => togglePublish.mutate(!isPublic)}
-                  disabled={togglePublish.isPending}
-                  className="inline-flex items-center gap-2 bg-white/15 text-white font-semibold rounded-full px-5 py-2.5 min-h-[44px] hover:bg-white/25 transition disabled:opacity-50"
-                >
-                  {isPublic ? "Tirar do ar" : "Publicar"}
-                </button>
-              )}
+            <div className="flex gap-2 shrink-0">
               <a
-                href={pagePath}
+                href={`/p/${form.slug || pro.slug}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 bg-white text-[#0F172A] font-semibold rounded-full px-5 py-2.5 min-h-[44px] hover:bg-white/90 hover:text-[#0F172A] transition"
@@ -159,8 +115,10 @@ function Page() {
               <button
                 type="button"
                 onClick={() => {
-                  void navigator.clipboard.writeText(`${window.location.origin}${pagePath}`);
-                  toast.success(isPublic ? "Link copiado!" : "Link secreto copiado!");
+                  void navigator.clipboard.writeText(
+                    `${window.location.origin}/p/${form.slug || pro.slug}`,
+                  );
+                  toast.success("Link copiado!");
                 }}
                 className="inline-flex items-center gap-2 bg-white text-[#0F172A] font-semibold rounded-full px-5 py-2.5 min-h-[44px] hover:bg-white/90 hover:text-[#0F172A] transition border border-border"
               >
