@@ -430,44 +430,63 @@ function ComparisonBadge({ current, previous }: { current: number; previous: num
 function DailyRevenueChart({ data }: { data: { day: number; receita: number }[] }) {
   const max = Math.max(...data.map((d) => d.receita), 0);
   const [selected, setSelected] = useState<number | null>(null);
+  const step = Math.max(1, Math.ceil(data.length / (data.length > 28 ? 5 : 8)));
   return (
-    <div className="flex items-end gap-[3px] sm:gap-1 h-40 sm:h-48">
-      {data.map((d) => {
-        const isZero = d.receita === 0;
-        const height = isZero ? 3 : Math.max((d.receita / max) * 100, 8);
-        const isPeak = !isZero && d.receita === max;
-        const isSelected = selected === d.day;
-        return (
-          <button
-            key={d.day}
-            type="button"
-            onClick={() => setSelected(isSelected ? null : d.day)}
-            aria-label={`Dia ${d.day} — ${formatBRL(d.receita)}`}
-            className="group relative flex-1 h-full flex items-end"
-          >
-            <div
-              className={`w-full rounded-t-[3px] transition-colors ${
-                isPeak
-                  ? "bg-accent"
-                  : isZero
-                    ? "bg-muted-foreground/15"
-                    : "bg-accent/45 group-hover:bg-accent/80 group-active:bg-accent/80"
-              }`}
-              style={{ height: `${height}%` }}
-              title={`Dia ${d.day} — ${formatBRL(d.receita)}`}
-            />
-            <div
-              className={`pointer-events-none absolute -top-1 left-1/2 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-md border border-border bg-background px-2 py-1 text-[11px] font-semibold z-10 shadow-lg transition-opacity ${
-                isSelected
-                  ? "opacity-100"
-                  : "opacity-0 group-hover:opacity-100 group-active:opacity-100"
+    <div>
+      <div className="flex items-end gap-[3px] sm:gap-1 h-40 sm:h-48">
+        {data.map((d) => {
+          const isZero = d.receita === 0;
+          const height = isZero ? 3 : Math.max((d.receita / max) * 100, 8);
+          const isPeak = !isZero && d.receita === max;
+          const isSelected = selected === d.day;
+          return (
+            <button
+              key={d.day}
+              type="button"
+              onClick={() => setSelected(isSelected ? null : d.day)}
+              aria-label={`Dia ${d.day} — ${formatBRL(d.receita)}`}
+              className="group relative flex-1 h-full flex items-end"
+            >
+              <div
+                className={`w-full rounded-t-[3px] transition-colors ${
+                  isPeak
+                    ? "bg-accent"
+                    : isZero
+                      ? "bg-muted-foreground/15"
+                      : "bg-accent/45 group-hover:bg-accent/80 group-active:bg-accent/80"
+                }`}
+                style={{ height: `${height}%` }}
+                title={`Dia ${d.day} — ${formatBRL(d.receita)}`}
+              />
+              <div
+                className={`pointer-events-none absolute -top-1 left-1/2 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-md border border-border bg-background px-2 py-1 text-[11px] font-semibold z-10 shadow-lg transition-opacity ${
+                  isSelected
+                    ? "opacity-100"
+                    : "opacity-0 group-hover:opacity-100 group-active:opacity-100"
+                }`}
+              >
+                {formatBRL(d.receita)}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+      <div className="flex gap-[3px] sm:gap-1 mt-2" aria-hidden>
+        {data.map((d) => {
+          const show = (d.day - 1) % step === 0 || d.day === data.length;
+          const isSelected = selected === d.day;
+          return (
+            <span
+              key={d.day}
+              className={`flex-1 text-center text-[10px] sm:text-[11px] font-semibold tabular-nums leading-none truncate transition-colors ${
+                isSelected ? "text-accent" : "text-muted-foreground/60"
               }`}
             >
-              {formatBRL(d.receita)}
-            </div>
-          </button>
-        );
-      })}
+              {show ? d.day : ""}
+            </span>
+          );
+        })}
+      </div>
     </div>
   );
 }

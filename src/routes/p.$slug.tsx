@@ -77,6 +77,9 @@ import {
 /** Cores dos cards de planos (ciclam pelas variantes do ServiceCard). */
 const PLANO_VARIANTS: ServiceVariant[] = ["brand", "accent", "success", "warning"];
 
+/** Cores dos cards de produtos (deslocadas das dos planos para diferenciar). */
+const PRODUTO_VARIANTS: ServiceVariant[] = ["success", "warning", "accent", "brand"];
+
 /** Diferenciais genéricos exibidos na página pública (sem tema de segmento). */
 const BENEFITS: Array<{ icon: LucideIcon; title: string; text: string }> = [
   {
@@ -281,6 +284,26 @@ function BookingPage() {
         .order("created_at");
       if (error) throw error;
       return data as Service[];
+    },
+  });
+
+  const { data: produtos, isLoading: loadingProdutos } = useQuery({
+    queryKey: ["public-produtos", pro.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from(db.produtos)
+        .select("*")
+        .eq("professional_id", pro.id)
+        .eq("is_active", true)
+        .order("created_at");
+      if (error) throw error;
+      return data as Array<{
+        id: string;
+        name: string;
+        description: string | null;
+        price_cents: number;
+        image_url: string | null;
+      }>;
     },
   });
 
@@ -516,37 +539,6 @@ function BookingPage() {
                 ))}
               </div>
             </div>
-
-            {/* Planos */}
-            {loadingPlanos ? (
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {[0, 1].map((i) => (
-                  <div key={i} className="skeleton h-48" />
-                ))}
-              </div>
-            ) : planos && planos.length > 0 ? (
-              <div>
-                <h3 className="text-lg sm:text-2xl font-black tracking-tight text-foreground mb-5 flex items-center gap-2">
-                  <Sparkles className="h-5 w-5 ui-icon-color" /> Nossos planos
-                </h3>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {planos.map((p, i) => (
-                    <ServiceCard
-                      key={p.id}
-                      title={p.name}
-                      description={p.description}
-                      meta={formatBRL(p.price_cents)}
-                      image={p.image_url}
-                      imageAlt={p.name}
-                      variant={PLANO_VARIANTS[i % PLANO_VARIANTS.length]}
-                      shine
-                      className="ui-stagger"
-                      style={{ ["--i" as string]: i }}
-                    />
-                  ))}
-                </div>
-              </div>
-            ) : null}
 
             {/* Como funciona */}
             <div>
@@ -824,6 +816,68 @@ function BookingPage() {
                     Continuar <ArrowRight className="h-5 w-5" />
                   </UIButton>
                 </div>
+
+                {/* Planos mensais */}
+                {loadingPlanos ? (
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {[0, 1].map((i) => (
+                      <div key={i} className="skeleton h-48" />
+                    ))}
+                  </div>
+                ) : planos && planos.length > 0 ? (
+                  <div>
+                    <h3 className="text-lg sm:text-2xl font-black tracking-tight text-foreground mb-5 flex items-center gap-2">
+                      <Sparkles className="h-5 w-5 ui-icon-color" /> Planos mensais
+                    </h3>
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                      {planos.map((p, i) => (
+                        <ServiceCard
+                          key={p.id}
+                          title={p.name}
+                          description={p.description}
+                          meta={formatBRL(p.price_cents)}
+                          image={p.image_url}
+                          imageAlt={p.name}
+                          variant={PLANO_VARIANTS[i % PLANO_VARIANTS.length]}
+                          shine
+                          className="ui-stagger"
+                          style={{ ["--i" as string]: i }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+
+                {/* Produtos */}
+                {loadingProdutos ? (
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {[0, 1].map((i) => (
+                      <div key={i} className="skeleton h-48" />
+                    ))}
+                  </div>
+                ) : produtos && produtos.length > 0 ? (
+                  <div>
+                    <h3 className="text-lg sm:text-2xl font-black tracking-tight text-foreground mb-5 flex items-center gap-2">
+                      <ShoppingBag className="h-5 w-5 ui-icon-color" /> Produtos
+                    </h3>
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                      {produtos.map((p, i) => (
+                        <ServiceCard
+                          key={p.id}
+                          title={p.name}
+                          description={p.description}
+                          meta={formatBRL(p.price_cents)}
+                          image={p.image_url}
+                          imageAlt={p.name}
+                          variant={PRODUTO_VARIANTS[i % PRODUTO_VARIANTS.length]}
+                          shine
+                          className="ui-stagger"
+                          style={{ ["--i" as string]: i }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
 
                 <div className="ui-card grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-border overflow-hidden">
                   {BENEFITS.map((b) => (
