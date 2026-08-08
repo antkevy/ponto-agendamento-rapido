@@ -64,7 +64,6 @@ import {
 } from "@/components/ui-kit";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ViewToggle, type ViewMode } from "@/components/view-toggle";
-import { ServiceCard, type ServiceVariant } from "@/components/service-card";
 import {
   BorderBeam,
   Magnet,
@@ -73,12 +72,6 @@ import {
   SpotlightCard,
   TextReveal,
 } from "@/components/effects";
-
-/** Cores dos cards de planos (ciclam pelas variantes do ServiceCard). */
-const PLANO_VARIANTS: ServiceVariant[] = ["brand", "accent", "success", "warning"];
-
-/** Cores dos cards de produtos (deslocadas das dos planos para diferenciar). */
-const PRODUTO_VARIANTS: ServiceVariant[] = ["success", "warning", "accent", "brand"];
 
 /** Diferenciais genéricos exibidos na página pública (sem tema de segmento). */
 const BENEFITS: Array<{ icon: LucideIcon; title: string; text: string }> = [
@@ -217,6 +210,20 @@ type Service = {
   is_active: boolean;
 };
 type Employee = { id: string; name: string; photo_url: string | null; is_active: boolean };
+type Plano = {
+  id: string;
+  name: string;
+  description: string | null;
+  price_cents: number;
+  image_url: string | null;
+};
+type Produto = {
+  id: string;
+  name: string;
+  description: string | null;
+  price_cents: number;
+  image_url: string | null;
+};
 
 type Step = "landing" | "service" | "employee" | "when" | "form" | "done";
 
@@ -242,6 +249,8 @@ function BookingPage() {
 
   const [step, setStep] = useState<Step>("landing");
   const [selectedServices, setSelectedServices] = useState<Service[]>([]);
+  const [selectedProducts, setSelectedProducts] = useState<Produto[]>([]);
+  const [selectedPlan, setSelectedPlan] = useState<Plano | null>(null);
   const [serviceView, setServiceView] = useState<ViewMode>("grid");
   const [detailService, setDetailService] = useState<Service | null>(null);
   const [employee, setEmployee] = useState<Employee | null>(null);
@@ -263,13 +272,7 @@ function BookingPage() {
         .eq("is_active", true)
         .order("price_cents");
       if (error) throw error;
-      return data as Array<{
-        id: string;
-        name: string;
-        description: string | null;
-        price_cents: number;
-        image_url: string | null;
-      }>;
+      return (data ?? []) as Plano[];
     },
   });
 
@@ -297,13 +300,7 @@ function BookingPage() {
         .eq("is_active", true)
         .order("created_at");
       if (error) throw error;
-      return data as Array<{
-        id: string;
-        name: string;
-        description: string | null;
-        price_cents: number;
-        image_url: string | null;
-      }>;
+      return (data ?? []) as Produto[];
     },
   });
 
@@ -354,6 +351,16 @@ function BookingPage() {
     );
   }
 
+  function toggleProduct(p: Produto) {
+    setSelectedProducts((prev) =>
+      prev.some((x) => x.id === p.id) ? prev.filter((x) => x.id !== p.id) : [...prev, p],
+    );
+  }
+
+  function togglePlan(p: Plano) {
+    setSelectedPlan((prev) => (prev?.id === p.id ? null : p));
+  }
+
   function proceedFromServices() {
     setEmployee(null);
     setWhen(null);
@@ -368,6 +375,8 @@ function BookingPage() {
     else if (step === "service") setStep("landing");
     else if (step === "done") {
       setSelectedServices([]);
+      setSelectedProducts([]);
+      setSelectedPlan(null);
       setEmployee(null);
       setWhen(null);
       setConfirmedId(null);
@@ -800,9 +809,28 @@ function BookingPage() {
                         <strong className="text-foreground">{selectedServices.length}</strong>{" "}
                         serviço(s) · {selectedServices.reduce((a, s) => a + s.duration_minutes, 0)}{" "}
                         min
+                        {selectedProducts.length > 0 && (
+                          <>
+                            {" · "}
+                            <strong className="text-foreground">
+                              {selectedProducts.length}
+                            </strong>{" "}
+                            produto(s)
+                          </>
+                        )}
+                        {selectedPlan && (
+                          <>
+                            {" · "}
+                            <strong className="text-foreground">1</strong> plano
+                          </>
+                        )}
                       </span>
                       <span className="text-lg font-black tracking-tight ui-accent-text">
-                        {formatBRL(selectedServices.reduce((a, s) => a + s.price_cents, 0))}
+                        {formatBRL(
+                          selectedServices.reduce((a, s) => a + s.price_cents, 0) +
+                            selectedProducts.reduce((a, p) => a + p.price_cents, 0) +
+                            (selectedPlan?.price_cents ?? 0),
+                        )}
                       </span>
                     </div>
                   )}
@@ -828,22 +856,30 @@ function BookingPage() {
                   <div>
                     <h3 className="text-lg sm:text-2xl font-black tracking-tight text-foreground mb-5 flex items-center gap-2">
                       <Sparkles className="h-5 w-5 ui-icon-color" /> Planos mensais
+                      <span className="text-xs font-semibold ui-accent-text">
+                        · toque para assinar
+                      </span>
                     </h3>
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                      {planos.map((p, i) => (
-                        <ServiceCard
-                          key={p.id}
-                          title={p.name}
-                          description={p.description}
-                          meta={formatBRL(p.price_cents)}
-                          image={p.image_url}
-                          imageAlt={p.name}
-                          variant={PLANO_VARIANTS[i % PLANO_VARIANTS.length]}
-                          shine
-                          className="ui-stagger"
-                          style={{ ["--i" as string]: i }}
-                        />
-                      ))}
+                      {planos.map((p, i) => {
+                        const selected = selectedPlan?.id === p.id;
+                        return (
+                          <SelectableItemCard
+                            key={p.id}
+                            name={p.name}
+                            description={p.description}
+                            priceCents={p.price_cents}
+                            image={p.image_url}
+                            chip="Plano mensal"
+                            selected={selected}
+                            actionLabel={selected ? "Plano assinado" : "Assinar plano"}
+                            onToggle={() => togglePlan(p)}
+                            icon={Sparkles}
+                            className="ui-stagger"
+                            style={{ ["--i" as string]: i }}
+                          />
+                        );
+                      })}
                     </div>
                   </div>
                 ) : null}
@@ -859,22 +895,30 @@ function BookingPage() {
                   <div>
                     <h3 className="text-lg sm:text-2xl font-black tracking-tight text-foreground mb-5 flex items-center gap-2">
                       <ShoppingBag className="h-5 w-5 ui-icon-color" /> Produtos
+                      <span className="text-xs font-semibold ui-accent-text">
+                        · toque para adicionar
+                      </span>
                     </h3>
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                      {produtos.map((p, i) => (
-                        <ServiceCard
-                          key={p.id}
-                          title={p.name}
-                          description={p.description}
-                          meta={formatBRL(p.price_cents)}
-                          image={p.image_url}
-                          imageAlt={p.name}
-                          variant={PRODUTO_VARIANTS[i % PRODUTO_VARIANTS.length]}
-                          shine
-                          className="ui-stagger"
-                          style={{ ["--i" as string]: i }}
-                        />
-                      ))}
+                      {produtos.map((p, i) => {
+                        const selected = selectedProducts.some((x) => x.id === p.id);
+                        return (
+                          <SelectableItemCard
+                            key={p.id}
+                            name={p.name}
+                            description={p.description}
+                            priceCents={p.price_cents}
+                            image={p.image_url}
+                            chip="Produto"
+                            selected={selected}
+                            actionLabel={selected ? "Adicionado" : "Adicionar produto"}
+                            onToggle={() => toggleProduct(p)}
+                            icon={ShoppingBag}
+                            className="ui-stagger"
+                            style={{ ["--i" as string]: i }}
+                          />
+                        );
+                      })}
                     </div>
                   </div>
                 ) : null}
@@ -945,6 +989,8 @@ function BookingPage() {
           <WhenStep
             pro={pro}
             selectedServices={selectedServices}
+            selectedProducts={selectedProducts}
+            selectedPlan={selectedPlan}
             employee={employee}
             onPick={(d) => {
               setWhen(d);
@@ -958,6 +1004,8 @@ function BookingPage() {
           <FormStep
             pro={pro}
             selectedServices={selectedServices}
+            selectedProducts={selectedProducts}
+            selectedPlan={selectedPlan}
             employee={employee}
             when={when}
             brand={brand}
@@ -973,11 +1021,15 @@ function BookingPage() {
           <DoneStep
             pro={pro}
             selectedServices={selectedServices}
+            selectedProducts={selectedProducts}
+            selectedPlan={selectedPlan}
             employee={employee}
             when={when}
             accessCode={confirmedCode}
             onReset={() => {
               setSelectedServices([]);
+              setSelectedProducts([]);
+              setSelectedPlan(null);
               setEmployee(null);
               setWhen(null);
               setConfirmedId(null);
@@ -1057,6 +1109,103 @@ function BookingPage() {
   );
 }
 
+/** Card selecionável de catálogo (produto/plano) na página pública. */
+function SelectableItemCard({
+  name,
+  description,
+  priceCents,
+  image,
+  chip,
+  selected,
+  actionLabel,
+  onToggle,
+  icon: Icon,
+  className,
+  style,
+}: {
+  name: string;
+  description?: string | null;
+  priceCents: number;
+  image?: string | null;
+  chip: string;
+  selected: boolean;
+  actionLabel: string;
+  onToggle: () => void;
+  icon: LucideIcon;
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onToggle}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onToggle();
+        }
+      }}
+      data-selected={selected || undefined}
+      className={cn(
+        "ui-card ui-ripple w-full h-full text-left cursor-pointer overflow-hidden transition-all hover:-translate-y-1 active:scale-[0.99] flex flex-col data-[selected]:border-accent data-[selected]:ring-2 data-[selected]:ring-accent/30",
+        className,
+      )}
+      style={style}
+    >
+      <div className="relative">
+        {image ? (
+          <img
+            src={optimizedImageUrl(image, 800) ?? image}
+            alt={name}
+            loading="lazy"
+            decoding="async"
+            className="w-full aspect-[4/3] object-cover"
+          />
+        ) : (
+          <span className="w-full aspect-[4/3] grid place-items-center bg-secondary text-muted-foreground">
+            <Icon className="h-8 w-8" />
+          </span>
+        )}
+        <span className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-full bg-background/90 backdrop-blur px-2.5 py-1 text-[11px] font-bold text-foreground border border-border">
+          {chip}
+        </span>
+        {selected && (
+          <span
+            className="absolute top-2 right-2 h-7 w-7 rounded-full grid place-items-center text-white shadow-lg animate-check-in"
+            style={{ backgroundColor: "var(--accent)" }}
+          >
+            <Check className="h-4 w-4" />
+          </span>
+        )}
+      </div>
+      <div className="p-3.5 flex flex-col gap-1.5 flex-1">
+        <p className="font-bold truncate text-sm text-foreground">{name}</p>
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-lg font-black tracking-tight ui-accent-text">
+            {formatBRL(priceCents)}
+          </p>
+          <span
+            className={cn(
+              "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold transition-colors",
+              selected ? "text-accent-foreground" : "text-muted-foreground border border-border",
+            )}
+            style={selected ? { backgroundColor: "var(--accent)" } : undefined}
+          >
+            {selected && <Check className="h-3 w-3" />}
+            {actionLabel}
+          </span>
+        </div>
+        {description && (
+          <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+            {description}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function WhatsAppFloat({ phone }: { phone: string }) {
   const digits = phone.replace(/\D/g, "");
   const full = digits.startsWith("55") ? digits : `55${digits}`;
@@ -1077,12 +1226,16 @@ function WhatsAppFloat({ phone }: { phone: string }) {
 function WhenStep({
   pro,
   selectedServices,
+  selectedProducts,
+  selectedPlan,
   employee,
   onPick,
   brand,
 }: {
   pro: { id: string; business_name: string; address?: string | null };
   selectedServices: Service[];
+  selectedProducts: Produto[];
+  selectedPlan: Plano | null;
   employee: Employee | null;
   onPick: (d: Date) => void;
   brand: string;
@@ -1391,6 +1544,8 @@ function WhenStep({
 
         <OrderSummary
           services={selectedServices}
+          products={selectedProducts}
+          plan={selectedPlan}
           employee={employee}
           businessName={pro.business_name}
           address={pro.address ?? null}
@@ -1403,6 +1558,8 @@ function WhenStep({
 function FormStep({
   pro,
   selectedServices,
+  selectedProducts,
+  selectedPlan,
   employee,
   when,
   onDone,
@@ -1410,6 +1567,8 @@ function FormStep({
 }: {
   pro: { id: string; business_name: string; address?: string | null };
   selectedServices: Service[];
+  selectedProducts: Produto[];
+  selectedPlan: Plano | null;
   employee: Employee | null;
   when: Date;
   onDone: (id: string, accessCode: string) => void;
@@ -1421,8 +1580,11 @@ function FormStep({
   const [notes, setNotes] = useState("");
 
   const combinedPrice = useMemo(
-    () => selectedServices.reduce((a, s) => a + s.price_cents, 0),
-    [selectedServices],
+    () =>
+      selectedServices.reduce((a, s) => a + s.price_cents, 0) +
+      selectedProducts.reduce((a, p) => a + p.price_cents, 0) +
+      (selectedPlan?.price_cents ?? 0),
+    [selectedServices, selectedProducts, selectedPlan],
   );
   const combinedDuration = useMemo(
     () => selectedServices.reduce((a, s) => a + s.duration_minutes, 0),
@@ -1458,6 +1620,30 @@ function FormStep({
         notes: notes.trim() || null,
         service_snapshot_name: combinedName,
         service_snapshot_price_cents: combinedPrice,
+        itens_snapshot: [
+          ...selectedServices.map((s) => ({
+            tipo: "servico",
+            id: s.id,
+            nome: s.name,
+            preco_cents: s.price_cents,
+          })),
+          ...selectedProducts.map((p) => ({
+            tipo: "produto",
+            id: p.id,
+            nome: p.name,
+            preco_cents: p.price_cents,
+          })),
+          ...(selectedPlan
+            ? [
+                {
+                  tipo: "plano",
+                  id: selectedPlan.id,
+                  nome: selectedPlan.name,
+                  preco_cents: selectedPlan.price_cents,
+                },
+              ]
+            : []),
+        ],
         access_code: accessCode,
       });
       if (error) throw error;
@@ -1493,6 +1679,8 @@ function FormStep({
         <div className="lg:sticky lg:top-6">
           <OrderSummary
             services={selectedServices}
+            products={selectedProducts}
+            plan={selectedPlan}
             employee={employee}
             when={when}
             businessName={pro.business_name}
@@ -1580,6 +1768,8 @@ function FormStep({
 function DoneStep({
   pro,
   selectedServices,
+  selectedProducts,
+  selectedPlan,
   employee,
   when,
   accessCode,
@@ -1587,6 +1777,8 @@ function DoneStep({
 }: {
   pro: { business_name: string; slug: string };
   selectedServices: Service[];
+  selectedProducts: Produto[];
+  selectedPlan: Plano | null;
   employee: Employee | null;
   when: Date;
   accessCode: string | null;
@@ -1597,9 +1789,19 @@ function DoneStep({
     [selectedServices],
   );
   const combinedPrice = useMemo(
-    () => selectedServices.reduce((a, s) => a + s.price_cents, 0),
-    [selectedServices],
+    () =>
+      selectedServices.reduce((a, s) => a + s.price_cents, 0) +
+      selectedProducts.reduce((a, p) => a + p.price_cents, 0) +
+      (selectedPlan?.price_cents ?? 0),
+    [selectedServices, selectedProducts, selectedPlan],
   );
+  const extras =
+    selectedProducts.length > 0 || selectedPlan
+      ? [
+          ...selectedProducts.map((p) => `Produto: ${p.name}`),
+          ...(selectedPlan ? [`Plano mensal: ${selectedPlan.name}`] : []),
+        ]
+      : [];
   return (
     <section className="text-center py-8 animate-fade-in-up">
       <div className="mx-auto w-20 h-20 rounded-full bg-success/10 grid place-items-center animate-check-in">
@@ -1611,6 +1813,7 @@ function DoneStep({
       <p className="mt-2 text-muted-foreground">{pro.business_name} está te esperando.</p>
       <div className="mt-6 card-elevated p-4 max-w-sm mx-auto text-left space-y-1">
         <p className="font-semibold">{combinedName}</p>
+        {extras.length > 0 && <p className="text-sm text-muted-foreground">{extras.join(" · ")}</p>}
         <p className="text-sm text-muted-foreground">{formatBRL(combinedPrice)}</p>
         <p className="text-sm text-muted-foreground capitalize">{formatLongDate(when)}</p>
         <p className="text-sm text-muted-foreground">às {formatTime(when)}</p>
@@ -1654,22 +1857,45 @@ function F({ label, children }: { label: string; children: React.ReactNode }) {
   );
 }
 
-/** Resumo fixo do pedido durante o fluxo (serviços, horário, profissional e total). */
+/** Resumo fixo do pedido durante o fluxo (serviços, produtos, plano, horário, profissional e total). */
 function OrderSummary({
   services,
+  products,
+  plan,
   employee,
   when,
   businessName,
   address,
 }: {
   services: Service[];
+  products?: Produto[];
+  plan?: Plano | null;
   employee: Employee | null;
   when?: Date | null;
   businessName?: string | null;
   address?: string | null;
 }) {
-  const totalPrice = services.reduce((a, s) => a + s.price_cents, 0);
+  const totalPrice =
+    services.reduce((a, s) => a + s.price_cents, 0) +
+    (products ?? []).reduce((a, p) => a + p.price_cents, 0) +
+    (plan?.price_cents ?? 0);
   const totalDuration = services.reduce((a, s) => a + s.duration_minutes, 0);
+  const catalogItems = (products ?? []).map((p) => ({
+    id: p.id,
+    name: p.name,
+    meta: "Produto",
+    price: p.price_cents,
+    image: p.image_url,
+  }));
+  if (plan) {
+    catalogItems.push({
+      id: plan.id,
+      name: plan.name,
+      meta: "Plano mensal",
+      price: plan.price_cents,
+      image: plan.image_url,
+    });
+  }
   return (
     <div className="ui-card overflow-hidden lg:sticky lg:top-6">
       <div className="h-1.5" style={{ background: "var(--brand)" }} />
@@ -1697,6 +1923,39 @@ function OrderSummary({
               </div>
               <span className="text-sm font-bold ui-accent-text shrink-0">
                 {formatBRL(s.price_cents)}
+              </span>
+            </li>
+          ))}
+          {catalogItems.map((item) => (
+            <li key={item.id} className="flex items-center gap-3">
+              {item.image ? (
+                <img
+                  src={optimizedImageUrl(item.image, 128) ?? item.image}
+                  alt={item.name}
+                  loading="lazy"
+                  decoding="async"
+                  className="h-10 w-10 rounded-xl object-cover shrink-0 border border-border"
+                />
+              ) : (
+                <span className="ui-icon-bubble h-10 w-10 grid place-items-center rounded-xl shrink-0">
+                  {plan && plan.id === item.id ? (
+                    <Sparkles className="h-4 w-4" />
+                  ) : (
+                    <ShoppingBag className="h-4 w-4" />
+                  )}
+                </span>
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-foreground truncate">{item.name}</p>
+                <p className="text-xs text-muted-foreground">
+                  {item.meta}
+                  {plan && plan.id === item.id && (
+                    <span className="font-semibold ui-accent-text"> · renovação mensal</span>
+                  )}
+                </p>
+              </div>
+              <span className="text-sm font-bold ui-accent-text shrink-0">
+                {formatBRL(item.price)}
               </span>
             </li>
           ))}
