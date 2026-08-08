@@ -280,11 +280,11 @@ function Dashboard() {
           </div>
 
           {stats && (
-            <div className="mt-6 grid gap-6 lg:grid-cols-2">
-              <div className="card-elevated p-5">
-                <h3 className="text-lg font-bold tracking-tight text-foreground mb-4">
+            <>
+              <div className="mt-6 card-elevated p-5">
+                <h2 className="text-lg font-bold tracking-tight text-foreground mb-4">
                   Receita diária
-                </h3>
+                </h2>
                 {stats.dailyData.every((d) => d.receita === 0) ? (
                   <p className="text-sm text-muted-foreground py-8 text-center">
                     Nenhum dado no período.
@@ -294,52 +294,52 @@ function Dashboard() {
                 )}
               </div>
 
-              <div className="card-elevated p-5">
-                <h3 className="text-lg font-bold tracking-tight text-foreground mb-4">
-                  Receita por serviço
-                </h3>
-                {stats.serviceData.length === 0 ? (
-                  <p className="text-sm text-muted-foreground py-8 text-center">
-                    Nenhum dado no período.
-                  </p>
-                ) : (
-                  <ServiceBars data={stats.serviceData} />
-                )}
+              <div className="mt-6 grid gap-6 lg:grid-cols-2">
+                <div className="card-elevated p-5">
+                  <h2 className="text-lg font-bold tracking-tight text-foreground mb-4">
+                    Receita por serviço
+                  </h2>
+                  {stats.serviceData.length === 0 ? (
+                    <p className="text-sm text-muted-foreground py-8 text-center">
+                      Nenhum dado no período.
+                    </p>
+                  ) : (
+                    <ServiceBars data={stats.serviceData} />
+                  )}
+                </div>
+
+                <div className="card-elevated p-5">
+                  <h2 className="text-lg font-bold tracking-tight text-foreground mb-4">
+                    Status dos agendamentos
+                  </h2>
+                  {stats.statusData.length === 0 ? (
+                    <p className="text-sm text-muted-foreground py-8 text-center">
+                      Nenhum dado no período.
+                    </p>
+                  ) : (
+                    <StatusBars data={stats.statusData} />
+                  )}
+                </div>
               </div>
-            </div>
+            </>
           )}
 
           {stats && (stats.prevRevenue > 0 || stats.prevCount > 0) && (
-            <div className="mt-6 grid gap-6 lg:grid-cols-2">
-              <div className="card-elevated p-5">
-                <h3 className="text-lg font-bold tracking-tight text-foreground mb-4">
-                  Comparação com mês anterior
-                </h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Receita</p>
-                    <p className="text-xl font-black mt-1">{formatBRL(stats.totalRevenue)}</p>
-                    <ComparisonBadge current={stats.totalRevenue} previous={stats.prevRevenue} />
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Atendimentos</p>
-                    <p className="text-xl font-black mt-1">{stats.monthCount}</p>
-                    <ComparisonBadge current={stats.monthCount} previous={stats.prevCount} />
-                  </div>
+            <div className="mt-6 card-elevated p-5">
+              <h2 className="text-lg font-bold tracking-tight text-foreground mb-4">
+                Comparação com mês anterior
+              </h2>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-muted-foreground">Receita</p>
+                  <p className="text-xl font-black mt-1">{formatBRL(stats.totalRevenue)}</p>
+                  <ComparisonBadge current={stats.totalRevenue} previous={stats.prevRevenue} />
                 </div>
-              </div>
-
-              <div className="card-elevated p-5">
-                <h3 className="text-lg font-bold tracking-tight text-foreground mb-4">
-                  Status dos agendamentos
-                </h3>
-                {stats.statusData.length === 0 ? (
-                  <p className="text-sm text-muted-foreground py-8 text-center">
-                    Nenhum dado no período.
-                  </p>
-                ) : (
-                  <StatusBars data={stats.statusData} />
-                )}
+                <div>
+                  <p className="text-xs text-muted-foreground">Atendimentos</p>
+                  <p className="text-xl font-black mt-1">{stats.monthCount}</p>
+                  <ComparisonBadge current={stats.monthCount} previous={stats.prevCount} />
+                </div>
               </div>
             </div>
           )}
@@ -432,8 +432,8 @@ function DailyRevenueChart({ data }: { data: { day: number; receita: number }[] 
   const [selected, setSelected] = useState<number | null>(null);
   const step = Math.max(1, Math.ceil(data.length / (data.length > 28 ? 5 : 8)));
   return (
-    <div>
-      <div className="flex items-end gap-[3px] sm:gap-1 h-40 sm:h-48">
+    <div className="overflow-x-auto scrollbar-slim">
+      <div className="flex items-end gap-px min-w-max h-40 sm:h-48">
         {data.map((d) => {
           const isZero = d.receita === 0;
           const height = isZero ? 3 : Math.max((d.receita / max) * 100, 8);
@@ -445,7 +445,7 @@ function DailyRevenueChart({ data }: { data: { day: number; receita: number }[] 
               type="button"
               onClick={() => setSelected(isSelected ? null : d.day)}
               aria-label={`Dia ${d.day} — ${formatBRL(d.receita)}`}
-              className="group relative flex-1 h-full flex items-end"
+              className="group relative flex-1 min-w-[24px] min-h-[24px] h-full flex items-end"
             >
               <div
                 className={`w-full rounded-t-[3px] transition-colors ${
@@ -471,15 +471,15 @@ function DailyRevenueChart({ data }: { data: { day: number; receita: number }[] 
           );
         })}
       </div>
-      <div className="flex gap-[3px] sm:gap-1 mt-2" aria-hidden>
+      <div className="flex gap-px mt-2 min-w-max" aria-hidden>
         {data.map((d) => {
           const show = (d.day - 1) % step === 0 || d.day === data.length;
           const isSelected = selected === d.day;
           return (
             <span
               key={d.day}
-              className={`flex-1 text-center text-[10px] sm:text-[11px] font-semibold tabular-nums leading-none truncate transition-colors ${
-                isSelected ? "text-accent" : "text-muted-foreground/60"
+              className={`flex-1 min-w-[24px] text-center text-[10px] sm:text-[11px] font-semibold tabular-nums leading-none truncate transition-colors ${
+                isSelected ? "text-accent" : "text-muted-foreground"
               }`}
             >
               {show ? d.day : ""}

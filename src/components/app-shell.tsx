@@ -3,6 +3,7 @@ import { useEffect, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/hooks/use-theme";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { BrandLogo } from "@/components/brand-logo";
 import {
   Calendar,
@@ -30,6 +31,7 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
   const { user, loading } = useAuth();
   const router = useRouter();
   const { theme, toggle } = useTheme();
+  const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -88,7 +90,7 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
 
         {/* Sidebar */}
         <aside
-          aria-hidden={!open}
+          {...(isMobile && !open ? { inert: "" } : {})}
           className={`fixed lg:sticky top-14 lg:top-0 inset-x-0 lg:inset-auto bottom-0 lg:bottom-auto z-30 lg:h-screen w-3/5 max-w-72 lg:w-64 bg-sidebar border-r border-sidebar-border overflow-y-auto transition-transform duration-300 ease-in-out lg:translate-x-0 lg:pointer-events-auto ${open ? "translate-x-0" : "-translate-x-full pointer-events-none"}`}
         >
           <div className="hidden lg:flex items-center justify-between h-20 px-6 border-b border-sidebar-border">
@@ -104,7 +106,7 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
                 onClick={() => setOpen(false)}
                 activeOptions={{ exact: l.exact }}
                 activeProps={{ "data-active": "true" } as never}
-                className="group flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors min-h-[44px] data-[active=true]:bg-accent data-[active=true]:text-accent-foreground data-[active=true]:shadow-sm"
+                className="group flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors min-h-[44px] data-[active=true]:bg-sidebar-primary data-[active=true]:text-sidebar-primary-foreground data-[active=true]:shadow-sm"
               >
                 <l.icon className="h-4 w-4" />
                 {l.label}
