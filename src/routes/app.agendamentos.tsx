@@ -204,7 +204,6 @@ function Page() {
         status: "confirmed",
         service_snapshot_name: v.service_name,
         service_snapshot_price_cents: v.service_price_cents,
-        itens_snapshot: v.itens_snapshot,
       });
       if (error) throw error;
     },
@@ -1285,7 +1284,6 @@ type NewAppointmentPayload = {
   service_id: string;
   service_name: string;
   service_price_cents: number;
-  itens_snapshot: Array<{ tipo: string; id: string; nome: string; preco_cents: number }>;
   starts_at: string;
   ends_at: string;
   client_name: string;
@@ -1461,12 +1459,6 @@ function NewAppointmentForm({
           service_id: selectedServices[0].id,
           service_name: combinedName,
           service_price_cents: totalPrice,
-          itens_snapshot: selectedServices.map((s) => ({
-            tipo: "servico",
-            id: s.id,
-            nome: s.name,
-            preco_cents: s.price_cents,
-          })),
           starts_at: start.toISOString(),
           ends_at: ends.toISOString(),
           client_name: finalName,

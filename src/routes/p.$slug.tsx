@@ -1620,30 +1620,6 @@ function FormStep({
         notes: notes.trim() || null,
         service_snapshot_name: combinedName,
         service_snapshot_price_cents: combinedPrice,
-        itens_snapshot: [
-          ...selectedServices.map((s) => ({
-            tipo: "servico",
-            id: s.id,
-            nome: s.name,
-            preco_cents: s.price_cents,
-          })),
-          ...selectedProducts.map((p) => ({
-            tipo: "produto",
-            id: p.id,
-            nome: p.name,
-            preco_cents: p.price_cents,
-          })),
-          ...(selectedPlan
-            ? [
-                {
-                  tipo: "plano",
-                  id: selectedPlan.id,
-                  nome: selectedPlan.name,
-                  preco_cents: selectedPlan.price_cents,
-                },
-              ]
-            : []),
-        ],
         access_code: accessCode,
       });
       if (error) throw error;
