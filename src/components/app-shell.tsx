@@ -123,7 +123,7 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
         </aside>
 
         <main className="flex-1 min-w-0">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-10 py-6 lg:py-10">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-10 pt-6 pb-24 lg:py-10 lg:pb-10">
             {title && (
               <h1 className="text-3xl lg:text-4xl font-black tracking-tight text-foreground mb-6 animate-fade-in-up">
                 {title}
@@ -133,6 +133,30 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
           </div>
         </main>
       </div>
+
+      {/* Bottom tab bar (mobile) */}
+      <nav
+        aria-label="Navegação principal"
+        className="lg:hidden fixed inset-x-0 bottom-0 z-40 bg-background/95 backdrop-blur-xl border-t border-border pb-[env(safe-area-inset-bottom)]"
+      >
+        <div className="grid grid-cols-5">
+          {links.map((l) => (
+            <Link
+              key={l.to}
+              to={l.to as string}
+              onClick={() => setOpen(false)}
+              activeOptions={{ exact: l.exact }}
+              activeProps={{ "data-active": "true" } as never}
+              className="group flex flex-col items-center justify-center gap-1 min-h-[56px] py-1.5 text-[10px] font-medium text-muted-foreground data-[active=true]:text-foreground"
+            >
+              <span className="grid place-items-center h-7 w-12 rounded-full transition-colors group-data-[active=true]:bg-accent/15">
+                <l.icon className="h-[22px] w-[22px]" strokeWidth={2} />
+              </span>
+              {l.label}
+            </Link>
+          ))}
+        </div>
+      </nav>
     </div>
   );
 }
