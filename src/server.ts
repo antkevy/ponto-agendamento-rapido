@@ -58,7 +58,7 @@ function withSecurityHeaders(response: Response): Response {
   headers.set("x-frame-options", "DENY");
   headers.set("referrer-policy", "strict-origin-when-cross-origin");
   headers.set("permissions-policy", "camera=(), microphone=(), geolocation=(), payment=(), usb=()");
-  if (process.env.APP_ENABLE_CSP === "1") {
+  if (process.env.APP_ENABLE_CSP !== "0") {
     headers.set(
       "content-security-policy",
       [

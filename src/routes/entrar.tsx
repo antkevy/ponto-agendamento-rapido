@@ -87,7 +87,6 @@ function SignIn() {
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     setResetLoading(false);
     if (error) return toast.error("Não foi possível atualizar a senha. Tente novamente.");
-    await supabase.rpc("touch_password_change");
     if (passwordMode === "expired") {
       finishReset();
       setNewPassword("");

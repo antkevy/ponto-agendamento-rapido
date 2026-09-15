@@ -836,12 +836,12 @@ export type Database = {
         Returns: boolean;
       };
       client_cancel_appointment: {
-        Args: { _code?: string; _contact: string; _id: string };
+        Args: { _code: string; _contact: string; _id: string };
         Returns: boolean;
       };
       client_reschedule_appointment: {
         Args: {
-          _code?: string;
+          _code: string;
           _contact: string;
           _id: string;
           _starts_at: string;
@@ -869,9 +869,8 @@ export type Database = {
         Returns: boolean;
       };
       lookup_client_appointments: {
-        Args: { _code?: string; _contact: string };
+        Args: { _code: string; _contact: string };
         Returns: {
-          access_code: string;
           client_name: string;
           duration_minutes: number;
           employee_id: string;
@@ -884,6 +883,10 @@ export type Database = {
           starts_at: string;
           status: Database["public"]["Enums"]["appointment_status"];
         }[];
+      };
+      get_my_professional: {
+        Args: never;
+        Returns: Database["public"]["Tables"]["profissionais"]["Row"][];
       };
       set_mfa_enabled: { Args: { p_enabled: boolean }; Returns: boolean };
       set_user_role: {

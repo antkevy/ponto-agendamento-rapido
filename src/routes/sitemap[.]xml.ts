@@ -5,6 +5,15 @@ import { db } from "@/lib/db-tables";
 
 const BASE_URL = "https://agendai-br.lovable.app";
 
+function escapeXml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
+
 interface SitemapEntry {
   path: string;
   changefreq?: "always" | "hourly" | "daily" | "weekly" | "monthly" | "yearly" | "never";
@@ -26,7 +35,11 @@ export const Route = createFileRoute("/sitemap.xml")({
           const { data } = await supabase.from(db.profissionais).select("slug");
           for (const row of (data ?? []) as { slug: string | null }[]) {
             if (row.slug)
-              entries.push({ path: `/p/${row.slug}`, changefreq: "daily", priority: "0.8" });
+              entries.push({
+                path: `/p/${escapeXml(row.slug)}`,
+                changefreq: "daily",
+                priority: "0.8",
+              });
           }
         } catch {
           // sitemap continua válido apenas com as rotas estáticas

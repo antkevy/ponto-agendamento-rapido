@@ -75,8 +75,28 @@ export async function decryptString(payload: string): Promise<string | null> {
   }
 }
 
-/** Hash SHA-256 (hex) — útil para anonimizar identificadores em logs. */
+/**
+ * Hash HMAC-SHA-256 (hex) — anonimiza identificadores em logs.
+ * Usa APP_DATA_ENCRYPTION_KEY como chave HMAC quando disponível;
+ * sem chave configurada, usa SHA-256 simples (fallback para dev local).
+ */
 export async function hashSecret(value: string): Promise<string> {
+  if (KEY_B64) {
+    try {
+      const raw = Uint8Array.from(atob(KEY_B64), (c) => c.charCodeAt(0));
+      const hmacKey = await crypto.subtle.importKey(
+        "raw",
+        raw,
+        { name: "HMAC", hash: "SHA-256" },
+        false,
+        ["sign"],
+      );
+      const sig = await crypto.subtle.sign("HMAC", hmacKey, new TextEncoder().encode(value));
+      return [...new Uint8Array(sig)].map((b) => b.toString(16).padStart(2, "0")).join("");
+    } catch {
+      // Se importKey falhar, cai para SHA-256 simples
+    }
+  }
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }

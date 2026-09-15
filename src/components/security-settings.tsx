@@ -125,7 +125,6 @@ export function SecuritySettings() {
       if (reauth) throw new Error("Senha atual incorreta.");
       const { error } = await supabase.auth.updateUser({ password: pw.next });
       if (error) throw error;
-      await supabase.rpc("touch_password_change");
     },
     onSuccess: () => {
       toast.success("Senha atualizada!");
