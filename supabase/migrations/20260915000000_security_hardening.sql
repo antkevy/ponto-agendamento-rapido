@@ -32,21 +32,11 @@ AS $$
 BEGIN
   IF TG_OP = 'INSERT' THEN
     IF NEW.access_code IS NULL OR NEW.access_code !~ '^[0-9]{6}$' THEN
-      -- Usa gen_random_bytes do pgcrypto quando disponível (mais seguro que random())
-      IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pgcrypto') THEN
-        NEW.access_code := lpad((abs(('x' || encode(gen_random_bytes(4), 'hex'))::bit(32)::bigint) % 1000000)::text, 6, '0');
-      ELSE
-        NEW.access_code := lpad((floor(random() * 1000000))::int::text, 6, '0');
-      END IF;
+      NEW.access_code := lpad((floor(random() * 1000000))::int::text, 6, '0');
     END IF;
   ELSE -- UPDATE
-    -- Gera código para linhas legado (NULL); preserva para as demais
     IF OLD.access_code IS NULL OR OLD.access_code !~ '^[0-9]{6}$' THEN
-      IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pgcrypto') THEN
-        NEW.access_code := lpad((abs(('x' || encode(gen_random_bytes(4), 'hex'))::bit(32)::bigint) % 1000000)::text, 6, '0');
-      ELSE
-        NEW.access_code := lpad((floor(random() * 1000000))::int::text, 6, '0');
-      END IF;
+      NEW.access_code := lpad((floor(random() * 1000000))::int::text, 6, '0');
     ELSE
       NEW.access_code := OLD.access_code;
     END IF;
@@ -54,9 +44,6 @@ BEGIN
   RETURN NEW;
 END;
 $$;
-
--- Garante que pgcrypto existe (gen_random_bytes)
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 -- Backfill: gera access_code para agendamentos legado (NULL)
 -- O trigger (BEFORE UPDATE) vai gerar o código automaticamente para linhas NULL.
