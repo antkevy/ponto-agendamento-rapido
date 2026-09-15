@@ -137,7 +137,7 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
       {/* Bottom tab bar (mobile) */}
       <nav
         aria-label="Navegação principal"
-        className="lg:hidden fixed inset-x-0 bottom-0 z-40 bg-background/95 backdrop-blur-xl border-t border-border pb-[env(safe-area-inset-bottom)]"
+        className="lg:hidden fixed inset-x-0 bottom-0 z-40 bg-background border-t border-border pb-[env(safe-area-inset-bottom)] [transform:translateZ(0)]"
       >
         <div className="grid grid-cols-5">
           {links.map((l) => (
