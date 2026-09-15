@@ -179,8 +179,11 @@ function Page() {
   }, [appts]);
 
   const update = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: Appt["status"] }) => {
-      const { error } = await supabase.from(db.agendamentos).update({ status }).eq("id", id);
+    mutationFn: async ({
+      id,
+      ...patch
+    }: { id: string } & Partial<Pick<Appt, "status" | "notes">>) => {
+      const { error } = await supabase.from(db.agendamentos).update(patch).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -193,22 +196,47 @@ function Page() {
 
   const create = useMutation({
     mutationFn: async (v: NewAppointmentPayload) => {
-      const { error } = await supabase.from(db.agendamentos).insert({
-        professional_id: pro!.id,
-        service_id: v.service_id,
-        starts_at: v.starts_at,
-        ends_at: v.ends_at,
-        client_name: v.client_name,
-        client_phone: v.client_phone,
-        client_email: v.client_email,
-        notes: v.notes,
-        status: "confirmed",
-        service_snapshot_name: v.service_name,
-        service_snapshot_price_cents: v.service_price_cents,
-      });
+      const { error, data } = await supabase
+        .from(db.agendamentos)
+        .insert({
+          professional_id: pro!.id,
+          service_id: v.service_id,
+          starts_at: v.starts_at,
+          ends_at: v.ends_at,
+          client_name: v.client_name,
+          client_phone: v.client_phone,
+          client_email: v.client_email,
+          notes: v.notes,
+          status: "confirmed",
+          service_snapshot_name: v.service_name,
+          service_snapshot_price_cents: v.service_price_cents,
+        })
+        .select("starts_at")
+        .single();
       if (error) throw error;
+      return { starts_at: data?.starts_at ?? v.starts_at };
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
+      const created = new Date(result.starts_at);
+      const now = new Date();
+      const start = new Date(now);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(start);
+      if (range === "today") end.setDate(end.getDate() + 1);
+      else if (range === "week") end.setDate(end.getDate() + 7);
+      else if (range === "month") end.setMonth(end.getMonth() + 1);
+      else end.setFullYear(end.getFullYear() + 5);
+
+      const insideCurrentRange = created >= start && created < end;
+      if (!insideCurrentRange) {
+        const monthEnd = new Date(start);
+        monthEnd.setMonth(monthEnd.getMonth() + 1);
+        if (created < monthEnd) setRange("month");
+        else setRange("all");
+        setView("list");
+      }
+      if (status !== "all") setStatus("all");
+
       qc.invalidateQueries({ queryKey: ["appointments"] });
       qc.invalidateQueries({ queryKey: ["appt-calendar-week"] });
       qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
@@ -236,7 +264,9 @@ function Page() {
               <button
                 onClick={() => {
                   void refetch();
+                  void qc.invalidateQueries({ queryKey: ["appointments"] });
                   void qc.invalidateQueries({ queryKey: ["appt-calendar-week"] });
+                  void qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
                 }}
                 disabled={isFetching}
                 aria-busy={isFetching || undefined}
@@ -425,7 +455,9 @@ function Page() {
                       <button
                         onClick={() => {
                           void refetch();
+                          void qc.invalidateQueries({ queryKey: ["appointments"] });
                           void qc.invalidateQueries({ queryKey: ["appt-calendar-week"] });
+                          void qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
                         }}
                         disabled={isFetching}
                         className="btn-outline-brand inline-flex items-center gap-1 text-sm"
@@ -480,6 +512,7 @@ function Page() {
 
           {detail && (
             <ApptDetailModal
+              key={detail.id}
               a={detail}
               businessName={pro.business_name}
               msgConfirmed={pro.msg_confirmed}
@@ -488,6 +521,10 @@ function Page() {
               onUpdate={(s) => {
                 update.mutate({ id: detail.id, status: s });
                 setDetail(null);
+              }}
+              onSaveNotes={(notes) => {
+                update.mutate({ id: detail.id, notes });
+                setDetail((d) => (d ? { ...d, notes } : d));
               }}
             />
           )}
@@ -590,14 +627,26 @@ function ApptsTable({
               <p className="font-medium truncate max-w-[200px]">{a.service_snapshot_name}</p>
             </DataTableCell>
             <DataTableCell className="whitespace-nowrap">
-              <p className="font-medium capitalize">
-                {new Date(a.starts_at).toLocaleDateString("pt-BR", {
-                  weekday: "short",
-                  day: "2-digit",
-                  month: "short",
-                })}
-              </p>
-              <p className="text-xs text-muted-foreground">{formatTime(new Date(a.starts_at))}</p>
+              <div className="flex items-center gap-1.5">
+                <div>
+                  <p className="font-medium capitalize">
+                    {new Date(a.starts_at).toLocaleDateString("pt-BR", {
+                      weekday: "short",
+                      day: "2-digit",
+                      month: "short",
+                    })}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {formatTime(new Date(a.starts_at))}
+                  </p>
+                </div>
+                {a.notes && (
+                  <StickyNote
+                    className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
+                    aria-hidden="true"
+                  />
+                )}
+              </div>
             </DataTableCell>
             <DataTableCell className="whitespace-nowrap">
               <p className="font-black tracking-tight" style={{ color: "var(--brand)" }}>
@@ -700,6 +749,14 @@ function ApptCard({
       {a.client_email && (
         <p className="text-xs text-muted-foreground inline-flex items-center gap-1 truncate">
           <Mail className="h-3 w-3 shrink-0" /> {a.client_email}
+        </p>
+      )}
+      {a.notes && (
+        <p
+          className="text-xs text-muted-foreground inline-flex items-center gap-1 truncate"
+          title={a.notes}
+        >
+          <StickyNote className="h-3 w-3 shrink-0" /> {a.notes}
         </p>
       )}
       <div className="flex flex-wrap gap-2 mt-1 sm:mt-auto sm:pt-2">
@@ -1123,6 +1180,7 @@ function ApptDetailModal({
   msgCancelled,
   onClose,
   onUpdate,
+  onSaveNotes,
 }: {
   a: Appt;
   businessName: string;
@@ -1130,6 +1188,7 @@ function ApptDetailModal({
   msgCancelled: string | null;
   onClose: () => void;
   onUpdate: (s: Appt["status"]) => void;
+  onSaveNotes: (notes: string | null) => void;
 }) {
   const start = new Date(a.starts_at);
   const end = new Date(a.ends_at);
@@ -1140,6 +1199,8 @@ function ApptDetailModal({
     .slice(0, 2)
     .map((w) => w.charAt(0).toUpperCase())
     .join("");
+  const [notesDraft, setNotesDraft] = useState(a.notes ?? "");
+  const notesChanged = notesDraft.trim() !== (a.notes ?? "").trim();
 
   return (
     <Modal onClose={onClose} hideFooter>
@@ -1228,11 +1289,31 @@ function ApptDetailModal({
           </div>
         </div>
 
-        {a.notes && (
-          <UINotice icon={StickyNote} title="Observações">
-            {a.notes}
-          </UINotice>
-        )}
+        <div className="space-y-2">
+          <label className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
+            <StickyNote className="h-4 w-4 text-muted-foreground" /> Observações
+          </label>
+          <UITextarea
+            rows={3}
+            value={notesDraft}
+            onChange={(e) => setNotesDraft(e.target.value)}
+            placeholder="Alguma preferência ou observação do cliente..."
+          />
+          {notesChanged && (
+            <button
+              type="button"
+              onClick={() => onSaveNotes(notesDraft.trim() || null)}
+              className="btn-brand w-full inline-flex items-center justify-center gap-2"
+            >
+              <CheckCheck className="h-4 w-4 shrink-0" /> Salvar observações
+            </button>
+          )}
+          {a.notes && !notesChanged && (
+            <UINotice icon={StickyNote} title="Observações salvas">
+              {a.notes}
+            </UINotice>
+          )}
+        </div>
 
         <div className="space-y-2 pt-1">
           <button
@@ -1475,7 +1556,7 @@ function NewAppointmentForm({
           notes: notes.trim() || null,
         });
       }}
-      className="flex flex-col h-full"
+      className="flex flex-col min-h-full -m-5 p-5 sm:-m-6 sm:p-6 lg:m-0 lg:p-0 lg:h-full"
     >
       <header className="flex items-center justify-between gap-3 mb-5 shrink-0">
         <div className="flex items-center gap-3 min-w-0">
@@ -1487,8 +1568,8 @@ function NewAppointmentForm({
         </div>
       </header>
 
-      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px] lg:overflow-visible lg:gap-10">
-        <div className="space-y-5 min-h-0 lg:space-y-6 lg:overflow-y-auto overscroll-contain scrollbar-slim lg:pr-3">
+      <div className="flex-1 min-h-0 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:overflow-visible lg:gap-10">
+        <div className="space-y-6 min-h-0 lg:space-y-6 lg:overflow-y-auto lg:overflow-x-hidden overscroll-contain scrollbar-slim lg:pr-3">
           <section className="space-y-3">
             <SectionLabel>
               Serviços ({selectedServices.length}
