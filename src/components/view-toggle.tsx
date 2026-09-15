@@ -1,6 +1,6 @@
-import { LayoutGrid, List } from "lucide-react";
+import { CalendarRange, LayoutGrid, List } from "lucide-react";
 
-export type ViewMode = "grid" | "list";
+export type ViewMode = "grid" | "list" | "calendar";
 
 export function ViewToggle({
   value,
@@ -28,6 +28,15 @@ export function ViewToggle({
         title="Grade"
       >
         <LayoutGrid className="h-4 w-4" />
+      </button>
+      <button
+        type="button"
+        onClick={() => onChange("calendar")}
+        data-selected={value === "calendar" || undefined}
+        className="px-3 py-2 text-sm inline-flex items-center gap-1 text-muted-foreground data-[selected]:bg-secondary data-[selected]:text-foreground border-l border-border"
+        title="Semana"
+      >
+        <CalendarRange className="h-4 w-4" />
       </button>
     </div>
   );
