@@ -41,6 +41,7 @@ import {
   Clock,
   StickyNote,
   CalendarRange,
+  Check,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { displayPhoneBR, isValidPhoneBR } from "@/lib/phone";
@@ -203,13 +204,15 @@ function Page() {
         status: "confirmed",
         service_snapshot_name: v.service_name,
         service_snapshot_price_cents: v.service_price_cents,
+        itens_snapshot: v.itens_snapshot,
       });
       if (error) throw error;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["appointments"] });
       qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
-      qc.invalidateQueries({ queryKey: ["clientes"] });
+      qc.invalidateQueries({ queryKey: ["appt-existing-clients"] });
+      qc.invalidateQueries({ queryKey: ["appt-existing-fallback"] });
       setCreating(false);
       toast.success("Agendamento criado!");
     },
@@ -1282,6 +1285,7 @@ type NewAppointmentPayload = {
   service_id: string;
   service_name: string;
   service_price_cents: number;
+  itens_snapshot: Array<{ tipo: string; id: string; nome: string; preco_cents: number }>;
   starts_at: string;
   ends_at: string;
   client_name: string;
@@ -1301,7 +1305,7 @@ function NewAppointmentForm({
   onSubmit: (v: NewAppointmentPayload) => void;
   onClose: () => void;
 }) {
-  const [serviceId, setServiceId] = useState("");
+  const [selectedServices, setSelectedServices] = useState<ServiceOption[]>([]);
   const [clientMode, setClientMode] = useState<"new" | "existing">("new");
   const [clientKey, setClientKey] = useState("");
   const [clientName, setClientName] = useState("");
@@ -1368,43 +1372,66 @@ function NewAppointmentForm({
     return existingFallback ?? [];
   }, [existingClients, existingFallback]);
 
-  const selected = (services ?? []).find((s) => s.id === serviceId);
+  const totalDuration = useMemo(
+    () => selectedServices.reduce((a, s) => a + s.duration_minutes, 0),
+    [selectedServices],
+  );
+  const totalPrice = useMemo(
+    () => selectedServices.reduce((a, s) => a + s.price_cents, 0),
+    [selectedServices],
+  );
+  const combinedName = useMemo(
+    () => selectedServices.map((s) => s.name).join(" + "),
+    [selectedServices],
+  );
   const selectedClient =
     clientMode === "existing" ? clientOptions.find((c) => c.key === clientKey) : null;
   const when = slot;
   const finalNamePreview =
     clientMode === "existing" ? (selectedClient?.name ?? "") : clientName.trim();
   const endTimeLabel =
-    selected && when
-      ? formatTime(new Date(when.getTime() + selected.duration_minutes * 60000))
-      : "—";
+    totalDuration > 0 && when ? formatTime(new Date(when.getTime() + totalDuration * 60000)) : "—";
 
-  const summaryCard = selected ? (
-    <div className="ui-card p-4 sm:p-5 space-y-3">
-      <UISummaryRow icon={Tag} sub={`${selected.duration_minutes} min`}>
-        {selected.name}
-      </UISummaryRow>
-      <UISummaryRow icon={Calendar} sub={when ? `às ${formatTime(when)}` : undefined}>
-        <span className="first-letter:uppercase">
-          {when ? formatLongDate(when) : "Data a definir"}
-        </span>
-      </UISummaryRow>
-      <UISummaryRow icon={User}>{finalNamePreview || "Cliente a definir"}</UISummaryRow>
-      <div className="pt-3 border-t border-border flex items-center justify-between gap-3">
-        <span className="text-sm font-semibold text-muted-foreground">Total</span>
-        <span className="text-2xl font-black tracking-tight" style={{ color: "var(--brand)" }}>
-          {formatBRL(selected.price_cents)}
-        </span>
+  const summaryCard =
+    selectedServices.length > 0 ? (
+      <div className="ui-card p-4 sm:p-5 space-y-3">
+        <div className="space-y-2">
+          {selectedServices.map((s) => (
+            <UISummaryRow
+              key={s.id}
+              icon={Tag}
+              sub={`${formatBRL(s.price_cents)} · ${s.duration_minutes} min`}
+            >
+              {s.name}
+            </UISummaryRow>
+          ))}
+        </div>
+        <UISummaryRow
+          icon={Calendar}
+          sub={when ? `às ${formatTime(when)} · até ${endTimeLabel}` : undefined}
+        >
+          <span className="first-letter:uppercase">
+            {when ? formatLongDate(when) : "Data a definir"}
+          </span>
+        </UISummaryRow>
+        <UISummaryRow icon={User}>{finalNamePreview || "Cliente a definir"}</UISummaryRow>
+        <div className="pt-3 border-t border-border flex items-center justify-between gap-3">
+          <span className="text-sm font-semibold text-muted-foreground">
+            Total · {totalDuration} min
+          </span>
+          <span className="text-2xl font-black tracking-tight" style={{ color: "var(--brand)" }}>
+            {formatBRL(totalPrice)}
+          </span>
+        </div>
       </div>
-    </div>
-  ) : null;
+    ) : null;
 
   return (
     <form
       onSubmit={(e) => {
         e.preventDefault();
-        if (!serviceId) {
-          toast.error("Selecione um serviço.");
+        if (selectedServices.length === 0) {
+          toast.error("Selecione ao menos um serviço.");
           return;
         }
         const client =
@@ -1429,11 +1456,17 @@ function NewAppointmentForm({
           return;
         }
         const start = slot;
-        const ends = new Date(start.getTime() + selected!.duration_minutes * 60000);
+        const ends = new Date(start.getTime() + totalDuration * 60000);
         onSubmit({
-          service_id: serviceId,
-          service_name: selected!.name,
-          service_price_cents: selected!.price_cents,
+          service_id: selectedServices[0].id,
+          service_name: combinedName,
+          service_price_cents: totalPrice,
+          itens_snapshot: selectedServices.map((s) => ({
+            tipo: "servico",
+            id: s.id,
+            nome: s.name,
+            preco_cents: s.price_cents,
+          })),
           starts_at: start.toISOString(),
           ends_at: ends.toISOString(),
           client_name: finalName,
@@ -1457,26 +1490,52 @@ function NewAppointmentForm({
       <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px] lg:overflow-visible lg:gap-10">
         <div className="space-y-5 min-h-0 lg:space-y-6 lg:overflow-y-auto overscroll-contain scrollbar-slim lg:pr-3">
           <section className="space-y-3">
-            <SectionLabel>Serviço</SectionLabel>
-            <span className="ui-field">
-              <Tag className="ui-field-icon" />
-              <select
-                required
-                value={serviceId}
-                onChange={(e) => {
-                  setServiceId(e.target.value);
-                  setSlot(null);
-                }}
-                className="ui-field-input pl-11"
-              >
-                <option value="">Selecione um serviço...</option>
-                {(services ?? []).map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name} · {formatBRL(s.price_cents)}
-                  </option>
-                ))}
-              </select>
-            </span>
+            <SectionLabel>
+              Serviços ({selectedServices.length}
+              {selectedServices.length > 0 ? ` · ${totalDuration} min` : ""})
+            </SectionLabel>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {(services ?? []).map((s) => {
+                const isSelected = selectedServices.some((x) => x.id === s.id);
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedServices((prev) =>
+                        isSelected ? prev.filter((x) => x.id !== s.id) : [...prev, s],
+                      );
+                      setSlot(null);
+                    }}
+                    aria-pressed={isSelected}
+                    className={cn(
+                      "flex items-center justify-between gap-3 rounded-xl border p-3 text-left transition-all min-h-[56px]",
+                      isSelected
+                        ? "border-accent bg-accent/10 ring-1 ring-inset ring-accent"
+                        : "border-border hover:border-accent/50 hover:bg-muted/40",
+                    )}
+                  >
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-semibold">{s.name}</span>
+                      <span className="block text-xs text-muted-foreground">
+                        {formatBRL(s.price_cents)} · {s.duration_minutes} min
+                      </span>
+                    </span>
+                    <span
+                      className={cn(
+                        "grid h-6 w-6 shrink-0 place-items-center rounded-full border transition-colors",
+                        isSelected
+                          ? "border-accent bg-accent text-accent-foreground"
+                          : "border-border text-transparent",
+                      )}
+                      aria-hidden="true"
+                    >
+                      <Check className="h-4 w-4" />
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
             {!servicesLoading && (services ?? []).length === 0 && (
               <UINotice icon={Info} title="Nenhum serviço ativo">
                 Crie um serviço na aba Serviços para poder agendar.
@@ -1613,13 +1672,13 @@ function NewAppointmentForm({
             <SectionLabel>Data e hora</SectionLabel>
             <AvailabilityPicker
               proId={proId}
-              durationMinutes={selected?.duration_minutes ?? 0}
+              durationMinutes={totalDuration}
               selectedSlot={slot}
               onPick={setSlot}
             />
-            {selected && (
+            {totalDuration > 0 && (
               <p className="text-xs text-muted-foreground">
-                {selected.duration_minutes} min de duração · término às {endTimeLabel}
+                {totalDuration} min totais · término às {endTimeLabel}
               </p>
             )}
           </section>

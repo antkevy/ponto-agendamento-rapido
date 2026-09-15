@@ -4,10 +4,10 @@ export type Theme = "light" | "dark";
 const KEY = "agendai-theme";
 
 function getInitial(): Theme {
-  if (typeof window === "undefined") return "light";
+  if (typeof window === "undefined") return "dark";
   const saved = window.localStorage.getItem(KEY) as Theme | null;
   if (saved === "light" || saved === "dark") return saved;
-  return window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  return "dark";
 }
 
 function apply(theme: Theme) {
@@ -17,7 +17,7 @@ function apply(theme: Theme) {
 }
 
 export function useTheme() {
-  const [theme, setTheme] = useState<Theme>("light");
+  const [theme, setTheme] = useState<Theme>("dark");
 
   useEffect(() => {
     const t = getInitial();
