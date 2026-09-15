@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Reveal } from "@/components/reveal";
@@ -14,6 +15,8 @@ import {
   Smartphone,
   MessageCircle,
   CircleCheck,
+  Menu,
+  X,
 } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -224,7 +227,7 @@ function BookingPreview() {
       </div>
 
       {/* floating: confirmed */}
-      <div className="ui-card-glass absolute -left-3 sm:-left-8 top-10 flex items-center gap-2.5 rounded-2xl px-3.5 py-2.5 motion-safe:animate-float">
+      <div className="ui-card-glass absolute -left-1 sm:-left-8 top-10 flex items-center gap-2.5 rounded-2xl px-3.5 py-2.5 motion-safe:animate-float">
         <span className="grid h-8 w-8 place-items-center rounded-full bg-success/15 text-success">
           <CircleCheck className="h-4 w-4" />
         </span>
@@ -237,7 +240,7 @@ function BookingPreview() {
       </div>
 
       {/* floating: new booking */}
-      <div className="ui-card-glass absolute -right-3 sm:-right-8 bottom-10 flex items-center gap-2.5 rounded-2xl px-3.5 py-2.5 motion-safe:animate-float-delay">
+      <div className="ui-card-glass absolute -right-1 sm:-right-8 bottom-10 flex items-center gap-2.5 rounded-2xl px-3.5 py-2.5 motion-safe:animate-float-delay">
         <span className="grid h-8 w-8 place-items-center rounded-full bg-[#25D366]/15 text-[#25D366]">
           <MessageCircle className="h-4 w-4" />
         </span>
@@ -253,22 +256,25 @@ function BookingPreview() {
 }
 
 function Landing() {
+  const [mobileNav, setMobileNav] = useState(false);
   return (
     <div className="min-h-screen bg-background overflow-x-clip">
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl">
-        <div className="max-w-6xl mx-auto px-5 sm:px-8 h-20 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-5 sm:px-8 h-16 sm:h-20 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5">
             <span
-              className="w-10 h-10 rounded-full grid place-items-center text-white shadow-md"
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full grid place-items-center text-white shadow-md"
               style={{
                 backgroundImage:
                   "linear-gradient(180deg, oklch(0.62 0.17 250), oklch(0.55 0.18 250))",
               }}
             >
-              <CalendarCheck2 className="h-5 w-5" strokeWidth={2.5} />
+              <CalendarCheck2 className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={2.5} />
             </span>
-            <span className="text-2xl font-bold tracking-tight text-foreground">Agendaí</span>
+            <span className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+              Agendaí
+            </span>
           </Link>
           <nav className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
             <a href="#recursos" className="hover:text-foreground transition-colors">
@@ -284,18 +290,73 @@ function Landing() {
           <div className="flex items-center gap-2">
             <Link
               to="/entrar"
-              className="hidden sm:inline-flex text-sm text-muted-foreground hover:text-foreground px-3 py-2"
+              className="text-sm text-muted-foreground hover:text-foreground px-3 py-2 hidden sm:inline-flex"
             >
               Entrar
             </Link>
             <ThemeToggle />
             <Link
               to="/cadastrar"
-              className="btn-pill-solid inline-flex items-center text-sm sm:text-base"
+              className="btn-pill-solid hidden sm:inline-flex items-center text-sm"
             >
               Começar grátis
             </Link>
+            <button
+              type="button"
+              className="md:hidden min-h-[44px] min-w-[44px] grid place-items-center -mr-2 rounded-lg text-muted-foreground hover:text-foreground"
+              onClick={() => setMobileNav((v) => !v)}
+              aria-expanded={mobileNav}
+              aria-label={mobileNav ? "Fechar menu" : "Abrir menu"}
+            >
+              {mobileNav ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
           </div>
+        </div>
+        {/* Mobile nav panel */}
+        <div
+          className={cn(
+            "md:hidden overflow-hidden border-t border-border/60 bg-background/95 backdrop-blur-xl transition-[max-height,opacity] duration-300 ease-in-out",
+            mobileNav ? "max-h-64 opacity-100" : "max-h-0 opacity-0 pointer-events-none",
+          )}
+        >
+          <nav className="flex flex-col px-5 sm:px-8 py-4 gap-1">
+            <a
+              href="#recursos"
+              className="min-h-[44px] flex items-center rounded-lg px-3 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+              onClick={() => setMobileNav(false)}
+            >
+              Recursos
+            </a>
+            <a
+              href="#como-funciona"
+              className="min-h-[44px] flex items-center rounded-lg px-3 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+              onClick={() => setMobileNav(false)}
+            >
+              Como funciona
+            </a>
+            <a
+              href="#faq"
+              className="min-h-[44px] flex items-center rounded-lg px-3 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+              onClick={() => setMobileNav(false)}
+            >
+              Perguntas
+            </a>
+            <div className="my-1 border-t border-border/60" />
+            <Link
+              to="/entrar"
+              className="min-h-[44px] flex items-center rounded-lg px-3 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+              onClick={() => setMobileNav(false)}
+            >
+              Entrar
+            </Link>
+            <Link
+              to="/cadastrar"
+              className="btn-pill-solid min-h-[48px] flex items-center justify-center text-sm mt-1"
+              onClick={() => setMobileNav(false)}
+            >
+              Começar grátis
+            </Link>
+          </nav>
         </div>
       </header>
 
@@ -313,7 +374,7 @@ function Landing() {
               </span>
             </div>
 
-            <h1 className="mt-8 text-5xl sm:text-6xl font-sans font-black tracking-tight text-foreground leading-[1.02]">
+            <h1 className="mt-8 text-[2.6rem] leading-[1.05] sm:text-6xl font-sans font-black tracking-tight text-foreground">
               Gerencie seus agendamentos{" "}
               <span style={{ color: "oklch(0.62 0.19 250)" }}>de forma simples.</span>
             </h1>
@@ -413,7 +474,7 @@ function Landing() {
           <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map(({ icon: Icon, title, desc }, i) => (
               <Reveal key={title} delay={(i % 3) * 90}>
-                <div className="group relative h-full overflow-hidden card-elevated p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+                <div className="group relative h-full overflow-hidden card-elevated p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl active:scale-[0.985]">
                   <span
                     className="pointer-events-none absolute -top-16 -right-16 h-40 w-40 rounded-full opacity-0 blur-3xl transition-opacity duration-500 group-hover:opacity-100"
                     style={{ background: "oklch(0.62 0.19 250 / 0.18)" }}
@@ -471,7 +532,7 @@ function Landing() {
             <div className="hidden md:block absolute top-16 left-[16%] right-[16%] border-t-2 border-dashed border-border" />
             {STEPS.map(({ n, title, desc }, i) => (
               <Reveal key={n} delay={i * 110}>
-                <div className="group relative h-full card-elevated p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+                <div className="group relative h-full card-elevated p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl active:scale-[0.985]">
                   <div className="flex items-center gap-3">
                     <div
                       className="w-12 h-12 rounded-full grid place-items-center text-white font-black text-lg shadow-md ring-4 ring-background transition-transform duration-300 group-hover:scale-105"

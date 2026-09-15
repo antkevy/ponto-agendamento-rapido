@@ -1062,7 +1062,7 @@ function BookingPage() {
                   <h3 className="text-xl font-bold tracking-tight">{detailService.name}</h3>
                   <button
                     onClick={() => setDetailService(null)}
-                    className="p-1 rounded-md hover:bg-muted shrink-0"
+                    className="min-h-[44px] min-w-[44px] grid place-items-center rounded-md hover:bg-muted shrink-0"
                   >
                     <X className="h-5 w-5" />
                   </button>

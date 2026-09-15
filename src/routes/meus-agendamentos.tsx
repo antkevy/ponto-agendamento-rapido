@@ -680,7 +680,10 @@ function RescheduleModal({
               })}
             </p>
           </div>
-          <button onClick={onClose} className="p-1 rounded-md hover:bg-muted shrink-0">
+          <button
+            onClick={onClose}
+            className="min-h-[44px] min-w-[44px] grid place-items-center rounded-md hover:bg-muted shrink-0"
+          >
             <X className="h-5 w-5" />
           </button>
         </div>
