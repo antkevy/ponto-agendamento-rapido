@@ -185,6 +185,7 @@ function Page() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["appointments"] });
+      qc.invalidateQueries({ queryKey: ["appt-calendar-week"] });
       qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -209,6 +210,7 @@ function Page() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["appointments"] });
+      qc.invalidateQueries({ queryKey: ["appt-calendar-week"] });
       qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
       qc.invalidateQueries({ queryKey: ["appt-existing-clients"] });
       qc.invalidateQueries({ queryKey: ["appt-existing-fallback"] });
@@ -232,7 +234,10 @@ function Page() {
             </p>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => void refetch()}
+                onClick={() => {
+                  void refetch();
+                  void qc.invalidateQueries({ queryKey: ["appt-calendar-week"] });
+                }}
                 disabled={isFetching}
                 aria-busy={isFetching || undefined}
                 title="Atualizar"
@@ -418,7 +423,10 @@ function Page() {
                         <Plus className="h-4 w-4" /> Criar agendamento
                       </button>
                       <button
-                        onClick={() => void refetch()}
+                        onClick={() => {
+                          void refetch();
+                          void qc.invalidateQueries({ queryKey: ["appt-calendar-week"] });
+                        }}
                         disabled={isFetching}
                         className="btn-outline-brand inline-flex items-center gap-1 text-sm"
                       >
