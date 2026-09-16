@@ -63,7 +63,8 @@ import {
   UISummaryRow,
 } from "@/components/ui-kit";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { ViewToggle, type ViewMode } from "@/components/view-toggle";
+import { ViewToggle } from "@/components/view-toggle";
+import { CATALOG_VIEWS, type ViewMode } from "@/lib/view-modes";
 import {
   BorderBeam,
   Magnet,
@@ -625,7 +626,11 @@ function BookingPage() {
                 </div>
                 {(services ?? []).length > 0 && (
                   <div className="shrink-0">
-                    <ViewToggle value={serviceView} onChange={setServiceView} />
+                    <ViewToggle
+                      value={serviceView}
+                      onChange={setServiceView}
+                      availableViews={CATALOG_VIEWS}
+                    />
                   </div>
                 )}
               </div>

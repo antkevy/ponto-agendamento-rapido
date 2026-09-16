@@ -11,7 +11,8 @@ import { db } from "@/lib/db-tables";
 import { formatBRL, WEEKDAYS_PT } from "@/lib/booking";
 import { optimizedImageUrl } from "@/lib/image";
 import { cn } from "@/lib/utils";
-import { ViewToggle, type ViewMode } from "@/components/view-toggle";
+import { ViewToggle } from "@/components/view-toggle";
+import { CATALOG_VIEWS, type ViewMode } from "@/lib/view-modes";
 import { ImageUpload } from "@/components/image-upload";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
@@ -571,7 +572,7 @@ function CatalogHeader({
     <div className="flex flex-wrap items-center justify-between gap-3">
       <span className="ui-badge">{countLabel}</span>
       <div className="flex items-center gap-2">
-        <ViewToggle value={view} onChange={onViewChange} availableViews={["list", "grid"]} />
+        <ViewToggle value={view} onChange={onViewChange} availableViews={CATALOG_VIEWS} />
         {!readOnly && (
           <button onClick={onCreate} className="btn-brand inline-flex items-center gap-2">
             <Plus className="h-4 w-4" /> {onCreateLabel}
@@ -1050,7 +1051,7 @@ function FuncionariosTab({ pro, readOnly }: { pro: Pro; readOnly?: boolean }) {
             <Plus className="h-4 w-4" /> Novo funcionário
           </button>
         )}
-        <ViewToggle value={view} onChange={setView} availableViews={["list", "grid"]} />
+        <ViewToggle value={view} onChange={setView} availableViews={CATALOG_VIEWS} />
       </div>
 
       {view === "list" ? (

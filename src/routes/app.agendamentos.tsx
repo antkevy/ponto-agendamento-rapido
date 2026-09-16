@@ -42,7 +42,8 @@ import {
   Check,
 } from "lucide-react";
 import { displayPhoneBR, isValidPhoneBR } from "@/lib/phone";
-import { ViewToggle, type ViewMode } from "@/components/view-toggle";
+import { ViewToggle } from "@/components/view-toggle";
+import { APPOINTMENT_VIEWS, type ViewMode } from "@/lib/view-modes";
 import {
   ApptDetailModal,
   ROW_BORDER,
@@ -376,7 +377,7 @@ function Page() {
                   <ChevronDown className="h-4 w-4 absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
                 </div>
                 <span>
-                  <ViewToggle value={view} onChange={setView} />
+                  <ViewToggle value={view} onChange={setView} availableViews={APPOINTMENT_VIEWS} />
                 </span>
               </div>
             </div>
