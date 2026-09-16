@@ -322,8 +322,17 @@ $$;
 -- ********** 7. PERMISSÕES (GRANTS) ********** --
 
 -- Tabelas
-GRANT SELECT                           ON public.profissionais TO anon;
-GRANT SELECT, INSERT, UPDATE, DELETE   ON public.profissionais TO authenticated;
+-- Profissionais: leitura pública/só `id`, `slug`, `business_name`, etc. (anti
+-- cross-tenant PII). O owner (authenticated) NÃO tem SELECT na tabela inteira:
+-- lê as colunas privadas via RPC get_my_professional() (SECURITY DEFINER) e
+-- escreve via as policies "owner *". Isso impede que a subquery de policy RLS
+-- (ex.: p.user_id = auth.uid()) passe a depender de privilégio extra e quebre
+-- com "permission denied for table profissionais".
+GRANT SELECT (
+  id, slug, business_name, logo_url, brand_color, description,
+  address, phone, lat, lng, timezone, theme_colors
+) ON public.profissionais TO anon, authenticated;
+GRANT INSERT, UPDATE, DELETE           ON public.profissionais TO authenticated;
 GRANT ALL                              ON public.profissionais TO service_role;
 
 GRANT SELECT                           ON public.servicos TO anon;
@@ -371,6 +380,50 @@ GRANT EXECUTE ON FUNCTION public.get_employee_busy_slots(UUID, TIMESTAMPTZ, TIME
 GRANT EXECUTE ON FUNCTION public.lookup_client_appointments(TEXT)                               TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.client_cancel_appointment(UUID, TEXT)                          TO anon, authenticated;
 
+-- 7.5 Helpers de ownership (SECURITY DEFINER) — a checagem de propriedade
+--     precisa rodar como owner do schema (definer) porque o authenticated não
+--     tem SELECT em `user_id` de profissionais. Policies RLS que façam
+--     subquery direta em profissionais (ex.: p.user_id = auth.uid()) estouram
+--     "permission denied for table profissionais".
+CREATE OR REPLACE FUNCTION public.is_owner_of_professional(_professional_id UUID)
+RETURNS BOOLEAN
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.profissionais p
+    WHERE p.id = _professional_id
+      AND p.user_id = auth.uid()
+  );
+$$;
+REVOKE ALL ON FUNCTION public.is_owner_of_professional(UUID) FROM anon, PUBLIC;
+GRANT EXECUTE ON FUNCTION public.is_owner_of_professional(UUID) TO authenticated;
+
+CREATE OR REPLACE FUNCTION public.is_owner_of_employee(_employee_id UUID)
+RETURNS BOOLEAN
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.funcionarios e
+    JOIN public.profissionais p ON p.id = e.professional_id
+    WHERE e.id = _employee_id
+      AND p.user_id = auth.uid()
+  );
+$$;
+REVOKE ALL ON FUNCTION public.is_owner_of_employee(UUID) FROM anon, PUBLIC;
+GRANT EXECUTE ON FUNCTION public.is_owner_of_employee(UUID) TO authenticated;
+
+-- RPC para o owner ler o próprio profissional com colunas privadas
+-- (owner_name, msg_confirmed, msg_cancelled, etc.) — usada por
+-- src/hooks/use-my-professional.ts e tela de Configurações.
+CREATE OR REPLACE FUNCTION public.get_my_professional()
+RETURNS SETOF public.profissionais
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
+AS $$
+  SELECT * FROM public.profissionais WHERE user_id = auth.uid() LIMIT 1;
+$$;
+REVOKE ALL ON FUNCTION public.get_my_professional() FROM anon, PUBLIC;
+GRANT EXECUTE ON FUNCTION public.get_my_professional() TO authenticated;
+
 -- ********** 8. ROW LEVEL SECURITY (RLS) ********** --
 
 -- 8.1 Profissionais
@@ -396,8 +449,8 @@ CREATE POLICY "public read servicos" ON public.servicos
 DROP POLICY IF EXISTS "owner manage servicos" ON public.servicos;
 CREATE POLICY "owner manage servicos" ON public.servicos
   FOR ALL TO authenticated
-  USING (EXISTS (SELECT 1 FROM public.profissionais p WHERE p.id = servicos.professional_id AND p.user_id = auth.uid()))
-  WITH CHECK (EXISTS (SELECT 1 FROM public.profissionais p WHERE p.id = servicos.professional_id AND p.user_id = auth.uid()));
+  USING (public.is_owner_of_professional(servicos.professional_id))
+  WITH CHECK (public.is_owner_of_professional(servicos.professional_id));
 
 -- 8.3 Horarios
 ALTER TABLE public.horarios ENABLE ROW LEVEL SECURITY;
@@ -407,8 +460,8 @@ CREATE POLICY "public read horarios" ON public.horarios
 DROP POLICY IF EXISTS "owner manage horarios" ON public.horarios;
 CREATE POLICY "owner manage horarios" ON public.horarios
   FOR ALL TO authenticated
-  USING (EXISTS (SELECT 1 FROM public.profissionais p WHERE p.id = horarios.professional_id AND p.user_id = auth.uid()))
-  WITH CHECK (EXISTS (SELECT 1 FROM public.profissionais p WHERE p.id = horarios.professional_id AND p.user_id = auth.uid()));
+  USING (public.is_owner_of_professional(horarios.professional_id))
+  WITH CHECK (public.is_owner_of_professional(horarios.professional_id));
 
 -- 8.4 Bloqueios
 ALTER TABLE public.bloqueios ENABLE ROW LEVEL SECURITY;
@@ -418,8 +471,8 @@ CREATE POLICY "public read bloqueios" ON public.bloqueios
 DROP POLICY IF EXISTS "owner manage bloqueios" ON public.bloqueios;
 CREATE POLICY "owner manage bloqueios" ON public.bloqueios
   FOR ALL TO authenticated
-  USING (EXISTS (SELECT 1 FROM public.profissionais p WHERE p.id = bloqueios.professional_id AND p.user_id = auth.uid()))
-  WITH CHECK (EXISTS (SELECT 1 FROM public.profissionais p WHERE p.id = bloqueios.professional_id AND p.user_id = auth.uid()));
+  USING (public.is_owner_of_professional(bloqueios.professional_id))
+  WITH CHECK (public.is_owner_of_professional(bloqueios.professional_id));
 
 -- 8.5 Agendamentos
 ALTER TABLE public.agendamentos ENABLE ROW LEVEL SECURITY;
@@ -449,16 +502,16 @@ CREATE POLICY "public create agendamentos" ON public.agendamentos
 DROP POLICY IF EXISTS "owner read agendamentos" ON public.agendamentos;
 CREATE POLICY "owner read agendamentos" ON public.agendamentos
   FOR SELECT TO authenticated
-  USING (EXISTS (SELECT 1 FROM public.profissionais p WHERE p.id = agendamentos.professional_id AND p.user_id = auth.uid()));
+  USING (public.is_owner_of_professional(agendamentos.professional_id));
 DROP POLICY IF EXISTS "owner update agendamentos" ON public.agendamentos;
 CREATE POLICY "owner update agendamentos" ON public.agendamentos
   FOR UPDATE TO authenticated
-  USING (EXISTS (SELECT 1 FROM public.profissionais p WHERE p.id = agendamentos.professional_id AND p.user_id = auth.uid()))
-  WITH CHECK (EXISTS (SELECT 1 FROM public.profissionais p WHERE p.id = agendamentos.professional_id AND p.user_id = auth.uid()));
+  USING (public.is_owner_of_professional(agendamentos.professional_id))
+  WITH CHECK (public.is_owner_of_professional(agendamentos.professional_id));
 DROP POLICY IF EXISTS "owner delete agendamentos" ON public.agendamentos;
 CREATE POLICY "owner delete agendamentos" ON public.agendamentos
   FOR DELETE TO authenticated
-  USING (EXISTS (SELECT 1 FROM public.profissionais p WHERE p.id = agendamentos.professional_id AND p.user_id = auth.uid()));
+  USING (public.is_owner_of_professional(agendamentos.professional_id));
 
 -- 8.6 Funcionarios
 ALTER TABLE public.funcionarios ENABLE ROW LEVEL SECURITY;
@@ -468,8 +521,8 @@ CREATE POLICY "public read funcionarios" ON public.funcionarios
 DROP POLICY IF EXISTS "owner manage funcionarios" ON public.funcionarios;
 CREATE POLICY "owner manage funcionarios" ON public.funcionarios
   FOR ALL TO authenticated
-  USING (EXISTS (SELECT 1 FROM public.profissionais p WHERE p.id = funcionarios.professional_id AND p.user_id = auth.uid()))
-  WITH CHECK (EXISTS (SELECT 1 FROM public.profissionais p WHERE p.id = funcionarios.professional_id AND p.user_id = auth.uid()));
+  USING (public.is_owner_of_professional(funcionarios.professional_id))
+  WITH CHECK (public.is_owner_of_professional(funcionarios.professional_id));
 
 -- 8.7 Servicos Funcionario
 ALTER TABLE public.servicos_funcionario ENABLE ROW LEVEL SECURITY;
@@ -479,16 +532,8 @@ CREATE POLICY "public read servicos_funcionario" ON public.servicos_funcionario
 DROP POLICY IF EXISTS "owner manage servicos_funcionario" ON public.servicos_funcionario;
 CREATE POLICY "owner manage servicos_funcionario" ON public.servicos_funcionario
   FOR ALL TO authenticated
-  USING (EXISTS (
-    SELECT 1 FROM public.funcionarios e
-    JOIN public.profissionais p ON p.id = e.professional_id
-    WHERE e.id = servicos_funcionario.employee_id AND p.user_id = auth.uid()
-  ))
-  WITH CHECK (EXISTS (
-    SELECT 1 FROM public.funcionarios e
-    JOIN public.profissionais p ON p.id = e.professional_id
-    WHERE e.id = servicos_funcionario.employee_id AND p.user_id = auth.uid()
-  ));
+  USING (public.is_owner_of_employee(servicos_funcionario.employee_id))
+  WITH CHECK (public.is_owner_of_employee(servicos_funcionario.employee_id));
 
 -- 8.8 Disponibilidade Funcionario
 ALTER TABLE public.disponibilidade_funcionario ENABLE ROW LEVEL SECURITY;
@@ -498,16 +543,8 @@ CREATE POLICY "public read disponibilidade_funcionario" ON public.disponibilidad
 DROP POLICY IF EXISTS "owner manage disponibilidade_funcionario" ON public.disponibilidade_funcionario;
 CREATE POLICY "owner manage disponibilidade_funcionario" ON public.disponibilidade_funcionario
   FOR ALL TO authenticated
-  USING (EXISTS (
-    SELECT 1 FROM public.funcionarios e
-    JOIN public.profissionais p ON p.id = e.professional_id
-    WHERE e.id = disponibilidade_funcionario.employee_id AND p.user_id = auth.uid()
-  ))
-  WITH CHECK (EXISTS (
-    SELECT 1 FROM public.funcionarios e
-    JOIN public.profissionais p ON p.id = e.professional_id
-    WHERE e.id = disponibilidade_funcionario.employee_id AND p.user_id = auth.uid()
-  ));
+  USING (public.is_owner_of_employee(disponibilidade_funcionario.employee_id))
+  WITH CHECK (public.is_owner_of_employee(disponibilidade_funcionario.employee_id));
 
 -- 8.9 Bloqueios Funcionario
 ALTER TABLE public.bloqueios_funcionario ENABLE ROW LEVEL SECURITY;
@@ -517,16 +554,8 @@ CREATE POLICY "public read bloqueios_funcionario" ON public.bloqueios_funcionari
 DROP POLICY IF EXISTS "owner manage bloqueios_funcionario" ON public.bloqueios_funcionario;
 CREATE POLICY "owner manage bloqueios_funcionario" ON public.bloqueios_funcionario
   FOR ALL TO authenticated
-  USING (EXISTS (
-    SELECT 1 FROM public.funcionarios e
-    JOIN public.profissionais p ON p.id = e.professional_id
-    WHERE e.id = bloqueios_funcionario.employee_id AND p.user_id = auth.uid()
-  ))
-  WITH CHECK (EXISTS (
-    SELECT 1 FROM public.funcionarios e
-    JOIN public.profissionais p ON p.id = e.professional_id
-    WHERE e.id = bloqueios_funcionario.employee_id AND p.user_id = auth.uid()
-  ));
+  USING (public.is_owner_of_employee(bloqueios_funcionario.employee_id))
+  WITH CHECK (public.is_owner_of_employee(bloqueios_funcionario.employee_id));
 
 -- 8.10 Planos
 ALTER TABLE public.planos ENABLE ROW LEVEL SECURITY;
@@ -536,16 +565,16 @@ CREATE POLICY "public read planos" ON public.planos
 DROP POLICY IF EXISTS "owner manage planos" ON public.planos;
 CREATE POLICY "owner manage planos" ON public.planos
   FOR ALL TO authenticated
-  USING (EXISTS (SELECT 1 FROM public.profissionais p WHERE p.id = planos.professional_id AND p.user_id = auth.uid()))
-  WITH CHECK (EXISTS (SELECT 1 FROM public.profissionais p WHERE p.id = planos.professional_id AND p.user_id = auth.uid()));
+  USING (public.is_owner_of_professional(planos.professional_id))
+  WITH CHECK (public.is_owner_of_professional(planos.professional_id));
 
 -- 8.11 Clientes
 ALTER TABLE public.clientes ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "owner manage clientes" ON public.clientes;
 CREATE POLICY "owner manage clientes" ON public.clientes
   FOR ALL TO authenticated
-  USING (EXISTS (SELECT 1 FROM public.profissionais p WHERE p.id = clientes.professional_id AND p.user_id = auth.uid()))
-  WITH CHECK (EXISTS (SELECT 1 FROM public.profissionais p WHERE p.id = clientes.professional_id AND p.user_id = auth.uid()));
+  USING (public.is_owner_of_professional(clientes.professional_id))
+  WITH CHECK (public.is_owner_of_professional(clientes.professional_id));
 
 -- ********** 9. STORAGE POLICIES (brand-assets) ********** --
 DROP POLICY IF EXISTS "brand-assets public read" ON storage.objects;
