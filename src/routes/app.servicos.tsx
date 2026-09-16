@@ -571,7 +571,7 @@ function CatalogHeader({
     <div className="flex flex-wrap items-center justify-between gap-3">
       <span className="ui-badge">{countLabel}</span>
       <div className="flex items-center gap-2">
-        <ViewToggle value={view} onChange={onViewChange} />
+        <ViewToggle value={view} onChange={onViewChange} availableViews={["list", "grid"]} />
         {!readOnly && (
           <button onClick={onCreate} className="btn-brand inline-flex items-center gap-2">
             <Plus className="h-4 w-4" /> {onCreateLabel}
@@ -1050,7 +1050,7 @@ function FuncionariosTab({ pro, readOnly }: { pro: Pro; readOnly?: boolean }) {
             <Plus className="h-4 w-4" /> Novo funcionário
           </button>
         )}
-        <ViewToggle value={view} onChange={setView} />
+        <ViewToggle value={view} onChange={setView} availableViews={["list", "grid"]} />
       </div>
 
       {view === "list" ? (
