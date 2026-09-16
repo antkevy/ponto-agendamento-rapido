@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { useBookingTheme } from "@/hooks/use-booking-theme";
 import {
   appearanceCssVars,
-  LIGHT_PRESET,
+  DARK_PRESET,
   type Appearance,
   type ProfessionalTheme,
 } from "@/lib/appearance";
@@ -234,14 +234,15 @@ function BookingPage() {
 
   // Aparência aplicada já no HTML do servidor (SSR) para não piscar o tema
   // padrão antes do JS. O hook refine no cliente (dark mode / ajuste local).
+  // O padrão do Agendaí é o tema escuro, então o SSR usa DARK_PRESET.
   const ssrAppearance = useMemo<Appearance>(() => {
-    const base: Appearance = { ...LIGHT_PRESET };
-    if (pro.theme_colors?.light) Object.assign(base, pro.theme_colors.light);
+    const base: Appearance = { ...DARK_PRESET };
+    if (pro.theme_colors?.dark) Object.assign(base, pro.theme_colors.dark);
     return base;
   }, [pro.theme_colors]);
   const ssrBrand = useMemo(
     () =>
-      ssrAppearance.primary !== LIGHT_PRESET.primary
+      ssrAppearance.primary !== DARK_PRESET.primary
         ? ssrAppearance.primary
         : pro.brand_color || "#0284C7",
     [ssrAppearance, pro.brand_color],
