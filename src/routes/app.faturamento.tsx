@@ -7,12 +7,15 @@ import {
   ChevronLeft,
   ChevronRight,
   CircleDollarSign,
+  Coins,
   Info,
   Pencil,
   Receipt,
+  TrendingUp,
   Users,
   Wallet,
   X,
+  type LucideIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
@@ -30,7 +33,6 @@ import {
   zonedTodayKey,
 } from "@/lib/booking";
 import { CardTable, DataTableCell, DataTableHead, DataTableRow } from "@/components/ui/data-table";
-import { StatCard } from "@/components/ui/stat-card";
 
 export const Route = createFileRoute("/app/faturamento")({
   head: () => ({ meta: [{ title: "Faturamento — Agendaí" }] }),
@@ -244,30 +246,91 @@ function buildBuckets(
   return { buckets: [...buckets.values()], byMonth };
 }
 
+function Metric({
+  icon: Icon,
+  label,
+  value,
+  hint,
+  tone,
+}: {
+  icon: LucideIcon;
+  label: string;
+  value: string;
+  hint?: string;
+  tone: "accent" | "success" | "warning";
+}) {
+  const bubble = {
+    accent: "bg-accent/15 text-accent",
+    success: "bg-success/15 text-success",
+    warning: "bg-warning/15 text-warning",
+  }[tone];
+  return (
+    <div className="flex items-center gap-3">
+      <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl ${bubble}`}>
+        <Icon className="h-5 w-5" />
+      </span>
+      <div className="min-w-0">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+          {label}
+        </p>
+        <p className="truncate text-xl font-black tabular-nums tracking-tight text-foreground sm:text-2xl">
+          {value}
+        </p>
+        {hint && <p className="text-[11px] text-muted-foreground">{hint}</p>}
+      </div>
+    </div>
+  );
+}
+
+function LedgerRow({
+  label,
+  value,
+  strong,
+  danger,
+}: {
+  label: string;
+  value: string;
+  strong?: boolean;
+  danger?: boolean;
+}) {
+  return (
+    <div className="flex items-baseline justify-between gap-4">
+      <dt
+        className={`text-sm text-muted-foreground ${strong ? "font-semibold text-foreground" : ""}`}
+      >
+        {label}
+      </dt>
+      <dd
+        className={`shrink-0 text-sm tabular-nums ${strong ? "text-lg font-black text-foreground" : "font-semibold text-foreground"} ${danger ? "text-destructive" : ""}`}
+      >
+        {value}
+      </dd>
+    </div>
+  );
+}
+
 function RevenueChart({ buckets, byMonth }: { buckets: Bucket[]; byMonth: boolean }) {
   const [selected, setSelected] = useState<string | null>(null);
   const max = Math.max(1, ...buckets.map((b) => b.receita));
   const total = buckets.reduce((sum, b) => sum + b.receita, 0);
   const active = buckets.find((b) => b.key === selected);
   const step = Math.max(1, Math.ceil(buckets.length / (byMonth ? 12 : 14)));
+  const withRevenue = buckets.filter((b) => b.receita > 0);
+  const best = withRevenue.reduce<Bucket | null>(
+    (top, b) => (!top || b.receita > top.receita ? b : top),
+    null,
+  );
+  const worst = withRevenue.reduce<Bucket | null>(
+    (low, b) => (!low || b.receita < low.receita ? b : low),
+    null,
+  );
+  const average = buckets.length ? Math.round(total / buckets.length) : 0;
+  const unit = byMonth ? "mês" : "dia";
 
   return (
-    <div>
-      <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            {active ? active.label : "Total no período"}
-          </p>
-          {active && (
-            <p className="text-[11px] text-muted-foreground">Clique na barra para fixar</p>
-          )}
-        </div>
-        <p className="text-xl font-black tabular-nums tracking-tight text-foreground">
-          {formatBRL(Math.round(active?.receita ?? total))}
-        </p>
-      </div>
+    <>
       <div className="overflow-x-auto scrollbar-slim">
-        <div className="flex h-44 min-w-max items-end gap-1 pt-8">
+        <div className="flex h-40 min-w-max items-end gap-1 pt-8">
           {buckets.map((bucket, index) => {
             const isSelected = selected === bucket.key;
             const height = bucket.receita === 0 ? 2 : Math.max((bucket.receita / max) * 100, 6);
@@ -280,17 +343,15 @@ function RevenueChart({ buckets, byMonth }: { buckets: Bucket[]; byMonth: boolea
                 className="group relative flex h-full min-w-[26px] flex-1 items-end"
               >
                 <div
-                  className={`w-full rounded-t-[4px] transition-colors ${
+                  className={`w-full rounded-t-[4px] bg-gradient-to-t transition-opacity ${
                     isSelected
-                      ? "bg-accent"
-                      : bucket.receita === 0
-                        ? "bg-muted-foreground/15"
-                        : "bg-accent/45 group-hover:bg-accent/80"
+                      ? "from-accent to-primary opacity-100"
+                      : "from-accent/20 to-accent/70 opacity-80 group-hover:opacity-100"
                   }`}
                   style={{ height: `${height}%` }}
                 />
                 <div
-                  className={`pointer-events-none absolute -top-1 -translate-y-full whitespace-nowrap rounded-md border border-border bg-background px-2 py-1 text-[11px] font-semibold shadow-lg transition-opacity z-10 ${
+                  className={`pointer-events-none absolute -top-1 z-10 -translate-y-full whitespace-nowrap rounded-md border border-border bg-background px-2 py-1 text-[11px] font-semibold shadow-lg transition-opacity ${
                     index === 0
                       ? "left-0"
                       : index === buckets.length - 1
@@ -317,7 +378,39 @@ function RevenueChart({ buckets, byMonth }: { buckets: Bucket[]; byMonth: boolea
           ))}
         </div>
       </div>
-    </div>
+      <div className="mt-5 grid gap-4 border-t border-border/60 pt-4 sm:grid-cols-3">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            Média por {unit}
+          </p>
+          <p className="mt-1 text-sm font-bold tabular-nums text-foreground">
+            {formatBRL(average)}
+          </p>
+        </div>
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            Melhor {unit}
+          </p>
+          <p className="mt-1 text-sm font-bold tabular-nums text-foreground">
+            {best ? `${best.label} · ${formatBRL(Math.round(best.receita))}` : "—"}
+          </p>
+        </div>
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            Menor {unit} com receita
+          </p>
+          <p className="mt-1 text-sm font-bold tabular-nums text-foreground">
+            {worst ? `${worst.label} · ${formatBRL(Math.round(worst.receita))}` : "—"}
+          </p>
+        </div>
+      </div>
+      {active && (
+        <p className="mt-3 text-xs text-muted-foreground">
+          {active.label} selecionado:{" "}
+          <span className="font-bold text-accent">{formatBRL(Math.round(active.receita))}</span>
+        </p>
+      )}
+    </>
   );
 }
 
@@ -494,53 +587,85 @@ function Page() {
     saveCommission.mutate({ id: employee.id, percent });
   }
 
+  if (!proLoading && !pro) {
+    return (
+      <AppShell title="Faturamento">
+        <OnboardingCard />
+      </AppShell>
+    );
+  }
+
+  const commissionRate = summary && summary.gross ? (summary.commissions / summary.gross) * 100 : 0;
+  const periodLabel = formatRange(bounds.start, bounds.end, timeZone);
+
   return (
     <AppShell title="Faturamento">
-      <OnboardingCard />
+      {isError && (
+        <div role="alert" className="card-elevated mb-4 p-4 text-sm text-destructive">
+          Não foi possível carregar o faturamento. Tente novamente.
+        </div>
+      )}
 
-      <div className="card-elevated p-5 animate-fade-in-up">
-        <div className="flex flex-wrap items-center justify-between gap-4">
+      <section className="ui-card-glass relative animate-fade-in-up overflow-hidden p-6">
+        <span className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full bg-accent/10 blur-3xl" />
+        <div className="relative flex flex-wrap items-start justify-between gap-6">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Período
-            </p>
-            <p className="text-lg font-bold tracking-tight capitalize text-foreground">
-              {formatRange(bounds.start, bounds.end, timeZone)}
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="ui-badge text-[10px] uppercase tracking-widest">Financeiro</span>
+              <span className="text-xs font-semibold capitalize text-muted-foreground">
+                {periodLabel}
+              </span>
+            </div>
+            <h2 className="mt-3 text-2xl font-black tracking-tight text-foreground sm:text-3xl">
+              Fechamento do período
+            </h2>
+            <p className="mt-1 max-w-xl text-sm text-muted-foreground">
+              Entradas, comissões da equipe e o resultado do negócio em um só lugar.
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex flex-wrap gap-2" role="group" aria-label="Período">
+
+          <div className="flex flex-col items-start gap-3 sm:items-end">
+            <div
+              className="inline-flex flex-wrap gap-1 rounded-xl border border-border bg-background/70 p-1"
+              role="tablist"
+              aria-label="Período do faturamento"
+            >
               {PERIODS.map((item) => (
                 <button
                   key={item.key}
                   type="button"
+                  role="tab"
+                  aria-selected={period === item.key}
                   data-selected={period === item.key}
                   onClick={() => {
                     setPeriod(item.key);
                     setOffset(0);
                     setEditing(null);
                   }}
-                  className="chip"
+                  className="min-h-[40px] rounded-lg px-4 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground"
                 >
                   {item.label}
                 </button>
               ))}
             </div>
             {period !== "custom" && (
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
                   aria-label="Período anterior"
                   onClick={() => setOffset((value) => value - 1)}
-                  className="grid min-h-[44px] min-w-[44px] place-items-center rounded-lg border border-border hover:bg-muted/60 transition-colors"
+                  className="grid h-9 w-9 place-items-center rounded-lg border border-border bg-background/70 transition-colors hover:bg-muted"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </button>
+                <span className="min-w-[130px] text-center text-xs font-semibold capitalize text-foreground">
+                  {periodLabel}
+                </span>
                 <button
                   type="button"
                   aria-label="Próximo período"
                   onClick={() => setOffset((value) => value + 1)}
-                  className="grid min-h-[44px] min-w-[44px] place-items-center rounded-lg border border-border hover:bg-muted/60 transition-colors"
+                  className="grid h-9 w-9 place-items-center rounded-lg border border-border bg-background/70 transition-colors hover:bg-muted"
                 >
                   <ChevronRight className="h-4 w-4" />
                 </button>
@@ -548,8 +673,9 @@ function Page() {
             )}
           </div>
         </div>
+
         {period === "custom" && (
-          <div className="mt-4 grid gap-3 border-t border-border/60 pt-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+          <div className="relative mt-5 grid gap-3 border-t border-border/60 pt-5 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
             <label className="block">
               <span className="mb-1 block text-xs font-semibold text-muted-foreground">De</span>
               <input
@@ -574,244 +700,293 @@ function Page() {
                 setFrom(todayKey);
                 setTo(todayKey);
               }}
-              className="min-h-[44px] rounded-lg border border-border px-4 text-sm font-semibold hover:bg-muted/60 transition-colors"
+              className="min-h-[44px] rounded-lg border border-border bg-background px-4 text-sm font-semibold transition-colors hover:bg-muted"
             >
               Hoje
             </button>
           </div>
         )}
-      </div>
 
-      {isError && (
-        <div role="alert" className="card-elevated mt-4 p-4 text-sm text-destructive">
-          Não foi possível carregar o faturamento. Tente novamente.
+        <div className="relative mt-6 grid gap-5 border-t border-border/60 pt-5 sm:grid-cols-3">
+          {isLoading || proLoading || !summary ? (
+            Array.from({ length: 3 }).map((_, index) => (
+              <div key={index} className="flex items-center gap-3">
+                <div className="skeleton h-11 w-11 rounded-xl" />
+                <div>
+                  <div className="skeleton h-3 w-24" />
+                  <div className="skeleton mt-2 h-6 w-28" />
+                </div>
+              </div>
+            ))
+          ) : (
+            <>
+              <Metric
+                icon={Wallet}
+                label="Entradas"
+                value={formatBRL(summary.gross)}
+                hint={`${summary.atendimentos} atendimento(s)`}
+                tone="accent"
+              />
+              <Metric
+                icon={Coins}
+                label="Comissões"
+                value={formatBRL(summary.commissions)}
+                hint={`${commissionRate.toFixed(1).replace(".", ",")}% do bruto`}
+                tone="warning"
+              />
+              <Metric
+                icon={CircleDollarSign}
+                label="Resultado"
+                value={formatBRL(summary.net)}
+                hint="bruto menos comissões"
+                tone="success"
+              />
+            </>
+          )}
         </div>
-      )}
+      </section>
 
-      <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-        {isLoading || proLoading || !summary ? (
-          Array.from({ length: 4 }).map((_, index) => (
-            <div key={index} className="card-elevated p-5" role="status" aria-label="Carregando">
-              <div className="skeleton h-4 w-24" />
-              <div className="skeleton mt-3 h-9 w-32" />
+      <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.55fr)_minmax(290px,0.85fr)]">
+        <section className="card-elevated animate-fade-in-up p-5">
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <span className="ui-icon-bubble grid h-10 w-10 place-items-center rounded-xl">
+                <Users className="h-5 w-5" />
+              </span>
+              <div>
+                <h2 className="text-lg font-bold tracking-tight">Demonstrativo da equipe</h2>
+                <p className="text-xs text-muted-foreground">
+                  Receita atribuída e comissão de cada profissional
+                </p>
+              </div>
             </div>
-          ))
-        ) : (
-          <>
-            <StatCard
-              icon={Wallet}
-              label="Faturamento bruto"
-              value={summary.gross}
-              hint="agendamentos ativos"
-              tone="success"
-              ticker
-              formatTicker={(value) => formatBRL(Math.round(value))}
-            />
-            <StatCard
-              icon={Users}
-              label="Comissões"
-              value={summary.commissions}
-              hint="somando a equipe"
-              tone="accent"
-              ticker
-              formatTicker={(value) => formatBRL(Math.round(value))}
-            />
-            <StatCard
-              icon={CircleDollarSign}
-              label="Após comissões"
-              value={summary.net}
-              hint="bruto menos comissões"
-              tone="brand"
-              ticker
-              formatTicker={(value) => formatBRL(Math.round(value))}
-            />
-            <StatCard
-              icon={Receipt}
-              label="Atendimentos"
-              value={summary.atendimentos}
-              hint={`ticket médio ${formatBRL(summary.ticket)}`}
-              tone="warning"
-              ticker
-            />
-          </>
-        )}
+            {raw && !raw.commissionReady && (
+              <span className="ui-badge text-[11px]">Migração de comissão pendente</span>
+            )}
+            {raw?.commissionReady && !canEdit && (
+              <span className="ui-badge text-[11px]">Somente leitura</span>
+            )}
+          </div>
+
+          {!summary || summary.employees.length === 0 ? (
+            <p className="py-10 text-center text-sm text-muted-foreground">
+              Nenhum atendimento com funcionário no período.
+            </p>
+          ) : (
+            <CardTable className="border-0 bg-transparent shadow-none">
+              <thead className="bg-muted/50">
+                <tr>
+                  <DataTableHead>Profissional</DataTableHead>
+                  <DataTableHead>Atend.</DataTableHead>
+                  <DataTableHead>Receita</DataTableHead>
+                  <DataTableHead className="text-right">Comissão</DataTableHead>
+                  <DataTableHead className="text-right">A pagar</DataTableHead>
+                </tr>
+              </thead>
+              <tbody>
+                {summary.employees.map((employee) => {
+                  const due = Math.round((employee.receita * employee.commission) / 100);
+                  const isEditing = editing === employee.id;
+                  return (
+                    <DataTableRow key={employee.id}>
+                      <DataTableCell>
+                        <div className="flex items-center gap-3">
+                          <span className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full bg-accent/15 text-xs font-bold text-accent">
+                            {employee.photo ? (
+                              <img
+                                src={employee.photo}
+                                alt=""
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              employee.name.slice(0, 2).toUpperCase()
+                            )}
+                          </span>
+                          <span className="font-semibold text-foreground">{employee.name}</span>
+                        </div>
+                      </DataTableCell>
+                      <DataTableCell className="tabular-nums">
+                        {employee.atendimentos}
+                      </DataTableCell>
+                      <DataTableCell className="font-semibold tabular-nums">
+                        {formatBRL(employee.receita)}
+                      </DataTableCell>
+                      <DataTableCell className="text-right">
+                        {isEditing ? (
+                          <div className="flex items-center justify-end gap-1">
+                            <input
+                              type="number"
+                              min={0}
+                              max={100}
+                              step="0.01"
+                              autoFocus
+                              value={draft}
+                              onChange={(event) => setDraft(event.target.value)}
+                              onKeyDown={(event) => {
+                                if (event.key === "Enter") commitCommission(employee);
+                                if (event.key === "Escape") setEditing(null);
+                              }}
+                              aria-label={`Comissão de ${employee.name}`}
+                              className="h-9 w-20 rounded-lg border border-border bg-background px-2 text-right text-sm tabular-nums"
+                            />
+                            <button
+                              type="button"
+                              aria-label="Salvar comissão"
+                              onClick={() => commitCommission(employee)}
+                              disabled={saveCommission.isPending}
+                              className="grid h-9 w-9 place-items-center rounded-lg bg-accent/15 text-accent transition-colors hover:bg-accent/25"
+                            >
+                              <Check className="h-4 w-4" />
+                            </button>
+                            <button
+                              type="button"
+                              aria-label="Cancelar"
+                              onClick={() => setEditing(null)}
+                              className="grid h-9 w-9 place-items-center rounded-lg transition-colors hover:bg-muted"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            disabled={!canEdit || !raw?.commissionReady}
+                            onClick={() => {
+                              setEditing(employee.id);
+                              setDraft(String(employee.commission).replace(".", ","));
+                            }}
+                            className="inline-flex min-h-[36px] items-center gap-1 rounded-lg px-2 font-semibold tabular-nums text-foreground transition-colors hover:bg-accent/10 disabled:cursor-default disabled:hover:bg-transparent"
+                          >
+                            {employee.commission.toFixed(2).replace(".", ",")}%
+                            {canEdit && raw?.commissionReady && (
+                              <Pencil className="h-3 w-3 text-accent" />
+                            )}
+                          </button>
+                        )}
+                      </DataTableCell>
+                      <DataTableCell className="text-right font-bold tabular-nums text-success">
+                        {formatBRL(due)}
+                      </DataTableCell>
+                    </DataTableRow>
+                  );
+                })}
+              </tbody>
+              <tfoot className="bg-muted/40">
+                <tr>
+                  <DataTableCell className="font-bold">Total</DataTableCell>
+                  <DataTableCell className="font-bold tabular-nums">
+                    {summary.employees.reduce((sum, e) => sum + e.atendimentos, 0)}
+                  </DataTableCell>
+                  <DataTableCell className="font-bold tabular-nums">
+                    {formatBRL(summary.employees.reduce((sum, e) => sum + e.receita, 0))}
+                  </DataTableCell>
+                  <DataTableCell />
+                  <DataTableCell className="text-right font-bold tabular-nums text-success">
+                    {formatBRL(summary.commissions)}
+                  </DataTableCell>
+                </tr>
+              </tfoot>
+            </CardTable>
+          )}
+
+          {summary && summary.unassignedCount > 0 && (
+            <p className="mt-4 text-xs text-muted-foreground">
+              {summary.unassignedCount} atendimento(s) sem responsável:{" "}
+              <span className="font-semibold text-foreground">
+                {formatBRL(summary.unassignedRevenue)}
+              </span>
+              . Contam no bruto, mas não geram comissão.
+            </p>
+          )}
+        </section>
+
+        <aside className="card-elevated animate-fade-in-up p-5">
+          <div className="flex items-center gap-3">
+            <span className="ui-icon-bubble grid h-10 w-10 place-items-center rounded-xl">
+              <Receipt className="h-5 w-5" />
+            </span>
+            <div>
+              <h2 className="text-lg font-bold tracking-tight">Fechamento</h2>
+              <p className="text-xs text-muted-foreground">Resumo contábil do período</p>
+            </div>
+          </div>
+
+          {!summary ? (
+            <div className="skeleton mt-5 h-52" role="status" aria-label="Carregando fechamento" />
+          ) : (
+            <>
+              <dl className="mt-6 space-y-4">
+                <LedgerRow label="Receita bruta" value={formatBRL(summary.gross)} />
+                <LedgerRow
+                  label="Comissões da equipe"
+                  value={`− ${formatBRL(summary.commissions)}`}
+                  danger
+                />
+                <div className="border-t border-border/60 pt-4">
+                  <LedgerRow label="Resultado líquido" value={formatBRL(summary.net)} strong />
+                </div>
+                <LedgerRow label="Atendimentos" value={String(summary.atendimentos)} />
+                <LedgerRow label="Ticket médio" value={formatBRL(summary.ticket)} />
+              </dl>
+              <div className="mt-6">
+                <div className="mb-2 flex justify-between text-xs font-semibold">
+                  <span className="text-muted-foreground">Comissões sobre o bruto</span>
+                  <span className="tabular-nums text-foreground">
+                    {commissionRate.toFixed(1).replace(".", ",")}%
+                  </span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full rounded-full bg-warning transition-[width] duration-500"
+                    style={{ width: `${Math.min(commissionRate, 100)}%` }}
+                  />
+                </div>
+              </div>
+            </>
+          )}
+        </aside>
       </div>
 
       {buckets && buckets.buckets.length > 0 && (
-        <div className="card-elevated mt-6 p-5 animate-fade-in-up">
-          <div className="mb-5 flex items-center gap-3">
-            <span className="ui-icon-bubble h-10 w-10 grid place-items-center rounded-xl">
-              <CalendarDays className="h-5 w-5" />
-            </span>
-            <div>
-              <h2 className="text-lg font-bold tracking-tight">Evolução do faturamento</h2>
-              <p className="text-xs text-muted-foreground">
-                {buckets.byMonth ? "Por mês" : "Por dia"} · clique numa barra para fixar o valor
+        <section className="card-elevated mt-6 animate-fade-in-up p-5">
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <span className="ui-icon-bubble grid h-10 w-10 place-items-center rounded-xl">
+                <TrendingUp className="h-5 w-5" />
+              </span>
+              <div>
+                <h2 className="text-lg font-bold tracking-tight">Evolução do faturamento</h2>
+                <p className="text-xs text-muted-foreground">
+                  {buckets.byMonth ? "Visão mensal" : "Visão diária"} · clique numa barra para
+                  destacar
+                </p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                Total no período
+              </p>
+              <p className="text-2xl font-black tabular-nums tracking-tight text-foreground">
+                {formatBRL(Math.round(buckets.buckets.reduce((sum, b) => sum + b.receita, 0)))}
               </p>
             </div>
           </div>
           <RevenueChart buckets={buckets.buckets} byMonth={buckets.byMonth} />
-        </div>
+        </section>
       )}
 
-      <div className="card-elevated mt-6 p-5 animate-fade-in-up">
-        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <span className="ui-icon-bubble h-10 w-10 grid place-items-center rounded-xl">
-              <Users className="h-5 w-5" />
-            </span>
-            <div>
-              <h2 className="text-lg font-bold tracking-tight">Comissão por funcionário</h2>
-              <p className="text-xs text-muted-foreground">
-                Percentual configurável sobre a receita de cada atendimento
-              </p>
-            </div>
-          </div>
-          {raw && !raw.commissionReady && (
-            <span className="ui-badge text-[11px]">Aplique a migração de comissão para editar</span>
-          )}
-          {raw?.commissionReady && !canEdit && (
-            <span className="ui-badge text-[11px]">Somente leitura</span>
-          )}
-        </div>
-
-        {!summary || summary.employees.length === 0 ? (
-          <p className="py-8 text-center text-sm text-muted-foreground">
-            Nenhum atendimento com funcionário no período.
-          </p>
-        ) : (
-          <CardTable className="border-0 bg-transparent shadow-none">
-            <thead className="bg-muted/50">
-              <tr>
-                <DataTableHead>Funcionário</DataTableHead>
-                <DataTableHead>Atendimentos</DataTableHead>
-                <DataTableHead>Receita</DataTableHead>
-                <DataTableHead className="text-right">Comissão</DataTableHead>
-                <DataTableHead className="text-right">Valor devido</DataTableHead>
-              </tr>
-            </thead>
-            <tbody>
-              {summary.employees.map((employee) => {
-                const due = Math.round((employee.receita * employee.commission) / 100);
-                const isEditing = editing === employee.id;
-                return (
-                  <DataTableRow key={employee.id}>
-                    <DataTableCell>
-                      <div className="flex items-center gap-3">
-                        <span className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full bg-accent/15 text-xs font-bold text-accent">
-                          {employee.photo ? (
-                            <img
-                              src={employee.photo}
-                              alt=""
-                              className="h-full w-full object-cover"
-                            />
-                          ) : (
-                            employee.name.slice(0, 2).toUpperCase()
-                          )}
-                        </span>
-                        <span className="font-semibold text-foreground">{employee.name}</span>
-                      </div>
-                    </DataTableCell>
-                    <DataTableCell className="tabular-nums">{employee.atendimentos}</DataTableCell>
-                    <DataTableCell className="font-semibold tabular-nums">
-                      {formatBRL(employee.receita)}
-                    </DataTableCell>
-                    <DataTableCell className="text-right">
-                      {isEditing ? (
-                        <div className="flex items-center justify-end gap-1">
-                          <input
-                            type="number"
-                            min={0}
-                            max={100}
-                            step="0.01"
-                            autoFocus
-                            value={draft}
-                            onChange={(event) => setDraft(event.target.value)}
-                            onKeyDown={(event) => {
-                              if (event.key === "Enter") commitCommission(employee);
-                              if (event.key === "Escape") setEditing(null);
-                            }}
-                            aria-label={`Comissão de ${employee.name}`}
-                            className="h-9 w-20 rounded-lg border border-border bg-background px-2 text-right text-sm tabular-nums"
-                          />
-                          <button
-                            type="button"
-                            aria-label="Salvar comissão"
-                            onClick={() => commitCommission(employee)}
-                            disabled={saveCommission.isPending}
-                            className="grid h-9 w-9 place-items-center rounded-lg bg-accent/15 text-accent hover:bg-accent/25 transition-colors"
-                          >
-                            <Check className="h-4 w-4" />
-                          </button>
-                          <button
-                            type="button"
-                            aria-label="Cancelar"
-                            onClick={() => setEditing(null)}
-                            className="grid h-9 w-9 place-items-center rounded-lg hover:bg-muted/60 transition-colors"
-                          >
-                            <X className="h-4 w-4" />
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          type="button"
-                          disabled={!canEdit || !raw?.commissionReady}
-                          onClick={() => {
-                            setEditing(employee.id);
-                            setDraft(String(employee.commission).replace(".", ","));
-                          }}
-                          className="inline-flex min-h-[36px] items-center gap-1 rounded-lg px-2 font-semibold tabular-nums text-foreground hover:bg-accent/10 disabled:cursor-default disabled:hover:bg-transparent transition-colors"
-                        >
-                          {employee.commission.toFixed(2).replace(".", ",")}%
-                          {canEdit && raw?.commissionReady && (
-                            <Pencil className="h-3 w-3 text-accent" />
-                          )}
-                        </button>
-                      )}
-                    </DataTableCell>
-                    <DataTableCell className="text-right font-bold tabular-nums text-success">
-                      {formatBRL(due)}
-                    </DataTableCell>
-                  </DataTableRow>
-                );
-              })}
-            </tbody>
-            <tfoot className="bg-muted/40">
-              <tr>
-                <DataTableCell className="font-bold">Total</DataTableCell>
-                <DataTableCell className="font-bold tabular-nums">
-                  {summary.employees.reduce((sum, e) => sum + e.atendimentos, 0)}
-                </DataTableCell>
-                <DataTableCell className="font-bold tabular-nums">
-                  {formatBRL(summary.employees.reduce((sum, e) => sum + e.receita, 0))}
-                </DataTableCell>
-                <DataTableCell />
-                <DataTableCell className="text-right font-bold tabular-nums text-success">
-                  {formatBRL(summary.commissions)}
-                </DataTableCell>
-              </tr>
-            </tfoot>
-          </CardTable>
-        )}
-
-        {summary && summary.unassignedCount > 0 && (
-          <p className="mt-4 text-xs text-muted-foreground">
-            {summary.unassignedCount} atendimento(s) sem funcionário responsável:{" "}
-            <span className="font-semibold text-foreground">
-              {formatBRL(summary.unassignedRevenue)}
-            </span>
-            . Eles entram no faturamento bruto, mas não geram comissão.
-          </p>
-        )}
-      </div>
-
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        <div className="card-elevated p-5 animate-fade-in-up">
-          <h2 className="mb-4 text-lg font-bold tracking-tight">Receita por serviço</h2>
+        <section className="card-elevated animate-fade-in-up p-5">
+          <div className="flex items-center gap-3">
+            <span className="ui-icon-bubble grid h-10 w-10 place-items-center rounded-xl">
+              <Receipt className="h-5 w-5" />
+            </span>
+            <h2 className="text-lg font-bold tracking-tight">Receita por serviço</h2>
+          </div>
           {!summary || summary.services.length === 0 ? (
-            <p className="py-6 text-center text-sm text-muted-foreground">Sem dados no período.</p>
+            <p className="py-8 text-center text-sm text-muted-foreground">Sem dados no período.</p>
           ) : (
-            <div className="space-y-3">
+            <div className="mt-5 space-y-4">
               {summary.services.map((service) => {
                 const percent = summary.gross ? (service.receita / summary.gross) * 100 : 0;
                 return (
@@ -826,7 +1001,7 @@ function Page() {
                     </div>
                     <div className="h-2 overflow-hidden rounded-full bg-muted">
                       <div
-                        className="h-full rounded-full bg-accent transition-[width] duration-500"
+                        className="h-full rounded-full bg-gradient-to-r from-accent/50 to-accent transition-[width] duration-500"
                         style={{ width: `${Math.max(percent, 2)}%` }}
                       />
                     </div>
@@ -835,33 +1010,38 @@ function Page() {
               })}
             </div>
           )}
-        </div>
+        </section>
 
-        <div className="card-elevated p-5 animate-fade-in-up">
+        <section className="card-elevated animate-fade-in-up p-5">
           <div className="flex items-center gap-3">
-            <span className="ui-icon-bubble h-10 w-10 grid place-items-center rounded-xl">
+            <span className="ui-icon-bubble grid h-10 w-10 place-items-center rounded-xl">
               <Info className="h-5 w-5" />
             </span>
-            <h2 className="text-lg font-bold tracking-tight">Como o valor é calculado</h2>
+            <h2 className="text-lg font-bold tracking-tight">Regras do cálculo</h2>
           </div>
-          <ul className="mt-4 space-y-3 text-sm leading-relaxed text-muted-foreground">
-            <li>
-              <span className="font-semibold text-foreground">Faturamento bruto:</span> soma dos
-              agendamentos ativos (confirmados e concluídos) no período escolhido.
-            </li>
-            <li>
+          <div className="mt-5 space-y-4 text-sm leading-relaxed text-muted-foreground">
+            <p>
+              <span className="font-semibold text-foreground">Entradas:</span> soma dos agendamentos
+              confirmados e concluídos no período, no fuso do negócio.
+            </p>
+            <p>
               <span className="font-semibold text-foreground">Comissão:</span> percentual definido
-              para cada funcionário, aplicado sobre a receita dos atendimentos atribuídos a ele.
-            </li>
-            <li>
+              para cada profissional, aplicado à receita dos atendimentos atribuídos a ele.
+            </p>
+            <p>
               <span className="font-semibold text-foreground">Cancelamentos</span> não entram em
               nenhum cálculo.
-            </li>
-            <li>
-              A edição do percentual exige papel de admin ou editor e é registrada pelo banco.
-            </li>
-          </ul>
-        </div>
+            </p>
+            <p>
+              Alterar o percentual exige papel de admin ou editor; a gravação é protegida por RLS.
+            </p>
+          </div>
+        </section>
+      </div>
+
+      <div className="mt-6 flex items-center justify-center gap-2 text-xs text-muted-foreground">
+        <CalendarDays className="h-3.5 w-3.5" />
+        Período: <span className="font-semibold capitalize text-foreground">{periodLabel}</span>
       </div>
     </AppShell>
   );
