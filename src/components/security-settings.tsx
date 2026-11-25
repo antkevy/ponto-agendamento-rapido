@@ -13,7 +13,6 @@ import {
   passwordStrengthLabel,
   passwordStrengthHint,
   daysSincePasswordChange,
-  daysUntilPasswordExpiry,
 } from "@/lib/password";
 import { isLeakedPassword, LEAKED_PASSWORD_MESSAGE } from "@/lib/password-breach";
 
@@ -22,8 +21,6 @@ type SecurityRow = {
   password_changed_at: string | null;
   mfa_enabled: boolean;
 };
-
-const PASSWORD_WARNING_DAYS = 14;
 
 export function SecuritySettings() {
   const { user } = useAuth();
@@ -150,11 +147,6 @@ export function SecuritySettings() {
   const changedDays = row?.password_changed_at
     ? daysSincePasswordChange(row.password_changed_at)
     : null;
-  const untilExpiry = row?.password_changed_at
-    ? daysUntilPasswordExpiry(row.password_changed_at)
-    : null;
-  const expiringSoon = typeof untilExpiry === "number" && untilExpiry <= PASSWORD_WARNING_DAYS;
-
   const nextLabel = pw.next ? passwordStrengthLabel(passwordScore(pw.next)) : null;
 
   return (
@@ -277,18 +269,11 @@ export function SecuritySettings() {
           <div>
             <h3 className="text-lg font-bold tracking-tight">Trocar senha</h3>
             <p className="text-xs text-muted-foreground">
-              Recomendamos trocar a cada 90 dias.{" "}
-              {changedDays !== null && `Última troca há ${changedDays} dia(s).`}
+              Use uma senha única e forte. Troque apenas se houver suspeita de comprometimento.
+              {changedDays !== null && ` Última troca há ${changedDays} dia(s).`}
             </p>
           </div>
         </div>
-
-        {expiringSoon && (
-          <div className="rounded-xl border border-[var(--warning)]/40 bg-[var(--warning)]/10 px-4 py-3 text-sm">
-            Sua senha expira em {untilExpiry} dia(s). Troque agora para não ser obrigado a trocar no
-            login.
-          </div>
-        )}
 
         <div className="grid gap-4">
           <input

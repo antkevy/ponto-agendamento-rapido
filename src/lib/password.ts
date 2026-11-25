@@ -1,12 +1,11 @@
 /**
- * Política de senha do Agendaí: força mínima e rotação a cada 90 dias.
- * A complexidade é validada no cliente (cadastro/login/recuperação) e a
- * expiração é rastreada pela tabela `user_security.password_changed_at`
- * (atualizada por trigger no `auth.users` quando a senha muda).
+ * Política de senha do Agendaí: apenas força mínima.
+ * Não há expiração por prazo (conforme NIST SP 800-63B-4): a senha só precisa
+ * ser trocada quando o usuário quiser ou houver suspeita de comprometimento.
+ * `user_security.password_changed_at` fica apenas como registro informativo.
  */
 
 export const MIN_PASSWORD_LENGTH = 8;
-export const PASSWORD_MAX_AGE_DAYS = 90;
 
 export type PasswordScore = 0 | 1 | 2 | 3 | 4;
 
@@ -52,13 +51,4 @@ export function daysSincePasswordChange(passwordChangedAt: string | Date | null)
   const ts =
     typeof passwordChangedAt === "string" ? new Date(passwordChangedAt) : passwordChangedAt;
   return Math.max(0, Math.floor((Date.now() - ts.getTime()) / 86_400_000));
-}
-
-export function daysUntilPasswordExpiry(passwordChangedAt: string | Date | null): number {
-  return Math.max(0, PASSWORD_MAX_AGE_DAYS - daysSincePasswordChange(passwordChangedAt));
-}
-
-/** A senha precisa ser trocada quando passou do prazo de 90 dias. */
-export function passwordRequiresUpdate(passwordChangedAt: string | Date | null): boolean {
-  return daysSincePasswordChange(passwordChangedAt) >= PASSWORD_MAX_AGE_DAYS;
 }

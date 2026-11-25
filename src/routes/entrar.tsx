@@ -14,7 +14,7 @@ import {
   Quote,
 } from "lucide-react";
 import { UIButton, UICard, UIInput, UIPasswordInput, UITitle } from "@/components/ui-kit";
-import { daysUntilPasswordExpiry, isStrongPassword, passwordStrengthHint } from "@/lib/password";
+import { isStrongPassword, passwordStrengthHint } from "@/lib/password";
 import { isLeakedPassword, LEAKED_PASSWORD_MESSAGE } from "@/lib/password-breach";
 import authBg from "@/assets/auth-bg.jpg";
 
@@ -46,11 +46,9 @@ function SignIn() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [currentPassword, setCurrentPassword] = useState("");
   const [remember, setRemember] = useState(true);
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<"signin" | "mfa" | "reset">("signin");
-  const [passwordMode, setPasswordMode] = useState<"recovery" | "expired">("recovery");
   const [mfaCode, setMfaCode] = useState("");
   const [mfaFactorId, setMfaFactorId] = useState("");
   const [mfaLoading, setMfaLoading] = useState(false);
@@ -62,12 +60,10 @@ function SignIn() {
     const { data: subscription } = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY") {
         sessionStorage.setItem("agendai_recovering", "1");
-        setPasswordMode("recovery");
         setMode("reset");
       }
     });
     if (sessionStorage.getItem("agendai_recovering") === "1") {
-      setPasswordMode("recovery");
       setMode("reset");
     }
     return () => subscription.subscription.unsubscribe();
@@ -75,7 +71,6 @@ function SignIn() {
 
   function finishReset() {
     sessionStorage.removeItem("agendai_recovering");
-    setCurrentPassword("");
     setMode("signin");
   }
 
@@ -89,15 +84,7 @@ function SignIn() {
     if (await isLeakedPassword(newPassword)) return toast.error(LEAKED_PASSWORD_MESSAGE);
 
     setResetLoading(true);
-    const attributes: { password: string; current_password?: string } = {
-      password: newPassword,
-    };
-    // Quando a senha expirou, o usuário acabou de digitar a senha atual no
-    // login. Reenviamos aqui para atender ao "Require current password" do Supabase.
-    if (passwordMode === "expired" && currentPassword) {
-      attributes.current_password = currentPassword;
-    }
-    const { error } = await supabase.auth.updateUser(attributes);
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
     setResetLoading(false);
 
     if (error) {
@@ -124,14 +111,6 @@ function SignIn() {
       () => {},
     );
 
-    if (passwordMode === "expired") {
-      finishReset();
-      setNewPassword("");
-      setConfirmPassword("");
-      toast.success("Senha atualizada!");
-      router.navigate({ to: "/app" });
-      return;
-    }
     await supabase.auth.signOut();
     finishReset();
     setNewPassword("");
@@ -158,37 +137,17 @@ function SignIn() {
       toast.error("Autenticação em dois fatores não está configurada corretamente.");
       return;
     }
-    const { data: sec, error: secError } = await supabase
-      .from("user_security")
-      .select("password_changed_at")
-      .eq("user_id", user.id)
-      .maybeSingle();
-    if (secError) {
-      toast.error("Não foi possível validar sua conta. Tente novamente.");
-      return;
-    }
-    // Sem registro = sem política de senha confiável: falha fechada.
-    if (!sec?.password_changed_at) {
-      toast.error("Sua conta não está configurada. Procure o administrador.");
-      return;
-    }
-    if (daysUntilPasswordExpiry(sec.password_changed_at) > 0) {
-      void supabase
-        .rpc("log_auth_event", {
-          p_kind: "login_success",
-          p_contact: (user.email ?? "").toLowerCase(),
-        })
-        .then(
-          () => {},
-          () => {},
-        );
-      toast.success("Bem-vindo de volta!");
-      router.navigate({ to: "/app" });
-      return;
-    }
-    setPasswordMode("expired");
-    setMode("reset");
-    toast.error("Sua senha expirou. Defina uma nova senha para continuar.");
+    void supabase
+      .rpc("log_auth_event", {
+        p_kind: "login_success",
+        p_contact: (user.email ?? "").toLowerCase(),
+      })
+      .then(
+        () => {},
+        () => {},
+      );
+    toast.success("Bem-vindo de volta!");
+    router.navigate({ to: "/app" });
   }
 
   async function onMfaSubmit(e: React.FormEvent) {
@@ -246,7 +205,6 @@ function SignIn() {
       );
       return toast.error("Email ou senha inválidos.");
     }
-    setCurrentPassword(password);
     if (data.user) await handlePostLogin(data.user);
   }
 
@@ -294,11 +252,9 @@ function SignIn() {
         </form>
       ) : mode === "reset" ? (
         <form onSubmit={onResetPassword} className="space-y-3">
-          {passwordMode === "expired" && (
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Sua senha expirou. Defina uma nova senha forte para continuar.
-            </p>
-          )}
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Defina uma nova senha forte para continuar.
+          </p>
           <UIPasswordInput
             label="Nova senha"
             icon={Lock}

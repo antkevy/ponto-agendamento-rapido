@@ -88,5 +88,5 @@ $mfa$;
 ## 3. Testar
 
 1. Entre em `https://agendai-br.lovable.app/entrar` com o e-mail encontrado no SQL de diagnóstico e a nova senha.
-2. Confira `Configurações → Segurança`: a senha deve constar como alterada agora (não vai expirar em 90 dias).
+2. Confira `Configurações → Segurança`: a senha deve constar como alterada agora (não há expiração por prazo).
 3. Teste `/p/barbershopmd` para garantir que o agendamento público continua normal.
