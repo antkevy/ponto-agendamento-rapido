@@ -832,7 +832,7 @@ export type Database = {
     };
     Functions: {
       check_contact_rate_limit: {
-        Args: { _contact: string; _max: number; _op: string; _window: string };
+        Args: { _contact: string; _op: string; _max: number; _window: string };
         Returns: boolean;
       };
       client_cancel_appointment: {
@@ -868,6 +868,7 @@ export type Database = {
         Args: { p_contact: string; p_kind: string };
         Returns: boolean;
       };
+      log_login_failed: { Args: { p_contact: string }; Returns: boolean };
       lookup_client_appointments: {
         Args: { _code: string; _contact: string };
         Returns: {
@@ -879,6 +880,7 @@ export type Database = {
           professional_business_name: string;
           professional_id: string;
           professional_slug: string;
+          professional_timezone: string;
           service_name: string;
           starts_at: string;
           status: Database["public"]["Enums"]["appointment_status"];
@@ -889,6 +891,16 @@ export type Database = {
         Returns: Database["public"]["Tables"]["profissionais"]["Row"][];
       };
       set_mfa_enabled: { Args: { p_enabled: boolean }; Returns: boolean };
+      list_team_members: {
+        Args: never;
+        Returns: {
+          email: string;
+          mfa_enabled: boolean;
+          password_changed_at: string | null;
+          role: string;
+          user_id: string;
+        }[];
+      };
       set_user_role: {
         Args: { p_role: string; p_user_id: string };
         Returns: boolean;

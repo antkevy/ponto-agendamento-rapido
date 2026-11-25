@@ -375,8 +375,7 @@ function Landing() {
             </div>
 
             <h1 className="mt-8 text-[2.6rem] leading-[1.05] sm:text-6xl font-sans font-black tracking-tight text-foreground">
-              Gerencie seus agendamentos{" "}
-              <span style={{ color: "oklch(0.62 0.19 250)" }}>de forma simples.</span>
+              Gerencie seus agendamentos <span className="ui-accent-text">de forma simples.</span>
             </h1>
 
             <p className="mt-6 sm:mt-8 text-lg sm:text-xl text-muted-foreground leading-relaxed max-w-xl mx-auto lg:mx-0">
@@ -463,8 +462,7 @@ function Landing() {
                 </span>
               </span>
               <h2 className="mt-5 text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-foreground">
-                Tudo que você precisa para{" "}
-                <span style={{ color: "oklch(0.62 0.19 250)" }}>lotar sua agenda.</span>
+                Tudo que você precisa para <span className="ui-accent-text">lotar sua agenda.</span>
               </h2>
               <p className="mt-4 text-muted-foreground text-lg">
                 Uma plataforma pensada para quem vive de agenda cheia — sem complicar.
@@ -522,7 +520,7 @@ function Landing() {
               </span>
             </span>
             <h2 className="mt-5 text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-foreground">
-              Comece em <span style={{ color: "oklch(0.62 0.19 250)" }}>3 passos.</span>
+              Comece em <span className="ui-accent-text">3 passos.</span>
             </h2>
             <p className="mt-4 text-muted-foreground text-lg max-w-lg mx-auto">
               Do cadastro ao primeiro cliente marcado em menos de cinco minutos.
@@ -568,7 +566,7 @@ function Landing() {
                 </span>
               </span>
               <h2 className="mt-5 text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-foreground">
-                Tudo claro <span style={{ color: "oklch(0.62 0.19 250)" }}>antes de começar.</span>
+                Tudo claro <span className="ui-accent-text">antes de começar.</span>
               </h2>
             </div>
           </Reveal>

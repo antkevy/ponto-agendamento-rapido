@@ -15,7 +15,7 @@ import { OnboardingCard } from "@/components/onboarding-card";
 import { useMyProfessional } from "@/hooks/use-my-professional";
 import { supabase } from "@/integrations/supabase/client";
 import { db } from "@/lib/db-tables";
-import { formatBRL } from "@/lib/booking";
+import { formatBRL, zonedDateKey, zonedMonthBounds, zonedTodayKey } from "@/lib/booking";
 import { optimizedImageUrl } from "@/lib/image";
 import { CardTable, DataTableHead, DataTableRow, DataTableCell } from "@/components/ui/data-table";
 
@@ -47,53 +47,78 @@ type EmployeeSummary = {
 
 function Page() {
   const { data: pro, isLoading } = useMyProfessional();
-  const today = useMemo(() => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    return d;
-  }, []);
+  const timeZone = pro?.timezone ?? null;
   const [offset, setOffset] = useState(0);
 
-  const monthStart = useMemo(
-    () => new Date(today.getFullYear(), today.getMonth() + offset, 1),
-    [today, offset],
-  );
-  const monthEnd = useMemo(() => {
-    const d = new Date(monthStart);
-    d.setMonth(d.getMonth() + 1);
-    return d;
-  }, [monthStart]);
-  const monthLabel = monthStart.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+  const todayKey = useMemo(() => zonedTodayKey(timeZone), [timeZone]);
+  const monthBounds = useMemo(() => {
+    const [year, month] = todayKey.split("-").map(Number);
+    const total = year * 12 + (month - 1) + offset;
+    return zonedMonthBounds(Math.floor(total / 12), (total % 12) + 1, timeZone);
+  }, [todayKey, offset, timeZone]);
+  const monthStart = monthBounds.start;
+  const monthEnd = monthBounds.end;
+  const [labelYear, labelMonth] = zonedDateKey(monthStart, timeZone).split("-").map(Number);
+  const monthLabel = new Date(labelYear, labelMonth - 1, 1).toLocaleDateString("pt-BR", {
+    month: "long",
+    year: "numeric",
+  });
 
-  const { data: raw } = useQuery({
-    queryKey: ["relatorio", pro?.id, offset],
+  const { data: raw, isError } = useQuery({
+    queryKey: ["relatorio", pro?.id, offset, timeZone],
     enabled: !!pro?.id,
     queryFn: async () => {
       const proId = pro!.id;
 
-      const [appts, employeesR, empServices, services] = await Promise.all([
-        supabase
+      // PostgREST limita a 1000 linhas por padrão: paginar para não truncar o mês.
+      const apptsData: ApptRow[] = [];
+      const PAGE = 1000;
+      for (let from = 0; ; from += PAGE) {
+        const { data, error } = await supabase
           .from(db.agendamentos)
           .select(
             "client_name, client_phone, employee_id, service_snapshot_name, service_snapshot_price_cents, status, starts_at",
           )
           .eq("professional_id", proId)
           .gte("starts_at", monthStart.toISOString())
-          .lt("starts_at", monthEnd.toISOString()),
+          .lt("starts_at", monthEnd.toISOString())
+          .range(from, from + PAGE - 1);
+        if (error) throw error;
+        const page = (data ?? []) as ApptRow[];
+        apptsData.push(...page);
+        if (page.length < PAGE) break;
+      }
+
+      const [employeesR, servicesR] = await Promise.all([
         supabase
           .from(db.funcionarios)
           .select("id, name, photo_url")
           .eq("professional_id", proId)
           .eq("is_active", true),
-        supabase.from(db.servicosFuncionario).select("employee_id, service_id"),
         supabase.from(db.servicos).select("id, name").eq("professional_id", proId),
       ]);
+      for (const r of [employeesR, servicesR]) {
+        if (r.error) throw r.error;
+      }
+
+      // servicos_funcionario não tem professional_id: filtra pelos funcionários
+      // deste negócio em vez de trazer vínculos de todos os tenants.
+      const employeeIds = (employeesR.data ?? []).map((e) => e.id);
+      let empServicesData: { employee_id: string; service_id: string }[] = [];
+      if (employeeIds.length > 0) {
+        const { data, error } = await supabase
+          .from(db.servicosFuncionario)
+          .select("employee_id, service_id")
+          .in("employee_id", employeeIds);
+        if (error) throw error;
+        empServicesData = (data ?? []) as { employee_id: string; service_id: string }[];
+      }
 
       return {
-        appts: appts.data ?? [],
+        appts: apptsData,
         employees: employeesR.data ?? [],
-        empServices: empServices.data ?? [],
-        services: services.data ?? [],
+        empServices: empServicesData,
+        services: servicesR.data ?? [],
       };
     },
   });
@@ -142,12 +167,13 @@ function Page() {
 
   const employees = useMemo<EmployeeSummary[]>(() => {
     if (!raw) return [];
-    const completed = raw.appts.filter((a) => a.status === "completed" && a.employee_id);
+    // Mesma métrica das tabelas de clientes e serviços: não-cancelados.
+    const attributed = raw.appts.filter((a) => a.status !== "cancelled" && a.employee_id);
     const empMap = new Map<
       string,
       { servicos: number; receita: number; servicoCount: Map<string, number> }
     >();
-    for (const a of completed) {
+    for (const a of attributed) {
       const eid = a.employee_id!;
       if (!empMap.has(eid)) empMap.set(eid, { servicos: 0, receita: 0, servicoCount: new Map() });
       const e = empMap.get(eid)!;
@@ -193,7 +219,7 @@ function Page() {
   return (
     <AppShell title="Relatório">
       {isLoading ? (
-        <div className="skeleton h-32" />
+        <div className="skeleton h-32" role="status" aria-label="Carregando relatório" />
       ) : !pro ? (
         <OnboardingCard />
       ) : (
@@ -201,22 +227,27 @@ function Page() {
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
               <button
+                type="button"
                 onClick={() => setOffset((p) => p - 1)}
-                className="p-2 min-h-[40px] min-w-[40px] grid place-items-center rounded-lg hover:bg-muted border border-border"
+                aria-label="Mês anterior"
+                className="p-2 min-h-[44px] min-w-[44px] grid place-items-center rounded-lg hover:bg-muted border border-border"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
               <span className="font-bold capitalize text-lg">{monthLabel}</span>
               <button
+                type="button"
                 onClick={() => setOffset((p) => p + 1)}
-                className="p-2 min-h-[40px] min-w-[40px] grid place-items-center rounded-lg hover:bg-muted border border-border"
+                aria-label="Próximo mês"
+                className="p-2 min-h-[44px] min-w-[44px] grid place-items-center rounded-lg hover:bg-muted border border-border"
               >
                 <ChevronRight className="h-4 w-4" />
               </button>
               {offset !== 0 && (
                 <button
+                  type="button"
                   onClick={() => setOffset(0)}
-                  className="text-xs text-accent hover:underline ml-2"
+                  className="min-h-[44px] px-2 text-xs text-accent hover:underline ml-2"
                 >
                   Mês atual
                 </button>
@@ -224,8 +255,18 @@ function Page() {
             </div>
           </div>
 
+          {isError && (
+            <div role="alert" className="card-elevated p-4 mb-6 text-sm text-destructive">
+              Não foi possível carregar o relatório. Verifique sua conexão e tente novamente.
+            </div>
+          )}
+
           <Section icon={Users} title="Top clientes" subtitle="Clientes que mais geraram receita">
-            {clients.length === 0 ? (
+            {isError ? (
+              <p className="text-sm text-muted-foreground py-6 text-center">
+                Dados indisponíveis no momento.
+              </p>
+            ) : clients.length === 0 ? (
               <p className="text-sm text-muted-foreground py-6 text-center">
                 Nenhum dado no período.
               </p>
@@ -264,7 +305,11 @@ function Page() {
             title="Serviços mais vendidos"
             subtitle="Desempenho por serviço"
           >
-            {services.length === 0 ? (
+            {isError ? (
+              <p className="text-sm text-muted-foreground py-6 text-center">
+                Dados indisponíveis no momento.
+              </p>
+            ) : services.length === 0 ? (
               <p className="text-sm text-muted-foreground py-6 text-center">
                 Nenhum dado no período.
               </p>
@@ -299,9 +344,13 @@ function Page() {
           <Section
             icon={TrendingUp}
             title="Desempenho da equipe"
-            subtitle="Resultados por funcionário"
+            subtitle="Agendamentos não cancelados por funcionário"
           >
-            {employees.length === 0 ? (
+            {isError ? (
+              <p className="text-sm text-muted-foreground py-6 text-center">
+                Dados indisponíveis no momento.
+              </p>
+            ) : employees.length === 0 ? (
               <p className="text-sm text-muted-foreground py-6 text-center">
                 Nenhum dado no período.
               </p>
@@ -322,8 +371,10 @@ function Page() {
                         <div className="flex items-center gap-2">
                           {e.photo ? (
                             <img
-                              src={optimizedImageUrl(e.photo, 96) ?? e.photo}
+                              src={optimizedImageUrl(e.photo, 64) ?? e.photo}
                               alt=""
+                              width={32}
+                              height={32}
                               loading="lazy"
                               decoding="async"
                               className="h-8 w-8 rounded-full object-cover border border-border"

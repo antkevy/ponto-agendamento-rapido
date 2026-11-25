@@ -5,7 +5,13 @@ import { AppShell } from "@/components/app-shell";
 import { useMyProfessional } from "@/hooks/use-my-professional";
 import { supabase } from "@/integrations/supabase/client";
 import { db } from "@/lib/db-tables";
-import { formatBRL } from "@/lib/booking";
+import {
+  formatBRL,
+  zonedDateKey,
+  zonedDayBounds,
+  zonedMonthBounds,
+  zonedTodayKey,
+} from "@/lib/booking";
 import {
   Calendar,
   DollarSign,
@@ -28,43 +34,43 @@ export const Route = createFileRoute("/app/")({
 
 function Dashboard() {
   const { data: pro, isLoading } = useMyProfessional();
-  const today = useMemo(() => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    return d;
-  }, []);
+  const timeZone = pro?.timezone ?? null;
   const [monthOffset, setMonthOffset] = useState(0);
+
+  // Datas civis sempre no fuso do profissional, nunca no do navegador.
+  const todayKey = useMemo(() => zonedTodayKey(timeZone), [timeZone]);
   const currentMonth = useMemo(() => {
-    const d = new Date(today.getFullYear(), today.getMonth() + monthOffset, 1);
-    return d;
-  }, [today, monthOffset]);
+    const [year, month] = todayKey.split("-").map(Number);
+    const total = year * 12 + (month - 1) + monthOffset;
+    return { year: Math.floor(total / 12), month: (total % 12) + 1 };
+  }, [todayKey, monthOffset]);
 
-  const monthStart = useMemo(() => new Date(currentMonth), [currentMonth]);
-  const monthEnd = useMemo(() => {
-    const d = new Date(currentMonth);
-    d.setMonth(d.getMonth() + 1);
-    return d;
-  }, [currentMonth]);
-
-  const prevMonthStart = useMemo(() => {
-    const d = new Date(currentMonth);
-    d.setMonth(d.getMonth() - 1);
-    return d;
-  }, [currentMonth]);
-  const prevMonthEnd = useMemo(() => new Date(monthStart), [monthStart]);
+  const { start: monthStart, end: monthEnd } = useMemo(
+    () => zonedMonthBounds(currentMonth.year, currentMonth.month, timeZone),
+    [currentMonth, timeZone],
+  );
+  const { start: prevMonthStart, end: prevMonthEnd } = useMemo(
+    () => zonedMonthBounds(currentMonth.year, currentMonth.month - 1, timeZone),
+    [currentMonth, timeZone],
+  );
+  const { start: dayStart, end: dayEnd } = useMemo(() => {
+    const [year, month, day] = todayKey.split("-").map(Number);
+    return zonedDayBounds(year, month, day, timeZone);
+  }, [todayKey, timeZone]);
 
   const {
     data: stats,
     refetch,
     isFetching,
+    isError,
   } = useQuery({
-    queryKey: ["dashboard-stats", pro?.id, monthOffset],
+    queryKey: ["dashboard-stats", pro?.id, monthOffset, timeZone],
     enabled: !!pro?.id,
     placeholderData: (prev) => prev,
     queryFn: async () => {
       const proId = pro!.id;
 
-      const [current, previous, todayAppts, upcoming] = await Promise.all([
+      const [currentR, previousR, todayR, upcomingR] = await Promise.all([
         supabase
           .from(db.agendamentos)
           .select("id, starts_at, service_snapshot_name, service_snapshot_price_cents, status")
@@ -81,8 +87,8 @@ function Dashboard() {
           .from(db.agendamentos)
           .select("id, starts_at, client_name, service_snapshot_name, status")
           .eq("professional_id", proId)
-          .gte("starts_at", new Date().toISOString())
-          .lt("starts_at", new Date(today.getTime() + 86400000).toISOString())
+          .gte("starts_at", dayStart.toISOString())
+          .lt("starts_at", dayEnd.toISOString())
           .order("starts_at"),
         supabase
           .from(db.agendamentos)
@@ -95,37 +101,37 @@ function Dashboard() {
           .limit(5),
       ]);
 
-      const allCurrent = current.data ?? [];
-      const allPrevious = previous.data ?? [];
+      // Um erro de rede/RLS não pode ser exibido como "zero agendamentos".
+      for (const r of [currentR, previousR, todayR, upcomingR]) {
+        if (r.error) throw r.error;
+      }
+      const allCurrent = currentR.data ?? [];
+      const allPrevious = previousR.data ?? [];
 
       const confirmed = allCurrent.filter((a) => a.status === "confirmed");
       const completed = allCurrent.filter((a) => a.status === "completed");
       const cancelled = allCurrent.filter((a) => a.status === "cancelled");
 
+      // Métrica única: receita esperada = todos os não-cancelados, nos dois meses.
+      const activeCurrent = allCurrent.filter((a) => a.status !== "cancelled");
+      const activePrevious = allPrevious.filter((a) => a.status !== "cancelled");
       const revenueCompleted = completed.reduce((s, a) => s + a.service_snapshot_price_cents, 0);
       const revenueConfirmed = confirmed.reduce((s, a) => s + a.service_snapshot_price_cents, 0);
-      const totalRevenue = revenueCompleted + revenueConfirmed;
-
-      const prevCompleted = allPrevious.filter((a) => a.status === "completed");
-      const prevRevenue = prevCompleted.reduce((s, a) => s + a.service_snapshot_price_cents, 0);
-      const prevCount = allPrevious.filter((a) => a.status !== "cancelled").length;
+      const totalRevenue = activeCurrent.reduce((s, a) => s + a.service_snapshot_price_cents, 0);
+      const prevRevenue = activePrevious.reduce((s, a) => s + a.service_snapshot_price_cents, 0);
+      const monthCountValue = activeCurrent.length;
+      const prevCount = activePrevious.length;
 
       const dailyRevenue: Record<string, number> = {};
-      allCurrent
-        .filter((a) => a.status !== "cancelled")
-        .forEach((a) => {
-          const day = a.starts_at.slice(0, 10);
-          dailyRevenue[day] = (dailyRevenue[day] ?? 0) + a.service_snapshot_price_cents;
-        });
+      activeCurrent.forEach((a) => {
+        const day = zonedDateKey(new Date(a.starts_at), timeZone);
+        dailyRevenue[day] = (dailyRevenue[day] ?? 0) + a.service_snapshot_price_cents;
+      });
 
-      const daysInMonth = new Date(
-        monthStart.getFullYear(),
-        monthStart.getMonth() + 1,
-        0,
-      ).getDate();
+      const daysInMonth = new Date(currentMonth.year, currentMonth.month, 0).getDate();
+      const pad = (n: number) => String(n).padStart(2, "0");
       const dailyData = Array.from({ length: daysInMonth }, (_, i) => {
-        const d = new Date(monthStart.getFullYear(), monthStart.getMonth(), i + 1);
-        const key = d.toISOString().slice(0, 10);
+        const key = `${currentMonth.year}-${pad(currentMonth.month)}-${pad(i + 1)}`;
         return { day: i + 1, receita: dailyRevenue[key] ?? 0 };
       });
 
@@ -148,15 +154,15 @@ function Dashboard() {
         { name: "Cancelados", value: cancelled.length, color: "var(--color-destructive, #DC2626)" },
       ].filter((s) => s.value > 0);
 
-      const avgTicket = completed.length > 0 ? Math.round(revenueCompleted / completed.length) : 0;
+      const avgTicket = monthCountValue > 0 ? Math.round(totalRevenue / monthCountValue) : 0;
 
       return {
-        today: todayAppts.data ?? [],
-        upcoming: upcoming.data ?? [],
+        today: todayR.data ?? [],
+        upcoming: upcomingR.data ?? [],
         revenueCompleted,
         revenueConfirmed,
         totalRevenue,
-        monthCount: completed.length + confirmed.length,
+        monthCount: monthCountValue,
         cancelledCount: cancelled.length,
         prevRevenue,
         prevCount,
@@ -168,7 +174,10 @@ function Dashboard() {
     },
   });
 
-  const monthLabel = currentMonth.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+  const monthLabel = new Date(currentMonth.year, currentMonth.month - 1, 1).toLocaleDateString(
+    "pt-BR",
+    { month: "long", year: "numeric" },
+  );
 
   const pct = (current: number, previous: number) => {
     if (!previous) return null;
@@ -178,7 +187,7 @@ function Dashboard() {
   return (
     <AppShell title="Painel">
       {isLoading ? (
-        <div className="skeleton h-32" />
+        <div className="skeleton h-32" role="status" aria-label="Carregando painel" />
       ) : !pro ? (
         <OnboardingCard />
       ) : (
@@ -187,7 +196,7 @@ function Dashboard() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setMonthOffset((p) => p - 1)}
-                className="p-2 min-h-[40px] min-w-[40px] grid place-items-center rounded-lg hover:bg-muted border border-border"
+                className="p-2 min-h-[44px] min-w-[44px] grid place-items-center rounded-lg hover:bg-muted border border-border"
                 aria-label="Mês anterior"
               >
                 <ChevronLeft className="h-4 w-4" />
@@ -195,7 +204,7 @@ function Dashboard() {
               <span className="font-bold capitalize text-lg">{monthLabel}</span>
               <button
                 onClick={() => setMonthOffset((p) => p + 1)}
-                className="p-2 min-h-[40px] min-w-[40px] grid place-items-center rounded-lg hover:bg-muted border border-border"
+                className="p-2 min-h-[44px] min-w-[44px] grid place-items-center rounded-lg hover:bg-muted border border-border"
                 aria-label="Próximo mês"
               >
                 <ChevronRight className="h-4 w-4" />
@@ -203,7 +212,7 @@ function Dashboard() {
               {monthOffset !== 0 && (
                 <button
                   onClick={() => setMonthOffset(0)}
-                  className="text-xs text-accent hover:underline ml-2"
+                  className="min-h-[44px] px-2 text-xs text-accent hover:underline ml-2"
                 >
                   Voltar ao mês atual
                 </button>
@@ -228,10 +237,21 @@ function Dashboard() {
             </button>
           </div>
 
+          {isError && (
+            <div role="alert" className="card-elevated p-4 mb-4 text-sm text-destructive">
+              Não foi possível carregar os dados do painel. Tente novamente.
+            </div>
+          )}
+
           <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-            {!stats ? (
+            {!stats || isError ? (
               Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="card-elevated p-5">
+                <div
+                  key={i}
+                  className="card-elevated p-5"
+                  role="status"
+                  aria-label="Carregando indicadores"
+                >
                   <div className="skeleton h-4 w-20" />
                   <div className="skeleton h-9 w-28 mt-3" />
                   <div className="skeleton h-3 w-24 mt-3" />
@@ -279,7 +299,7 @@ function Dashboard() {
             )}
           </div>
 
-          {stats && (
+          {!isError && stats && (
             <>
               <div className="mt-6 card-elevated p-5">
                 <h2 className="text-lg font-bold tracking-tight text-foreground mb-4">
@@ -324,7 +344,7 @@ function Dashboard() {
             </>
           )}
 
-          {stats && (stats.prevRevenue > 0 || stats.prevCount > 0) && (
+          {!isError && stats && (stats.prevRevenue > 0 || stats.prevCount > 0) && (
             <div className="mt-6 card-elevated p-5">
               <h2 className="text-lg font-bold tracking-tight text-foreground mb-4">
                 Comparação com mês anterior
@@ -379,7 +399,10 @@ function Dashboard() {
             {(stats?.upcoming.length ?? 0) === 0 ? (
               <p className="text-muted-foreground text-sm">
                 Nada agendado ainda.{" "}
-                <Link to="/app/agendamentos" className="text-accent hover:underline">
+                <Link
+                  to="/app/agendamentos"
+                  className="inline-flex min-h-[44px] items-center text-accent hover:underline"
+                >
                   Ver todos
                 </Link>
               </p>
@@ -462,7 +485,7 @@ function DailyRevenueChart({ data }: { data: { day: number; receita: number }[] 
                 className={`pointer-events-none absolute -top-1 left-1/2 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-md border border-border bg-background px-2 py-1 text-[11px] font-semibold z-10 shadow-lg transition-opacity ${
                   isSelected
                     ? "opacity-100"
-                    : "opacity-0 group-hover:opacity-100 group-active:opacity-100"
+                    : "opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 group-active:opacity-100"
                 }`}
               >
                 {formatBRL(d.receita)}

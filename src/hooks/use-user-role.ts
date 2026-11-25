@@ -6,12 +6,12 @@ export type UserRole = "admin" | "editor" | "user";
 
 /**
  * Lê a role do usuário em `user_security` (definida pela migração
- * security_core). Sem registro (migração ainda não aplicada) assume "admin",
- * preservando o comportamento atual de dono do negócio.
+ * security_core). Falha fechada: sem registro ou em caso de erro, o usuário
+ * fica como "user" (somente leitura) — nunca recebe poderes por padrão.
  */
 export function useUserRole() {
   const { user } = useAuth();
-  const [role, setRole] = useState<UserRole>("admin");
+  const [role, setRole] = useState<UserRole>("user");
   const [loading, setLoading] = useState(true);
 
   const userId = user?.id;

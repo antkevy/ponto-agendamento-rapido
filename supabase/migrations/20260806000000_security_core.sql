@@ -98,11 +98,28 @@ REVOKE ALL ON FUNCTION public.has_role(TEXT) FROM anon, PUBLIC;
 GRANT EXECUTE ON FUNCTION public.has_role(TEXT) TO authenticated;
 
 -- Só o próprio usuário atualiza o próprio mfa_enabled (nunca a role).
+-- Flag só pode ser ligado se existe fator TOTP verificado, e desligado apenas
+-- numa sessão AAL2 — senão um atacante com a senha desligaria o 2FA do flag.
 CREATE OR REPLACE FUNCTION public.set_mfa_enabled(p_enabled BOOLEAN)
 RETURNS BOOLEAN
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = public
 AS $$
 BEGIN
+  IF NOT EXISTS (SELECT 1 FROM public.user_security WHERE user_id = auth.uid()) THEN
+    RETURN FALSE;
+  END IF;
+
+  IF COALESCE(p_enabled, false) THEN
+    IF NOT EXISTS (
+      SELECT 1 FROM auth.mfa_factors
+      WHERE user_id = auth.uid() AND factor_type = 'totp' AND status = 'verified'
+    ) THEN
+      RETURN FALSE;
+    END IF;
+  ELSIF coalesce(auth.jwt() ->> 'aal', 'aal1') <> 'aal2' THEN
+    RETURN FALSE;
+  END IF;
+
   UPDATE public.user_security
   SET mfa_enabled = COALESCE(p_enabled, false), updated_at = now()
   WHERE user_id = auth.uid();

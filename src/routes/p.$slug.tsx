@@ -18,12 +18,20 @@ import {
   formatBRL,
   formatLongDate,
   formatTime,
+  hourInTimeZone,
+  weekdayInTimeZone,
+  zonedDateKey,
+  zonedDayBounds,
+  zonedMonthBounds,
+  zonedTodayKey,
   WEEKDAYS_PT_SHORT,
   type AvailabilityRow,
   type Block,
   type BusySlot,
 } from "@/lib/booking";
 import { PhoneInput } from "@/components/phone-input";
+import { Modal } from "@/components/modal";
+import { Turnstile } from "@/components/turnstile";
 import { isValidPhoneBR } from "@/lib/phone";
 import {
   CheckCircle2,
@@ -179,6 +187,8 @@ export const Route = createFileRoute("/p/$slug")({
       scripts: [
         {
           type: "application/ld+json",
+          // O TanStack renderiza `children` de scripts com dangerouslySetInnerHTML:
+          // escapar '<', '>' e '&' impede que dados do perfil fechem a tag e injetem JS.
           children: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "LocalBusiness",
@@ -193,7 +203,12 @@ export const Route = createFileRoute("/p/$slug")({
             ...(p.lat != null && p.lng != null
               ? { geo: { "@type": "GeoCoordinates", latitude: p.lat, longitude: p.lng } }
               : {}),
-          }),
+          })
+            .replace(/</g, "\\u003c")
+            .replace(/>/g, "\\u003e")
+            .replace(/&/g, "\\u0026")
+            .replace(/\u2028/g, "\\u2028")
+            .replace(/\u2029/g, "\\u2029"),
         },
       ],
     };
@@ -653,19 +668,18 @@ function BookingPage() {
                     {services!.map((s, i) => {
                       const selected = selectedServices.some((x) => x.id === s.id);
                       return (
-                        <li key={s.id} className="ui-stagger" style={{ ["--i" as string]: i }}>
-                          <div
-                            role="button"
-                            tabIndex={0}
+                        <li
+                          key={s.id}
+                          className="ui-stagger relative"
+                          style={{ ["--i" as string]: i }}
+                        >
+                          <button
+                            type="button"
                             onClick={() => toggleService(s)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter" || e.key === " ") {
-                                e.preventDefault();
-                                toggleService(s);
-                              }
-                            }}
+                            aria-pressed={selected}
+                            aria-label={`${selected ? "Remover" : "Adicionar"} ${s.name}`}
                             data-selected={selected || undefined}
-                            className="ui-card ui-ripple w-full text-left cursor-pointer p-4 transition-all hover:-translate-y-0.5 active:scale-[0.99] data-[selected]:border-accent data-[selected]:ring-2 data-[selected]:ring-accent/30"
+                            className="ui-card ui-ripple w-full text-left cursor-pointer p-4 pr-32 transition-all hover:-translate-y-0.5 active:scale-[0.99] data-[selected]:border-accent data-[selected]:ring-2 data-[selected]:ring-accent/30"
                           >
                             <div className="flex items-center gap-3.5">
                               <div className="relative shrink-0">
@@ -706,41 +720,38 @@ function BookingPage() {
                                 <p className="text-base font-black tracking-tight ui-accent-text">
                                   {formatBRL(s.price_cents)}
                                 </p>
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setDetailService(s);
-                                  }}
-                                  className="mt-1 inline-flex items-center gap-0.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
-                                >
-                                  Ver detalhes <ChevronRight className="h-3.5 w-3.5" />
-                                </button>
                               </div>
                             </div>
-                          </div>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setDetailService(s)}
+                            aria-label={`Ver detalhes de ${s.name}`}
+                            className="absolute bottom-4 right-4 min-h-[44px] inline-flex items-center gap-0.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            Ver detalhes <ChevronRight className="h-3.5 w-3.5" />
+                          </button>
                         </li>
                       );
                     })}
                   </ul>
                 ) : (
-                  <ul className="grid gap-3 grid-cols-2 lg:grid-cols-3">
+                  <ul className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                     {services!.map((s, i) => {
                       const selected = selectedServices.some((x) => x.id === s.id);
                       return (
-                        <li key={s.id} className="ui-stagger" style={{ ["--i" as string]: i }}>
-                          <div
-                            role="button"
-                            tabIndex={0}
+                        <li
+                          key={s.id}
+                          className="ui-stagger relative"
+                          style={{ ["--i" as string]: i }}
+                        >
+                          <button
+                            type="button"
                             onClick={() => toggleService(s)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter" || e.key === " ") {
-                                e.preventDefault();
-                                toggleService(s);
-                              }
-                            }}
+                            aria-pressed={selected}
+                            aria-label={`${selected ? "Remover" : "Adicionar"} ${s.name}`}
                             data-selected={selected || undefined}
-                            className="ui-card ui-ripple w-full h-full text-left cursor-pointer overflow-hidden transition-all hover:-translate-y-1 active:scale-[0.99] flex flex-col data-[selected]:border-accent data-[selected]:ring-2 data-[selected]:ring-accent/30"
+                            className="ui-card ui-ripple w-full h-full text-left cursor-pointer overflow-hidden transition-all hover:-translate-y-1 active:scale-[0.99] flex flex-col pb-12 data-[selected]:border-accent data-[selected]:ring-2 data-[selected]:ring-accent/30"
                           >
                             <div className="relative">
                               {s.image_url ? (
@@ -770,28 +781,24 @@ function BookingPage() {
                             </div>
                             <div className="p-3.5 flex flex-col gap-1.5 flex-1">
                               <p className="font-bold truncate text-sm text-foreground">{s.name}</p>
-                              <div className="flex items-center justify-between gap-2">
-                                <p className="text-lg font-black tracking-tight ui-accent-text">
-                                  {formatBRL(s.price_cents)}
-                                </p>
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setDetailService(s);
-                                  }}
-                                  className="inline-flex items-center gap-0.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors shrink-0"
-                                >
-                                  Ver mais <ChevronRight className="h-3.5 w-3.5" />
-                                </button>
-                              </div>
+                              <p className="text-lg font-black tracking-tight ui-accent-text">
+                                {formatBRL(s.price_cents)}
+                              </p>
                               {s.description && (
                                 <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
                                   {s.description}
                                 </p>
                               )}
                             </div>
-                          </div>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setDetailService(s)}
+                            aria-label={`Ver detalhes de ${s.name}`}
+                            className="absolute bottom-3 right-3 min-h-[44px] inline-flex items-center gap-0.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            Ver mais <ChevronRight className="h-3.5 w-3.5" />
+                          </button>
                         </li>
                       );
                     })}
@@ -1046,60 +1053,57 @@ function BookingPage() {
         )}
 
         {detailService && (
-          <div
-            className="fixed inset-0 z-50 bg-foreground/40 backdrop-blur-sm dark:bg-black/60 dark:backdrop-blur-md grid place-items-center p-4 animate-fade-in-up"
-            onClick={() => setDetailService(null)}
+          <Modal
+            onClose={() => setDetailService(null)}
+            hideFooter
+            ariaLabel={`Detalhes de ${detailService.name}`}
+            contentClassName="max-w-sm rounded-2xl overflow-hidden shadow-2xl p-0"
           >
-            <div
-              className="bg-background w-full max-w-sm rounded-2xl overflow-hidden shadow-2xl"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {detailService.image_url && (
-                <img
-                  src={optimizedImageUrl(detailService.image_url, 768) ?? detailService.image_url}
-                  alt={detailService.name}
-                  loading="lazy"
-                  decoding="async"
-                  className="w-full aspect-square object-cover"
-                />
-              )}
-              <div className="p-5 space-y-3">
-                <div className="flex items-start justify-between gap-3">
-                  <h3 className="text-xl font-bold tracking-tight">{detailService.name}</h3>
-                  <button
-                    onClick={() => setDetailService(null)}
-                    className="min-h-[44px] min-w-[44px] grid place-items-center rounded-md hover:bg-muted shrink-0"
-                  >
-                    <X className="h-5 w-5" />
-                  </button>
-                </div>
-                <div className="flex items-center gap-4 text-sm">
-                  <span className="inline-flex items-center gap-1.5 text-muted-foreground">
-                    <Clock className="h-4 w-4" /> {detailService.duration_minutes} minutos
-                  </span>
-                  <span className="text-xl font-black text-primary">
-                    {formatBRL(detailService.price_cents)}
-                  </span>
-                </div>
-                {detailService.description && (
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    {detailService.description}
-                  </p>
-                )}
+            {detailService.image_url && (
+              <img
+                src={optimizedImageUrl(detailService.image_url, 768) ?? detailService.image_url}
+                alt={detailService.name}
+                loading="lazy"
+                decoding="async"
+                className="w-full aspect-square object-cover"
+              />
+            )}
+            <div className="p-5 space-y-3">
+              <div className="flex items-start justify-between gap-3">
+                <h3 className="text-xl font-bold tracking-tight">{detailService.name}</h3>
                 <button
-                  onClick={() => {
-                    toggleService(detailService);
-                    setDetailService(null);
-                  }}
-                  className="btn-gradient w-full"
+                  onClick={() => setDetailService(null)}
+                  className="min-h-[44px] min-w-[44px] grid place-items-center rounded-md hover:bg-muted shrink-0"
                 >
-                  {selectedServices.some((x) => x.id === detailService.id)
-                    ? "Remover serviço"
-                    : "Adicionar este serviço"}
+                  <X className="h-5 w-5" />
                 </button>
               </div>
+              <div className="flex items-center gap-4 text-sm">
+                <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                  <Clock className="h-4 w-4" /> {detailService.duration_minutes} minutos
+                </span>
+                <span className="text-xl font-black text-primary">
+                  {formatBRL(detailService.price_cents)}
+                </span>
+              </div>
+              {detailService.description && (
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {detailService.description}
+                </p>
+              )}
+              <button
+                onClick={() => {
+                  toggleService(detailService);
+                  setDetailService(null);
+                }}
+                className="btn-gradient w-full"
+              >
+                {selectedServices.some((x) => x.id === detailService.id)
+                  ? "Remover serviço"
+                  : "Adicionar este serviço"}
+              </button>
             </div>
-          </div>
+          </Modal>
         )}
       </main>
 
@@ -1238,7 +1242,7 @@ function WhenStep({
   onPick,
   brand,
 }: {
-  pro: { id: string; business_name: string; address?: string | null };
+  pro: { id: string; business_name: string; address?: string | null; timezone?: string | null };
   selectedServices: Service[];
   selectedProducts: Produto[];
   selectedPlan: Plano | null;
@@ -1291,12 +1295,11 @@ function WhenStep({
     return empAvail.length > 0 ? empAvail : proAvail;
   }, [employee, empAvail, proAvail]);
 
-  const rangeStart = monthStart;
-  const rangeEnd = useMemo(() => {
-    const d = new Date(monthStart);
-    d.setMonth(d.getMonth() + 1);
-    return d;
-  }, [monthStart]);
+  // Limites do mês no fuso do negócio: o grid é civil, as consultas são instantes.
+  const { start: rangeStart, end: rangeEnd } = useMemo(
+    () => zonedMonthBounds(monthStart.getFullYear(), monthStart.getMonth() + 1, pro.timezone),
+    [monthStart, pro.timezone],
+  );
 
   const { data: proBlocks } = useQuery({
     queryKey: ["public-blocks", pro.id, monthStart.toISOString()],
@@ -1331,10 +1334,12 @@ function WhenStep({
     queryKey: ["public-busy", pro.id, employee?.id ?? "none", selectedDay?.toISOString()],
     enabled: !!selectedDay,
     queryFn: async () => {
-      const from = new Date(selectedDay!);
-      from.setHours(0, 0, 0, 0);
-      const to = new Date(from);
-      to.setDate(to.getDate() + 1);
+      const { start: from, end: to } = zonedDayBounds(
+        selectedDay!.getFullYear(),
+        selectedDay!.getMonth() + 1,
+        selectedDay!.getDate(),
+        pro.timezone,
+      );
       if (employee) {
         const { data, error } = await supabase.rpc("get_employee_busy_slots", {
           _employee_id: employee.id,
@@ -1356,7 +1361,7 @@ function WhenStep({
 
   const daysGrid = useMemo(() => {
     const first = new Date(monthStart);
-    const startWeekday = first.getDay();
+    const startWeekday = weekdayInTimeZone(first, pro.timezone);
     const cells: Array<Date | null> = [];
     for (let i = 0; i < startWeekday; i++) cells.push(null);
     const end = new Date(monthStart);
@@ -1364,17 +1369,13 @@ function WhenStep({
     for (let d = new Date(first); d < end; d.setDate(d.getDate() + 1)) cells.push(new Date(d));
     while (cells.length % 7 !== 0) cells.push(null);
     return cells;
-  }, [monthStart]);
+  }, [monthStart, pro.timezone]);
 
-  const today = useMemo(() => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    return d;
-  }, []);
+  const todayKey = useMemo(() => zonedTodayKey(pro.timezone), [pro.timezone]);
 
   const dayHasAvailability = (day: Date) => {
     if (!avail) return false;
-    return avail.some((r) => r.weekday === day.getDay());
+    return avail.some((r) => r.weekday === weekdayInTimeZone(day, pro.timezone));
   };
 
   const combinedBlocks = useMemo<Block[]>(() => {
@@ -1393,8 +1394,19 @@ function WhenStep({
       availability: avail,
       blocks: combinedBlocks,
       busy,
+      timeZone: pro.timezone,
     });
-  }, [selectedDay, avail, proBlocks, empBlocks, busy, combinedDuration, employee, combinedBlocks]);
+  }, [
+    selectedDay,
+    avail,
+    proBlocks,
+    empBlocks,
+    busy,
+    combinedDuration,
+    employee,
+    combinedBlocks,
+    pro.timezone,
+  ]);
 
   return (
     <section className="animate-fade-in-up">
@@ -1421,7 +1433,8 @@ function WhenStep({
                 onClick={() => {
                   const d = new Date(monthStart);
                   d.setMonth(d.getMonth() - 1);
-                  if (d >= new Date(today.getFullYear(), today.getMonth(), 1)) setMonthStart(d);
+                  const target = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+                  if (target >= todayKey.slice(0, 7)) setMonthStart(d);
                 }}
                 className="p-2 min-h-[44px] min-w-[44px] grid place-items-center rounded-md hover:bg-muted"
                 aria-label="Mês anterior"
@@ -1451,15 +1464,22 @@ function WhenStep({
             <div className="grid grid-cols-7 gap-1">
               {daysGrid.map((d, i) => {
                 if (!d) return <div key={i} />;
-                const past = d < today;
+                const pad = (n: number) => String(n).padStart(2, "0");
+                const key = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+                const past = key < todayKey;
                 const canSelect = !past && dayHasAvailability(d);
-                const selected = selectedDay && d.toDateString() === selectedDay.toDateString();
-                const isToday = d.toDateString() === today.toDateString();
+                const selected =
+                  selectedDay &&
+                  key ===
+                    `${selectedDay.getFullYear()}-${pad(selectedDay.getMonth() + 1)}-${pad(selectedDay.getDate())}`;
+                const isToday = key === todayKey;
                 return (
                   <button
                     key={i}
+                    type="button"
                     disabled={!canSelect}
                     onClick={() => setSelectedDay(d)}
+                    aria-label={`${formatLongDate(d, pro.timezone)}${isToday ? " — hoje" : ""}`}
                     data-selected={selected || undefined}
                     data-today={isToday || undefined}
                     className="h-11 w-full rounded-lg text-sm font-medium disabled:opacity-30 disabled:cursor-not-allowed hover:bg-accent/10 hover:text-accent transition-colors data-[today]:ring-1 data-[today]:ring-accent/40 data-[selected]:!bg-accent data-[selected]:!text-accent-foreground data-[selected]:ring-0"
@@ -1475,7 +1495,7 @@ function WhenStep({
             {selectedDay ? (
               <div className="card-elevated p-4 h-full">
                 <h3 className="font-semibold mb-3 capitalize flex items-center justify-between gap-2 flex-wrap">
-                  <span>Horários · {formatLongDate(selectedDay)}</span>
+                  <span>Horários · {formatLongDate(selectedDay, pro.timezone)}</span>
                   {!loadingBusy && slots.length > 0 && (
                     <span className="inline-flex items-center gap-1 text-xs font-semibold ui-accent-text">
                       <CheckCircle2 className="h-3.5 w-3.5" /> {slots.length} disponíveis
@@ -1505,7 +1525,7 @@ function WhenStep({
                       { label: "Noite", from: 18, to: 24 },
                     ].map(({ label, from, to }) => {
                       const periodSlots = slots.filter((s) => {
-                        const h = s.getHours();
+                        const h = hourInTimeZone(s, pro.timezone);
                         return h >= from && h < to;
                       });
                       if (periodSlots.length === 0) return null;
@@ -1525,7 +1545,7 @@ function WhenStep({
                                 onClick={() => onPick(s)}
                                 className="chip"
                               >
-                                {formatTime(s)}
+                                {formatTime(s, pro.timezone)}
                               </button>
                             ))}
                           </div>
@@ -1555,6 +1575,7 @@ function WhenStep({
           employee={employee}
           businessName={pro.business_name}
           address={pro.address ?? null}
+          timeZone={pro.timezone}
         />
       </div>
     </section>
@@ -1571,7 +1592,7 @@ function FormStep({
   onDone,
   brand,
 }: {
-  pro: { id: string; business_name: string; address?: string | null };
+  pro: { id: string; business_name: string; address?: string | null; timezone?: string | null };
   selectedServices: Service[];
   selectedProducts: Produto[];
   selectedPlan: Plano | null;
@@ -1584,6 +1605,13 @@ function FormStep({
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [notes, setNotes] = useState("");
+  const captchaSiteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY as string | undefined;
+  // Em produção, booking sem CAPTCHA é recusado (fail-closed). Em dev, segue
+  // opcional para não travar desenvolvimento local.
+  const captchaRequired = import.meta.env.PROD;
+  const captchaUnavailable = captchaRequired && !captchaSiteKey;
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaKey, setCaptchaKey] = useState(0);
 
   const combinedPrice = useMemo(
     () =>
@@ -1606,6 +1634,21 @@ function FormStep({
       if (!name.trim()) throw new Error("Informe seu nome.");
       if (!isValidPhoneBR(phone))
         throw new Error("Informe um WhatsApp válido no formato (XX) XXXXX-XXXX.");
+      if (captchaRequired) {
+        if (captchaUnavailable)
+          throw new Error("Verificação de segurança indisponível. Contate o estabelecimento.");
+        if (!captchaToken)
+          throw new Error("Conclua a verificação de segurança antes de continuar.");
+        const response = await fetch("/api/turnstile-verify", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ token: captchaToken }),
+        });
+        if (!response.ok)
+          throw new Error("Não foi possível validar a verificação. Tente novamente.");
+        const result = (await response.json()) as { ok?: boolean };
+        if (!result.ok) throw new Error("Verificação de segurança expirada. Tente novamente.");
+      }
       const ends = new Date(when.getTime() + combinedDuration * 60 * 1000);
       const appointmentId = crypto.randomUUID();
       // Código de confirmação: prova de posse para consultar/cancelar depois
@@ -1626,6 +1669,31 @@ function FormStep({
         notes: notes.trim() || null,
         service_snapshot_name: combinedName,
         service_snapshot_price_cents: combinedPrice,
+        // Detalhamento que o snapshot achatado não preserva (ver migração de itens_snapshot).
+        itens_snapshot: [
+          ...selectedServices.slice(1).map((s) => ({
+            tipo: "servico",
+            id: s.id,
+            nome: s.name,
+            preco_cents: s.price_cents,
+          })),
+          ...selectedProducts.map((p) => ({
+            tipo: "produto",
+            id: p.id,
+            nome: p.name,
+            preco_cents: p.price_cents,
+          })),
+          ...(selectedPlan
+            ? [
+                {
+                  tipo: "plano",
+                  id: selectedPlan.id,
+                  nome: selectedPlan.name,
+                  preco_cents: selectedPlan.price_cents,
+                },
+              ]
+            : []),
+        ],
         access_code: accessCode,
       });
       if (error) throw error;
@@ -1638,6 +1706,10 @@ function FormStep({
           ? "Esse horário acabou de ser reservado. Escolha outro."
           : e.message;
       toast.error(msg);
+    },
+    onSettled: () => {
+      setCaptchaToken(null);
+      setCaptchaKey((k) => k + 1);
     },
   });
 
@@ -1667,6 +1739,7 @@ function FormStep({
             when={when}
             businessName={pro.business_name}
             address={pro.address ?? null}
+            timeZone={pro.timezone}
           />
         </div>
 
@@ -1724,11 +1797,25 @@ function FormStep({
             </div>
           </UICard>
 
+          {captchaUnavailable && (
+            <p role="alert" className="text-sm text-destructive text-center">
+              Verificação de segurança não configurada. Não é possível concluir o agendamento.
+            </p>
+          )}
+          {captchaSiteKey && (
+            <div className="card-elevated p-4">
+              <p className="text-xs font-semibold text-muted-foreground mb-3 text-center">
+                Verificação de segurança
+              </p>
+              <Turnstile key={captchaKey} siteKey={captchaSiteKey} onToken={setCaptchaToken} />
+            </div>
+          )}
+
           <UIButton
             type="submit"
             size="lg"
             fullWidth
-            disabled={create.isPending}
+            disabled={create.isPending || captchaUnavailable || (captchaRequired && !captchaToken)}
             icon={CalendarCheck2}
           >
             {create.isPending ? "Confirmando..." : "Confirmar agendamento"}
@@ -1737,8 +1824,7 @@ function FormStep({
           <p className="text-center text-xs text-muted-foreground inline-flex items-start gap-1.5 justify-center w-full">
             <Lock className="h-3.5 w-3.5 shrink-0 mt-px" />
             <span>
-              Ao confirmar, você concorda com nossos <span className="ui-link">Termos de Uso</span>{" "}
-              e <span className="ui-link">Política de Privacidade</span>.
+              Ao confirmar, você concorda com nossos Termos de Uso e Política de Privacidade.
             </span>
           </p>
         </form>
@@ -1757,7 +1843,7 @@ function DoneStep({
   accessCode,
   onReset,
 }: {
-  pro: { business_name: string; slug: string };
+  pro: { business_name: string; slug: string; timezone?: string | null };
   selectedServices: Service[];
   selectedProducts: Produto[];
   selectedPlan: Plano | null;
@@ -1797,8 +1883,10 @@ function DoneStep({
         <p className="font-semibold">{combinedName}</p>
         {extras.length > 0 && <p className="text-sm text-muted-foreground">{extras.join(" · ")}</p>}
         <p className="text-sm text-muted-foreground">{formatBRL(combinedPrice)}</p>
-        <p className="text-sm text-muted-foreground capitalize">{formatLongDate(when)}</p>
-        <p className="text-sm text-muted-foreground">às {formatTime(when)}</p>
+        <p className="text-sm text-muted-foreground capitalize">
+          {formatLongDate(when, pro.timezone)}
+        </p>
+        <p className="text-sm text-muted-foreground">às {formatTime(when, pro.timezone)}</p>
         {employee && <p className="text-sm text-muted-foreground">com {employee.name}</p>}
       </div>
       {accessCode && (
@@ -1848,6 +1936,7 @@ function OrderSummary({
   when,
   businessName,
   address,
+  timeZone,
 }: {
   services: Service[];
   products?: Produto[];
@@ -1856,6 +1945,7 @@ function OrderSummary({
   when?: Date | null;
   businessName?: string | null;
   address?: string | null;
+  timeZone?: string | null;
 }) {
   const totalPrice =
     services.reduce((a, s) => a + s.price_cents, 0) +
@@ -1946,10 +2036,10 @@ function OrderSummary({
         <div className="mt-4 pt-3 border-t border-border space-y-2">
           {when && (
             <UISummaryRow icon={CalendarIcon}>
-              <span className="capitalize">{formatLongDate(when)}</span>
+              <span className="capitalize">{formatLongDate(when, timeZone)}</span>
             </UISummaryRow>
           )}
-          {when && <UISummaryRow icon={Clock}>{formatTime(when)}</UISummaryRow>}
+          {when && <UISummaryRow icon={Clock}>{formatTime(when, timeZone)}</UISummaryRow>}
           {employee && <UISummaryRow icon={User}>com {employee.name}</UISummaryRow>}
           {businessName && (
             <UISummaryRow icon={MapPin} sub={address || undefined}>
@@ -2013,9 +2103,11 @@ function BookingStepper({ step, hasEmployees }: { step: Step; hasEmployees: bool
         <div
           className="h-2 rounded-full bg-muted overflow-hidden"
           role="progressbar"
+          aria-label="Progresso do agendamento"
           aria-valuenow={Math.min(activeIndex + 1, labels.length)}
           aria-valuemin={1}
           aria-valuemax={labels.length}
+          aria-valuetext={`Passo ${Math.min(activeIndex + 1, labels.length)} de ${labels.length}: ${allDone ? "Concluído" : labels[Math.min(activeIndex, labels.length - 1)]}`}
         >
           <div
             className="h-full rounded-full transition-all duration-500"

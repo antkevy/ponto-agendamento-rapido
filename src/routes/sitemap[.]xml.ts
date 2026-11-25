@@ -3,7 +3,12 @@ import type {} from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { db } from "@/lib/db-tables";
 
-const BASE_URL = "https://agendai-br.lovable.app";
+/** Usa a URL configurada em produção; em dev, a origem do próprio request. */
+function baseUrl(request: Request): string {
+  const configured = typeof process !== "undefined" ? process.env.APP_SITE_URL : undefined;
+  if (configured) return configured.replace(/\/+$/, "");
+  return new URL(request.url).origin;
+}
 
 function escapeXml(s: string): string {
   return s
@@ -23,7 +28,8 @@ interface SitemapEntry {
 export const Route = createFileRoute("/sitemap.xml")({
   server: {
     handlers: {
-      GET: async () => {
+      GET: async ({ request }) => {
+        const siteUrl = baseUrl(request);
         const entries: SitemapEntry[] = [
           { path: "/", changefreq: "weekly", priority: "1.0" },
           { path: "/entrar", changefreq: "monthly", priority: "0.4" },
@@ -48,7 +54,7 @@ export const Route = createFileRoute("/sitemap.xml")({
         const urls = entries.map((e) =>
           [
             `  <url>`,
-            `    <loc>${BASE_URL}${e.path}</loc>`,
+            `    <loc>${siteUrl}${e.path}</loc>`,
             e.changefreq ? `    <changefreq>${e.changefreq}</changefreq>` : null,
             e.priority ? `    <priority>${e.priority}</priority>` : null,
             `  </url>`,

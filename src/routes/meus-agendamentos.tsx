@@ -1,11 +1,12 @@
 import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { db } from "@/lib/db-tables";
 import { BrandLogo } from "@/components/brand-logo";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { Modal } from "@/components/modal";
 import { useBookingTheme } from "@/hooks/use-booking-theme";
 import type { ProfessionalTheme } from "@/lib/appearance";
 import { optimizedImageUrl } from "@/lib/image";
@@ -25,6 +26,8 @@ import {
   computeSlots,
   formatLongDate,
   formatTime,
+  hourInTimeZone,
+  weekdayInTimeZone,
   type AvailabilityRow,
   type Block,
   type BusySlot,
@@ -64,6 +67,7 @@ type Row = {
   duration_minutes: number;
   professional_business_name: string;
   professional_slug: string;
+  professional_timezone: string;
   service_name: string;
   starts_at: string;
   ends_at: string;
@@ -121,7 +125,7 @@ function Page() {
     !!proSlug,
   );
 
-  const { data, isFetching } = useQuery({
+  const { data, isFetching, isError } = useQuery({
     queryKey: ["client-appts", submitted, submittedCode],
     enabled: !!submitted,
     queryFn: async () => {
@@ -251,7 +255,8 @@ function Page() {
               setContact("");
             }}
             data-selected={mode === "phone"}
-            className="chip !min-h-[40px] !py-1.5 text-sm"
+            aria-pressed={mode === "phone"}
+            className="chip !min-h-[44px] text-sm"
           >
             WhatsApp
           </button>
@@ -262,7 +267,8 @@ function Page() {
               setContact("");
             }}
             data-selected={mode === "email"}
-            className="chip !min-h-[40px] !py-1.5 text-sm"
+            aria-pressed={mode === "email"}
+            className="chip !min-h-[44px] text-sm"
           >
             Email
           </button>
@@ -298,6 +304,7 @@ function Page() {
           <div className="flex flex-col sm:flex-row gap-3">
             {mode === "phone" ? (
               <input
+                aria-label="WhatsApp usado no agendamento"
                 required
                 type="tel"
                 inputMode="tel"
@@ -309,6 +316,7 @@ function Page() {
               />
             ) : (
               <input
+                aria-label="E-mail usado no agendamento"
                 required
                 type="email"
                 inputMode="email"
@@ -319,6 +327,7 @@ function Page() {
               />
             )}
             <input
+              aria-label="Código de acesso de 6 dígitos"
               required
               inputMode="numeric"
               autoComplete="one-time-code"
@@ -338,7 +347,12 @@ function Page() {
           </p>
         </form>
 
-        {submitted && (
+        {submitted && isError && (
+          <div role="alert" className="card-elevated p-4 mt-6 text-sm text-destructive">
+            Não foi possível consultar seus agendamentos. Tente novamente em instantes.
+          </div>
+        )}
+        {submitted && !isError && (
           <AppointmentList
             data={data ?? []}
             isFetching={isFetching}
@@ -374,7 +388,13 @@ function AppointmentList({
 }) {
   const [historyOpen, setHistoryOpen] = useState(false);
 
-  const now = useMemo(() => new Date(), []);
+  // `now` precisa avançar: com o valor congelado no mount, agendamentos que
+  // passam da marca de 24h continuavam "canceláveis" indefinidamente.
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(new Date()), 60_000);
+    return () => window.clearInterval(id);
+  }, []);
 
   const upcoming = useMemo(
     () => data.filter((r) => r.status === "confirmed" && new Date(r.starts_at) > now),
@@ -386,7 +406,10 @@ function AppointmentList({
     [data, now],
   );
 
-  if (isFetching) return <div className="mt-6 skeleton h-24" />;
+  if (isFetching)
+    return (
+      <div className="mt-6 skeleton h-24" role="status" aria-label="Carregando agendamentos" />
+    );
   if (data.length === 0)
     return (
       <p className="mt-6 text-sm text-muted-foreground">
@@ -410,6 +433,7 @@ function AppointmentList({
                     {new Date(r.starts_at).toLocaleString("pt-BR", {
                       dateStyle: "medium",
                       timeStyle: "short",
+                      timeZone: r.professional_timezone,
                     })}
                   </span>
                   <StatusPill status={r.status} />
@@ -474,6 +498,7 @@ function AppointmentList({
                           {new Date(r.starts_at).toLocaleString("pt-BR", {
                             dateStyle: "medium",
                             timeStyle: "short",
+                            timeZone: r.professional_timezone,
                           })}
                         </span>
                         <StatusPill status={r.status} />
@@ -510,6 +535,19 @@ function RescheduleModal({
     return d;
   });
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
+
+  const { data: proTimeZone } = useQuery({
+    queryKey: ["resched-timezone", row.professional_id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from(db.profissionais)
+        .select("timezone")
+        .eq("id", row.professional_id)
+        .maybeSingle();
+      if (error) throw error;
+      return (data as { timezone: string | null } | null)?.timezone ?? null;
+    },
+  });
 
   const { data: proAvail } = useQuery({
     queryKey: ["resched-avail", row.professional_id],
@@ -629,7 +667,7 @@ function RescheduleModal({
   }, []);
 
   const dayHasAvailability = (day: Date) =>
-    !!avail && avail.some((r) => r.weekday === day.getDay());
+    !!avail && avail.some((r) => r.weekday === weekdayInTimeZone(day, proTimeZone));
 
   const combinedBlocks = useMemo<Block[]>(() => {
     const list: Block[] = [];
@@ -647,6 +685,7 @@ function RescheduleModal({
       availability: avail,
       blocks: combinedBlocks,
       busy,
+      timeZone: proTimeZone,
     });
   }, [
     selectedDay,
@@ -657,164 +696,164 @@ function RescheduleModal({
     row.employee_id,
     row.duration_minutes,
     combinedBlocks,
+    proTimeZone,
   ]);
 
   return (
-    <div
-      className="fixed inset-0 z-50 bg-foreground/40 backdrop-blur-sm dark:bg-black/60 dark:backdrop-blur-md grid place-items-center p-4 animate-fade-in-up"
-      onClick={onClose}
+    <Modal
+      onClose={onClose}
+      hideFooter
+      ariaLabel="Reagendar agendamento"
+      contentClassName="max-w-lg rounded-2xl overflow-hidden shadow-2xl max-h-[90vh] flex flex-col p-0"
     >
-      <div
-        className="bg-background w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl max-h-[90vh] flex flex-col"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-start justify-between gap-3 p-5 pb-3">
-          <div className="min-w-0">
-            <h3 className="text-lg font-bold tracking-tight">Reagendar</h3>
-            <p className="text-sm text-muted-foreground truncate mt-0.5">{row.service_name}</p>
-            <p className="text-xs text-muted-foreground truncate mt-0.5">
-              Horário atual:{" "}
-              {new Date(row.starts_at).toLocaleString("pt-BR", {
-                dateStyle: "medium",
-                timeStyle: "short",
-              })}
-            </p>
+      <div className="flex items-start justify-between gap-3 p-5 pb-3">
+        <div className="min-w-0">
+          <h3 className="text-lg font-bold tracking-tight">Reagendar</h3>
+          <p className="text-sm text-muted-foreground truncate mt-0.5">{row.service_name}</p>
+          <p className="text-xs text-muted-foreground truncate mt-0.5">
+            Horário atual:{" "}
+            {new Date(row.starts_at).toLocaleString("pt-BR", {
+              dateStyle: "medium",
+              timeStyle: "short",
+              timeZone: row.professional_timezone,
+            })}
+          </p>
+        </div>
+        <button
+          onClick={onClose}
+          className="min-h-[44px] min-w-[44px] grid place-items-center rounded-md hover:bg-muted shrink-0"
+        >
+          <X className="h-5 w-5" />
+        </button>
+      </div>
+
+      <div className="overflow-y-auto p-5 pt-1 space-y-4">
+        <div className="card-elevated p-4">
+          <div className="flex items-center justify-between mb-3">
+            <button
+              onClick={() => {
+                const d = new Date(monthStart);
+                d.setMonth(d.getMonth() - 1);
+                if (d >= new Date(today.getFullYear(), today.getMonth(), 1)) setMonthStart(d);
+              }}
+              className="p-2 min-h-[44px] min-w-[44px] grid place-items-center rounded-md hover:bg-muted"
+              aria-label="Mês anterior"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <span className="font-semibold capitalize">
+              {monthStart.toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}
+            </span>
+            <button
+              onClick={() => {
+                const d = new Date(monthStart);
+                d.setMonth(d.getMonth() + 1);
+                setMonthStart(d);
+              }}
+              className="p-2 min-h-[44px] min-w-[44px] grid place-items-center rounded-md hover:bg-muted"
+              aria-label="Próximo mês"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className="min-h-[44px] min-w-[44px] grid place-items-center rounded-md hover:bg-muted shrink-0"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          <div className="grid grid-cols-7 gap-1 text-center text-xs text-muted-foreground mb-1">
+            {WEEKDAYS_PT_SHORT.map((w) => (
+              <span key={w}>{w}</span>
+            ))}
+          </div>
+          <div className="grid grid-cols-7 gap-1">
+            {daysGrid.map((d, i) => {
+              if (!d) return <div key={i} />;
+              const past = d < today;
+              const canSelect = !past && dayHasAvailability(d);
+              const selected = selectedDay && d.toDateString() === selectedDay.toDateString();
+              const isToday = d.toDateString() === today.toDateString();
+              return (
+                <button
+                  key={i}
+                  disabled={!canSelect}
+                  onClick={() => setSelectedDay(d)}
+                  data-selected={selected || undefined}
+                  data-today={isToday || undefined}
+                  aria-label={formatLongDate(d, proTimeZone)}
+                  className="h-11 w-full rounded-lg text-sm font-medium disabled:opacity-30 disabled:cursor-not-allowed hover:bg-accent/10 hover:text-accent transition-colors data-[today]:ring-1 data-[today]:ring-accent/40 data-[selected]:!bg-accent data-[selected]:!text-accent-foreground data-[selected]:ring-0"
+                >
+                  {d.getDate()}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        <div className="overflow-y-auto p-5 pt-1 space-y-4">
-          <div className="card-elevated p-4">
-            <div className="flex items-center justify-between mb-3">
-              <button
-                onClick={() => {
-                  const d = new Date(monthStart);
-                  d.setMonth(d.getMonth() - 1);
-                  if (d >= new Date(today.getFullYear(), today.getMonth(), 1)) setMonthStart(d);
-                }}
-                className="p-2 min-h-[44px] min-w-[44px] grid place-items-center rounded-md hover:bg-muted"
-                aria-label="Mês anterior"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              <span className="font-semibold capitalize">
-                {monthStart.toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}
-              </span>
-              <button
-                onClick={() => {
-                  const d = new Date(monthStart);
-                  d.setMonth(d.getMonth() + 1);
-                  setMonthStart(d);
-                }}
-                className="p-2 min-h-[44px] min-w-[44px] grid place-items-center rounded-md hover:bg-muted"
-                aria-label="Próximo mês"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
+        <div>
+          {!selectedDay ? (
+            <div className="card-elevated p-4 grid place-items-center text-center">
+              <div>
+                <CalendarIcon className="h-8 w-8 mx-auto text-muted-foreground/50 mb-2" />
+                <p className="text-sm text-muted-foreground">
+                  Selecione uma data para ver os horários disponíveis.
+                </p>
+              </div>
             </div>
-            <div className="grid grid-cols-7 gap-1 text-center text-xs text-muted-foreground mb-1">
-              {WEEKDAYS_PT_SHORT.map((w) => (
-                <span key={w}>{w}</span>
+          ) : loadingBusy ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="skeleton h-11" />
               ))}
             </div>
-            <div className="grid grid-cols-7 gap-1">
-              {daysGrid.map((d, i) => {
-                if (!d) return <div key={i} />;
-                const past = d < today;
-                const canSelect = !past && dayHasAvailability(d);
-                const selected = selectedDay && d.toDateString() === selectedDay.toDateString();
-                const isToday = d.toDateString() === today.toDateString();
+          ) : slots.length === 0 ? (
+            <div className="card-elevated p-4 grid place-items-center text-center">
+              <p className="text-sm text-muted-foreground">
+                Nenhum horário livre nesse dia. Tente outro.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {[
+                { label: "Manhã", from: 6, to: 12 },
+                { label: "Tarde", from: 12, to: 18 },
+                { label: "Noite", from: 18, to: 24 },
+              ].map(({ label, from, to }) => {
+                const periodSlots = slots.filter((s) => {
+                  const h = hourInTimeZone(s, proTimeZone);
+                  return h >= from && h < to;
+                });
+                if (periodSlots.length === 0) return null;
                 return (
-                  <button
-                    key={i}
-                    disabled={!canSelect}
-                    onClick={() => setSelectedDay(d)}
-                    data-selected={selected || undefined}
-                    data-today={isToday || undefined}
-                    className="h-10 w-full rounded-lg text-sm font-medium disabled:opacity-30 disabled:cursor-not-allowed hover:bg-accent/10 hover:text-accent transition-colors data-[today]:ring-1 data-[today]:ring-accent/40 data-[selected]:!bg-accent data-[selected]:!text-accent-foreground data-[selected]:ring-0"
-                  >
-                    {d.getDate()}
-                  </button>
+                  <div key={label}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="h-px w-4 bg-border" />
+                      <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        {label}
+                      </h4>
+                      <span className="h-px flex-1 bg-border" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                      {periodSlots.map((s) => (
+                        <button
+                          key={s.toISOString()}
+                          onClick={() => onConfirm(s.toISOString())}
+                          disabled={isPending}
+                          className="chip"
+                        >
+                          {formatTime(s, proTimeZone)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 );
               })}
             </div>
-          </div>
-
-          <div>
-            {!selectedDay ? (
-              <div className="card-elevated p-4 grid place-items-center text-center">
-                <div>
-                  <CalendarIcon className="h-8 w-8 mx-auto text-muted-foreground/50 mb-2" />
-                  <p className="text-sm text-muted-foreground">
-                    Selecione uma data para ver os horários disponíveis.
-                  </p>
-                </div>
-              </div>
-            ) : loadingBusy ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="skeleton h-11" />
-                ))}
-              </div>
-            ) : slots.length === 0 ? (
-              <div className="card-elevated p-4 grid place-items-center text-center">
-                <p className="text-sm text-muted-foreground">
-                  Nenhum horário livre nesse dia. Tente outro.
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {[
-                  { label: "Manhã", from: 6, to: 12 },
-                  { label: "Tarde", from: 12, to: 18 },
-                  { label: "Noite", from: 18, to: 24 },
-                ].map(({ label, from, to }) => {
-                  const periodSlots = slots.filter((s) => {
-                    const h = s.getHours();
-                    return h >= from && h < to;
-                  });
-                  if (periodSlots.length === 0) return null;
-                  return (
-                    <div key={label}>
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="h-px w-4 bg-border" />
-                        <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                          {label}
-                        </h4>
-                        <span className="h-px flex-1 bg-border" />
-                      </div>
-                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                        {periodSlots.map((s) => (
-                          <button
-                            key={s.toISOString()}
-                            onClick={() => onConfirm(s.toISOString())}
-                            disabled={isPending}
-                            className="chip"
-                          >
-                            {formatTime(s)}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          {isPending && (
-            <p className="text-center text-sm text-muted-foreground animate-fade-in-up">
-              <Clock className="h-4 w-4 inline-block mr-1" /> Confirmando...
-            </p>
           )}
         </div>
+
+        {isPending && (
+          <p className="text-center text-sm text-muted-foreground animate-fade-in-up">
+            <Clock className="h-4 w-4 inline-block mr-1" /> Confirmando...
+          </p>
+        )}
       </div>
-    </div>
+    </Modal>
   );
 }
 

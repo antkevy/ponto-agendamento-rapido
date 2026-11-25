@@ -69,8 +69,11 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
         <div className="flex items-center gap-1">
           {ThemeButton}
           <button
+            type="button"
             onClick={() => setOpen(!open)}
             aria-label="Menu"
+            aria-expanded={open}
+            aria-controls="sidebar-mobile"
             className="p-2 min-h-[44px] min-w-[44px] grid place-items-center rounded-md hover:bg-muted text-foreground"
           >
             {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -90,7 +93,8 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
 
         {/* Sidebar */}
         <aside
-          {...(isMobile && !open ? { inert: "" } : {})}
+          id="sidebar-mobile"
+          inert={isMobile && !open}
           className={`fixed lg:sticky top-14 lg:top-0 inset-x-0 lg:inset-auto bottom-0 lg:bottom-auto z-30 lg:h-screen w-3/5 max-w-72 lg:w-64 bg-sidebar border-r border-sidebar-border overflow-y-auto transition-transform duration-300 ease-in-out lg:translate-x-0 lg:pointer-events-auto ${open ? "translate-x-0" : "-translate-x-full pointer-events-none"}`}
         >
           <div className="hidden lg:flex items-center justify-between h-20 px-6 border-b border-sidebar-border">

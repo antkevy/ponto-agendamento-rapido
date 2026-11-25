@@ -21,10 +21,11 @@ export type RateLimitOptions = {
 };
 
 export function clientIp(request: Request): string {
-  const cf = request.headers.get("cf-connecting-ip");
-  if (cf) return cf;
-  const forwarded = request.headers.get("x-forwarded-for");
-  if (forwarded) return forwarded.split(",")[0].trim();
+  // `cf-connecting-ip` é definido pela Cloudflare e não pode ser forjado pelo
+  // cliente quando o Worker está atrás do proxy. `x-forwarded-for` é
+  // controlável pelo chamador, então nunca é usado como chave de rate limit.
+  const cf = request.headers.get("cf-connecting-ip")?.trim() ?? "";
+  if (/^[0-9a-fA-F:.]{7,45}$/.test(cf)) return cf;
   return "unknown";
 }
 

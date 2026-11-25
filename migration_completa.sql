@@ -1,9 +1,15 @@
 -- ============================================================
--- MIGRAÇÃO COMPLETA — Agendaí (Lovable Cloud → Supabase Externo)
+-- ⚠️  SCRIPT LEGADO — NÃO EXECUTAR EM PROJETO EXISTENTE  ⚠️
 -- ============================================================
--- Execute toda esta SQL no SQL Editor do novo projeto Supabase.
--- Ordem: 1) Storage → 2) Enum → 3) Tabelas → 4) Índices
---        5) Triggers → 6) RPCs → 7) Permissões → 8) RLS
+-- Este arquivo é um snapshot histórico do bootstrap inicial. Ele NÃO contém
+-- o hardening aplicado depois (RLS stricter, RPCs com access_code, validação
+-- de upload, session_is_compliant, etc.). Reexecutá-lo REVERTE correções de
+-- segurança e pode expor dados de clientes.
+--
+-- ✅ Para configurar um projeto NOVO, aplique em ordem:
+--    supabase/migrations/*.sql (de 20260728... até 20261125...).
+-- ✅ Para um projeto JÁ EXISTENTE, rode apenas as migrações pendentes.
+--    Nunca rode este arquivo: ele é mantido apenas como referência histórica.
 -- ============================================================
 
 -- ********** 1. STORAGE BUCKET ********** --

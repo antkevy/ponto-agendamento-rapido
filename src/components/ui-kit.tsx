@@ -192,7 +192,8 @@ export function UIPasswordInput(props: Omit<FieldProps, "type" | "trailing">) {
           type="button"
           onClick={() => setShow((v) => !v)}
           aria-label={show ? "Ocultar senha" : "Mostrar senha"}
-          className="p-1 rounded-md text-muted-foreground hover:text-foreground transition-colors"
+          aria-pressed={show}
+          className="min-h-[44px] min-w-[44px] grid place-items-center rounded-md text-muted-foreground hover:text-foreground transition-colors"
         >
           <EyeGlyph open={show} />
         </button>

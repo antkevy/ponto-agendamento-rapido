@@ -6,6 +6,7 @@ import { ShieldCheck, ShieldOff, KeyRound, UserCog, Loader2 } from "lucide-react
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useUserRole, ROLE_LABEL } from "@/hooks/use-user-role";
+import { TeamRoles } from "@/components/team-roles";
 import {
   isStrongPassword,
   passwordScore,
@@ -86,7 +87,8 @@ export function SecuritySettings() {
         code: mfaCode.trim(),
       });
       if (error) throw error;
-      await supabase.rpc("set_mfa_enabled", { p_enabled: true });
+      const { error: flagError } = await supabase.rpc("set_mfa_enabled", { p_enabled: true });
+      if (flagError) throw flagError;
     },
     onSuccess: () => {
       toast.success("Autenticação em dois fatores ativada!");
@@ -101,9 +103,11 @@ export function SecuritySettings() {
     mutationFn: async () => {
       const totp = factors?.filter((f) => f.factor_type === "totp") ?? [];
       for (const f of totp) {
-        await supabase.auth.mfa.unenroll({ factorId: f.id });
+        const { error } = await supabase.auth.mfa.unenroll({ factorId: f.id });
+        if (error) throw error;
       }
-      await supabase.rpc("set_mfa_enabled", { p_enabled: false });
+      const { error: flagError } = await supabase.rpc("set_mfa_enabled", { p_enabled: false });
+      if (flagError) throw flagError;
     },
     onSuccess: () => {
       toast.success("Autenticação em dois fatores desativada.");
@@ -173,6 +177,8 @@ export function SecuritySettings() {
         </div>
       </div>
 
+      {role === "admin" && <TeamRoles />}
+
       <div className="card-elevated p-6 space-y-5">
         <div className="flex items-center gap-3">
           <span className="ui-icon-bubble h-10 w-10 grid place-items-center rounded-xl">
@@ -214,6 +220,7 @@ export function SecuritySettings() {
             </div>
             <div className="flex flex-col sm:flex-row gap-3">
               <input
+                aria-label="Código de verificação do aplicativo autenticador"
                 value={mfaCode}
                 onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
                 inputMode="numeric"
@@ -276,6 +283,7 @@ export function SecuritySettings() {
 
         <div className="grid gap-4">
           <input
+            aria-label="Senha atual"
             type="password"
             autoComplete="current-password"
             placeholder="Senha atual"
@@ -284,6 +292,7 @@ export function SecuritySettings() {
             className="w-full min-h-[44px] px-3 py-2 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-ring"
           />
           <input
+            aria-label="Nova senha"
             type="password"
             autoComplete="new-password"
             placeholder="Nova senha"
@@ -292,6 +301,7 @@ export function SecuritySettings() {
             className="w-full min-h-[44px] px-3 py-2 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-ring"
           />
           <input
+            aria-label="Confirmar nova senha"
             type="password"
             autoComplete="new-password"
             placeholder="Confirmar nova senha"

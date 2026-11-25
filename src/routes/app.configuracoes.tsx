@@ -37,17 +37,26 @@ function Page() {
   });
 
   useEffect(() => {
-    if (pro)
-      setForm({
-        business_name: pro.business_name,
-        slug: pro.slug,
-        description: pro.description ?? "",
-        address: pro.address ?? "",
-        phone: onlyDigits(pro.phone ?? ""),
-        logo_url: pro.logo_url ?? "",
-        msg_confirmed: pro.msg_confirmed ?? "",
-        msg_cancelled: pro.msg_cancelled ?? "",
-      });
+    if (!pro) return;
+    const fresh = {
+      business_name: pro.business_name,
+      slug: pro.slug,
+      description: pro.description ?? "",
+      address: pro.address ?? "",
+      phone: onlyDigits(pro.phone ?? ""),
+      logo_url: pro.logo_url ?? "",
+      msg_confirmed: pro.msg_confirmed ?? "",
+      msg_cancelled: pro.msg_cancelled ?? "",
+    };
+    // Um refetch em background não pode apagar o que o usuário está digitando.
+    setForm((current) => {
+      const isPristine =
+        current.business_name === "" && current.slug === "" && current.description === "";
+      const wasEdited = (Object.keys(fresh) as (keyof typeof fresh)[]).some(
+        (key) => current[key] !== fresh[key],
+      );
+      return isPristine || !wasEdited ? fresh : current;
+    });
   }, [pro]);
 
   const save = useMutation({
@@ -81,7 +90,7 @@ function Page() {
   return (
     <AppShell title="Configurações">
       {isLoading ? (
-        <div className="skeleton h-32" />
+        <div className="skeleton h-32" role="status" aria-label="Carregando configurações" />
       ) : !pro ? (
         <OnboardingCard />
       ) : (

@@ -35,9 +35,10 @@ export function ViewToggle({
           key={b.mode}
           type="button"
           onClick={() => onChange(b.mode)}
+          aria-label={`Visualizar em ${b.label}`}
+          aria-pressed={active === b.mode}
           data-selected={active === b.mode || undefined}
-          className={`px-3 py-2 text-sm inline-flex items-center gap-1 text-muted-foreground data-[selected]:bg-secondary data-[selected]:text-foreground${i > 0 ? " border-l border-border" : ""}`}
-          title={b.label}
+          className={`min-h-[44px] min-w-[44px] px-3 text-sm inline-flex items-center justify-center gap-1 text-muted-foreground data-[selected]:bg-secondary data-[selected]:text-foreground${i > 0 ? " border-l border-border" : ""}`}
         >
           {b.icon}
         </button>

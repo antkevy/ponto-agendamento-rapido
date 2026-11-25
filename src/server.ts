@@ -2,8 +2,9 @@ import "./lib/error-capture";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
-import { accessLog } from "./lib/audit";
+import { accessLog, auditLog } from "./lib/audit";
 import { buildTooManyResponse, clientIp, GLOBAL_LIMIT, rateLimitRequest } from "./lib/rate-limit";
+import { verifyTurnstile } from "./lib/turnstile";
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
@@ -89,8 +90,10 @@ function mergeWorkerEnv(env: unknown) {
     "LOGTAIL_SOURCE_TOKEN",
     "APP_DATA_ENCRYPTION_KEY",
     "APP_ENABLE_CSP",
+    "APP_SITE_URL",
     "SUPABASE_URL",
     "SUPABASE_PUBLISHABLE_KEY",
+    "TURNSTILE_SECRET_KEY",
   ]) {
     if (bindings[key] && !process.env[key]) process.env[key] = bindings[key];
   }
@@ -103,14 +106,77 @@ function waitUntil(ctx: unknown, promise: Promise<unknown>) {
   }
 }
 
+function jsonResponse(payload: unknown, status = 200): Response {
+  return new Response(JSON.stringify(payload), {
+    status,
+    headers: {
+      "content-type": "application/json; charset=utf-8",
+      "cache-control": "no-store",
+    },
+  });
+}
+
+/** Endpoint interno: verifica o token do Turnstile sem expor o secret. */
+async function handleTurnstileVerify(request: Request, ctx: unknown): Promise<Response> {
+  const url = new URL(request.url);
+  const origin = request.headers.get("origin");
+  // Evita que outro site use nosso endpoint como oracle de verificação.
+  if (origin && origin !== url.origin) return jsonResponse({ ok: false }, 403);
+
+  try {
+    const body = (await request.json()) as { token?: unknown };
+    if (typeof body.token !== "string") return jsonResponse({ ok: false }, 400);
+
+    const configured = process.env.APP_SITE_URL;
+    const expectedHost = configured ? new URL(configured).hostname : url.hostname;
+    const result = await verifyTurnstile(
+      body.token,
+      process.env.TURNSTILE_SECRET_KEY,
+      expectedHost,
+    );
+    if (!result.ok) {
+      waitUntil(
+        ctx,
+        auditLog("captcha.failed", "warn", {
+          reason: result.reason,
+          path: url.pathname,
+          h_ip: clientIp(request),
+        }),
+      );
+    }
+    return jsonResponse({ ok: result.ok });
+  } catch {
+    return jsonResponse({ ok: false }, 400);
+  }
+}
+
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     mergeWorkerEnv(env);
     const startedAt = performance.now();
 
     try {
+      const url = new URL(request.url);
       const limited = rateLimitRequest(request, GLOBAL_LIMIT);
-      if (!limited.ok) return buildTooManyResponse(limited.retryAfterMs);
+      if (!limited.ok) {
+        const response = withSecurityHeaders(buildTooManyResponse(limited.retryAfterMs));
+        waitUntil(
+          ctx,
+          auditLog("http.rate_limited", "warn", {
+            path: url.pathname,
+            h_ip: clientIp(request),
+            retry_after_ms: limited.retryAfterMs,
+          }),
+        );
+        return response;
+      }
+
+      if (url.pathname === "/api/turnstile-verify") {
+        if (request.method !== "POST") {
+          return withSecurityHeaders(jsonResponse({ ok: false }, 405));
+        }
+        return withSecurityHeaders(await handleTurnstileVerify(request, ctx));
+      }
 
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);

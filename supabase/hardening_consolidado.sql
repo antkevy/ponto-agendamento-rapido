@@ -1,8 +1,18 @@
 -- =====================================================================
+-- ⚠️  ARQUIVO OBSOLETO — NÃO EXECUTAR EM PROJETO EXISTENTE
+-- =====================================================================
+-- Este consolidado foi escrito antes do hardening de 15/09 e 25/11/2026.
+-- Ele RECRIA assinaturas antigas de lookup_client_appointments() e
+-- client_cancel_appointment() sem código de acesso, e concede EXECUTE a anon —
+-- ou seja, reabre consulta/cancelamento de agendamentos apenas com telefone.
+--
+-- Use apenas `supabase/migrations/*.sql` (em ordem de data), em especial:
+--   20260915000000_security_hardening.sql
+--   20261125000000_critical_security_fixes.sql
+-- =====================================================================
+--
 -- Hardening consolidado - Agendaí (ponto-agendamento-rapido)
--- Aplicar manualmente no Supabase SQL editor do projeto
--- (https://sjxlludhozmojihuqxby.supabase.co -> SQL Editor)
--- É seguro rodar mais de uma vez (idempotente).
+-- Registro histórico; NÃO aplicar manualmente no SQL Editor.
 -- =====================================================================
 
 -- ************************************************************

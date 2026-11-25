@@ -9,17 +9,31 @@
  * criptografia de coluna quando houver caminho de escrita servidor.
  */
 
-const KEY_B64 = typeof process !== "undefined" ? process.env.APP_DATA_ENCRYPTION_KEY : undefined;
+/**
+ * A chave é lida a cada uso (não no import do módulo): no Cloudflare Workers
+ * os bindings são mesclados em `process.env` no início do request, depois de
+ * este módulo já ter sido avaliado pelo bundle.
+ */
+function keyB64(): string | undefined {
+  return typeof process !== "undefined" ? process.env.APP_DATA_ENCRYPTION_KEY : undefined;
+}
 
 let cachedKey: CryptoKey | null = null;
+let cachedFor: string | undefined;
 
 async function getKey(): Promise<CryptoKey | null> {
-  if (!KEY_B64) return null;
-  if (cachedKey) return cachedKey;
+  const b64 = keyB64();
+  if (!b64) {
+    cachedKey = null;
+    cachedFor = undefined;
+    return null;
+  }
+  if (cachedKey && cachedFor === b64) return cachedKey;
   try {
-    const raw = Uint8Array.from(atob(KEY_B64), (c) => c.charCodeAt(0));
+    const raw = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
     if (raw.byteLength !== 32) return null;
     cachedKey = await crypto.subtle.importKey("raw", raw, "AES-GCM", false, ["encrypt", "decrypt"]);
+    cachedFor = b64;
     return cachedKey;
   } catch {
     return null;
@@ -81,9 +95,10 @@ export async function decryptString(payload: string): Promise<string | null> {
  * sem chave configurada, usa SHA-256 simples (fallback para dev local).
  */
 export async function hashSecret(value: string): Promise<string> {
-  if (KEY_B64) {
+  const b64 = keyB64();
+  if (b64) {
     try {
-      const raw = Uint8Array.from(atob(KEY_B64), (c) => c.charCodeAt(0));
+      const raw = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
       const hmacKey = await crypto.subtle.importKey(
         "raw",
         raw,
@@ -101,4 +116,4 @@ export async function hashSecret(value: string): Promise<string> {
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-export const hasEncryptionKey = (): boolean => Boolean(KEY_B64);
+export const hasEncryptionKey = (): boolean => Boolean(keyB64());

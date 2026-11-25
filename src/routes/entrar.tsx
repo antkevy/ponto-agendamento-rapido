@@ -103,8 +103,14 @@ function SignIn() {
   }
 
   async function handlePostLogin(user: { id: string; email?: string }) {
-    const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-    if (aal?.nextLevel === "aal2") {
+    const { data: aal, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    if (aalError) {
+      toast.error("Não foi possível verificar a autenticação. Tente novamente.");
+      return;
+    }
+    // nextLevel continua "aal2" depois da verificação; só exigimos o MFA
+    // enquanto a sessão atual ainda não foi elevada.
+    if (aal?.nextLevel === "aal2" && aal.currentLevel !== "aal2") {
       const { data: list } = await supabase.auth.mfa.listFactors();
       const factor = list?.all.find((f) => f.factor_type === "totp" && f.status === "verified");
       if (factor) {
@@ -112,13 +118,24 @@ function SignIn() {
         setMode("mfa");
         return;
       }
+      toast.error("Autenticação em dois fatores não está configurada corretamente.");
+      return;
     }
-    const { data: sec } = await supabase
+    const { data: sec, error: secError } = await supabase
       .from("user_security")
       .select("password_changed_at")
       .eq("user_id", user.id)
       .maybeSingle();
-    if (!sec?.password_changed_at || daysUntilPasswordExpiry(sec.password_changed_at) > 0) {
+    if (secError) {
+      toast.error("Não foi possível validar sua conta. Tente novamente.");
+      return;
+    }
+    // Sem registro = sem política de senha confiável: falha fechada.
+    if (!sec?.password_changed_at) {
+      toast.error("Sua conta não está configurada. Procure o administrador.");
+      return;
+    }
+    if (daysUntilPasswordExpiry(sec.password_changed_at) > 0) {
       void supabase
         .rpc("log_auth_event", {
           p_kind: "login_success",
@@ -186,12 +203,10 @@ function SignIn() {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) {
-      void supabase
-        .rpc("log_auth_event", { p_kind: "login_failed", p_contact: email.trim().toLowerCase() })
-        .then(
-          () => {},
-          () => {},
-        );
+      void supabase.rpc("log_login_failed", { p_contact: email.trim().toLowerCase() }).then(
+        () => {},
+        () => {},
+      );
       return toast.error("Email ou senha inválidos.");
     }
     if (data.user) await handlePostLogin(data.user);
@@ -218,7 +233,7 @@ function SignIn() {
             Sua conta está protegida com autenticação em dois fatores. Digite o código de 6 dígitos
             gerado pelo seu app autenticador.
           </p>
-          <UIPasswordInput
+          <UIInput
             label="Código de verificação"
             icon={Lock}
             required
@@ -381,38 +396,58 @@ const TESTIMONIALS: Testimonial[] = [
 
 function TestimonialQuote() {
   const [active, setActive] = useState(0);
+  const [paused, setPaused] = useState(false);
   useEffect(() => {
+    if (paused) return;
     const id = setInterval(() => setActive((p) => (p + 1) % TESTIMONIALS.length), 6000);
     return () => clearInterval(id);
-  }, []);
+  }, [paused]);
   const t = TESTIMONIALS[active];
   return (
-    <div className="text-white">
-      <Quote className="h-8 w-8 text-white/40" />
-      <p
-        key={active}
-        className="mt-3 text-base leading-relaxed text-white/90 min-h-[84px] animate-fade-in-up"
-      >
-        “{t.text}”
-      </p>
-      <div className="mt-4 flex items-center gap-3">
-        <span className="h-10 w-10 rounded-full grid place-items-center bg-white/15 border border-white/25 text-sm font-bold">
-          {t.initials}
-        </span>
-        <div>
-          <p className="font-semibold">{t.name}</p>
-          <p className="text-xs text-white/60">{t.role}</p>
+    <div
+      className="text-white"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onFocusCapture={() => setPaused(true)}
+      onBlurCapture={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setPaused(false);
+      }}
+    >
+      <Quote className="h-8 w-8 text-white/40" aria-hidden="true" />
+      <div id="depoimento-painel" role="tabpanel" aria-labelledby={`depoimento-tab-${active}`}>
+        <p
+          key={active}
+          className="mt-3 text-base leading-relaxed text-white/90 min-h-[84px] animate-fade-in-up"
+        >
+          “{t.text}”
+        </p>
+        <div className="mt-4 flex items-center gap-3">
+          <span className="h-10 w-10 rounded-full grid place-items-center bg-white/15 border border-white/25 text-sm font-bold">
+            {t.initials}
+          </span>
+          <div>
+            <p className="font-semibold">{t.name}</p>
+            <p className="text-xs text-white/60">{t.role}</p>
+          </div>
         </div>
       </div>
       <div className="mt-4 flex gap-1.5" role="tablist" aria-label="Depoimentos">
-        {TESTIMONIALS.map((_, i) => (
+        {TESTIMONIALS.map((item, i) => (
           <button
             key={i}
+            id={`depoimento-tab-${i}`}
             type="button"
+            role="tab"
+            aria-selected={i === active}
+            aria-controls="depoimento-painel"
             onClick={() => setActive(i)}
-            aria-label={`Ver depoimento ${i + 1}`}
-            className={`h-1.5 rounded-full transition-all ${i === active ? "w-6 bg-white" : "w-1.5 bg-white/40 hover:bg-white/70"}`}
-          />
+            aria-label={`Ver depoimento de ${item.name}`}
+            className={`h-11 min-w-[44px] grid place-items-center rounded-full transition-all ${i === active ? "bg-white" : "bg-white/40 hover:bg-white/70"}`}
+          >
+            <span
+              className={`block rounded-full transition-all ${i === active ? "w-6 h-1.5" : "w-1.5 h-1.5"}`}
+            />
+          </button>
         ))}
       </div>
     </div>

@@ -19,7 +19,8 @@ export function auditEnabled(): boolean {
   return Boolean(env("LOGTAIL_SOURCE_TOKEN"));
 }
 
-const SENSITIVE_KEYS = new Set(["email", "contact", "phone", "name", "token", "password"]);
+// IP é dado pessoal (LGPD): nunca deve sair em claro nos logs.
+const SENSITIVE_KEYS = new Set(["email", "contact", "phone", "name", "token", "password", "ip"]);
 
 async function maskSensitive(meta: Record<string, unknown>): Promise<Record<string, unknown>> {
   const out: Record<string, unknown> = {};
@@ -78,7 +79,7 @@ export function auditLog(
   })();
 }
 
-/** Log de acesso: um registro por request (status, IP, duração). */
+/** Log de acesso: um registro por request (status, hash do IP, duração). */
 export function accessLog(
   request: Request,
   response: Response,
@@ -90,7 +91,8 @@ export function accessLog(
     method: request.method,
     path: new URL(request.url).pathname,
     status: response.status,
-    ip,
+    // Prefixo h_ => hashSecret() anonimiza antes do envio.
+    h_ip: ip,
     duration_ms: Math.round(durationMs),
   });
 }

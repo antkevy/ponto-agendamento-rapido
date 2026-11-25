@@ -58,9 +58,11 @@ function SignUp() {
       const user = data.user;
       if (!user) throw new Error("Não foi possível criar a conta.");
 
-      // Try to create the professional profile (may need active session)
+      // Tenta criar o perfil do negócio. Com confirmação de e-mail ativada não
+      // há sessão ainda; nesse caso o onboarding do painel completa o perfil.
       const baseSlug = slugify(businessName) || "meu-negocio";
       let slug = baseSlug;
+      let profileReady = false;
       for (let i = 0; i < 8; i++) {
         const { error: insErr } = await supabase.from(db.profissionais).insert({
           user_id: user.id,
@@ -68,16 +70,24 @@ function SignUp() {
           business_name: businessName.trim(),
           owner_name: ownerName.trim() || null,
         });
-        if (!insErr) break;
+        if (!insErr) {
+          profileReady = true;
+          break;
+        }
         if (insErr.code === "23505") {
           slug = `${baseSlug}-${crypto.getRandomValues(new Uint32Array(1))[0] % 1000}`;
           continue;
         }
-        // Session may not be ready yet if email confirmation is on; ignore silently — dashboard will handle it.
         break;
       }
 
-      toast.success("Conta criada! Bem-vindo ao Agendaí.");
+      if (profileReady) {
+        toast.success("Conta criada! Bem-vindo ao Agendaí.");
+      } else {
+        toast.warning(
+          "Conta criada! Confirme seu e-mail e configure seu negócio no primeiro acesso.",
+        );
+      }
       void supabase
         .rpc("log_auth_event", { p_kind: "signup_success", p_contact: email.trim().toLowerCase() })
         .then(

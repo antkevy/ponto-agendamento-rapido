@@ -11,8 +11,13 @@ import {
   formatBRL,
   formatLongDate,
   formatTime,
+  hourInTimeZone,
+  weekdayInTimeZone,
   computeSlots,
   WEEKDAYS_PT_SHORT,
+  zonedDateKey,
+  zonedDayBounds,
+  zonedTodayKey,
 } from "@/lib/booking";
 import type { AvailabilityRow, Block, BusySlot } from "@/lib/booking";
 import { cn } from "@/lib/utils";
@@ -93,35 +98,47 @@ function Page() {
   const [detail, setDetail] = useState<Appt | null>(null);
   const qc = useQueryClient();
 
+  const timeZone = pro?.timezone ?? null;
   const {
     data: appts,
     refetch,
     isFetching,
+    isError,
   } = useQuery({
-    queryKey: ["appointments", pro?.id, range],
+    queryKey: ["appointments", pro?.id, range, timeZone],
     enabled: !!pro?.id,
     queryFn: async () => {
-      const now = new Date();
-      const start = new Date(now);
-      start.setHours(0, 0, 0, 0);
-      const end = new Date(start);
-      if (range === "today") end.setDate(end.getDate() + 1);
-      else if (range === "week") end.setDate(end.getDate() + 7);
-      else if (range === "month") end.setMonth(end.getMonth() + 1);
-      else {
-        start.setFullYear(start.getFullYear() - 5);
-        end.setFullYear(end.getFullYear() + 5);
-      }
+      const todayKey = zonedTodayKey(timeZone);
+      const [year, month, day] = todayKey.split("-").map(Number);
+      // Intervalos calculados no fuso do profissional, não no do navegador.
+      // "Todos" cobre 1 ano para trás e 1 ano para frente (paginação abaixo).
+      const days = range === "today" ? 1 : range === "week" ? 7 : range === "month" ? 30 : 730;
+      const first =
+        range === "all"
+          ? new Date(Date.now() - 365 * 86400000)
+          : zonedDayBounds(year, month, day, timeZone).start;
+      const last = new Date(first.getTime() + days * 86400000);
 
-      const { data, error } = await supabase
-        .from(db.agendamentos)
-        .select("*")
-        .eq("professional_id", pro!.id)
-        .gte("starts_at", start.toISOString())
-        .lt("starts_at", end.toISOString())
-        .order("starts_at", { ascending: range !== "all" });
-      if (error) throw error;
-      return data as Appt[];
+      // Colunas explícitas e paginação evitam payload gigante/truncamento.
+      const all: Appt[] = [];
+      const PAGE = 1000;
+      for (let from = 0; ; from += PAGE) {
+        const { data, error } = await supabase
+          .from(db.agendamentos)
+          .select(
+            "id, starts_at, ends_at, client_name, client_phone, client_email, service_snapshot_name, service_snapshot_price_cents, status, notes",
+          )
+          .eq("professional_id", pro!.id)
+          .gte("starts_at", first.toISOString())
+          .lt("starts_at", last.toISOString())
+          .order("starts_at", { ascending: range !== "all" })
+          .range(from, from + PAGE - 1);
+        if (error) throw error;
+        const page = (data ?? []) as Appt[];
+        all.push(...page);
+        if (page.length < PAGE) break;
+      }
+      return all;
     },
   });
 
@@ -152,21 +169,25 @@ function Page() {
 
   const summary = useMemo(() => {
     const list = appts ?? [];
-    const todayStr = new Date().toDateString();
+    const todayKey = zonedTodayKey(timeZone);
     return {
-      today: list.filter((a) => new Date(a.starts_at).toDateString() === todayStr).length,
+      today: list.filter((a) => zonedDateKey(new Date(a.starts_at), timeZone) === todayKey).length,
       confirmed: list.filter((a) => a.status === "confirmed").length,
       completed: list.filter((a) => a.status === "completed").length,
       cancelled: list.filter((a) => a.status === "cancelled").length,
     };
-  }, [appts]);
+  }, [appts, timeZone]);
 
   const update = useMutation({
     mutationFn: async ({
       id,
       ...patch
     }: { id: string } & Partial<Pick<Appt, "status" | "notes">>) => {
-      const { error } = await supabase.from(db.agendamentos).update(patch).eq("id", id);
+      const { error } = await supabase
+        .from(db.agendamentos)
+        .update(patch)
+        .eq("id", id)
+        .eq("professional_id", pro!.id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -184,6 +205,8 @@ function Page() {
         .insert({
           professional_id: pro!.id,
           service_id: v.service_id,
+          employee_id: v.employee_id,
+          itens_snapshot: v.itens_snapshot,
           starts_at: v.starts_at,
           ends_at: v.ends_at,
           client_name: v.client_name,
@@ -201,20 +224,16 @@ function Page() {
     },
     onSuccess: (result) => {
       const created = new Date(result.starts_at);
-      const now = new Date();
-      const start = new Date(now);
-      start.setHours(0, 0, 0, 0);
-      const end = new Date(start);
-      if (range === "today") end.setDate(end.getDate() + 1);
-      else if (range === "week") end.setDate(end.getDate() + 7);
-      else if (range === "month") end.setMonth(end.getMonth() + 1);
-      else end.setFullYear(end.getFullYear() + 5);
+      const [year, month, day] = zonedTodayKey(timeZone).split("-").map(Number);
+      const start = zonedDayBounds(year, month, day, timeZone).start;
+      const days = range === "today" ? 1 : range === "week" ? 7 : range === "month" ? 30 : 730;
+      const rangeStart = range === "all" ? new Date(start.getTime() - 365 * 86400000) : start;
+      const end = new Date(rangeStart.getTime() + days * 86400000);
 
-      const insideCurrentRange = created >= start && created < end;
+      const insideCurrentRange = created >= rangeStart && created < end;
       if (!insideCurrentRange) {
-        const monthEnd = new Date(start);
-        monthEnd.setMonth(monthEnd.getMonth() + 1);
-        if (created < monthEnd) setRange("month");
+        const monthEnd = new Date(start.getTime() + 30 * 86400000);
+        if (created >= start && created < monthEnd) setRange("month");
         else setRange("all");
         setView("list");
       }
@@ -234,7 +253,7 @@ function Page() {
   return (
     <AppShell title="Agendamentos">
       {isLoading ? (
-        <div className="skeleton h-32" />
+        <div className="skeleton h-32" role="status" aria-label="Carregando agendamentos" />
       ) : !pro ? (
         <OnboardingCard />
       ) : (
@@ -343,14 +362,16 @@ function Page() {
                 <input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
+                  aria-label="Buscar agendamentos"
                   placeholder="Buscar por cliente, serviço, telefone ou email..."
                   className="w-full h-[44px] pl-9 pr-9 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 />
                 {search && (
                   <button
+                    type="button"
                     onClick={() => setSearch("")}
                     aria-label="Limpar busca"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 grid min-h-[44px] min-w-[44px] place-items-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted"
                   >
                     <X className="h-4 w-4" />
                   </button>
@@ -383,17 +404,24 @@ function Page() {
             </div>
           </div>
 
+          {isError && (
+            <div role="alert" className="card-elevated p-4 mb-4 text-sm text-destructive">
+              Não foi possível carregar os agendamentos. Verifique sua conexão e tente novamente.
+            </div>
+          )}
+
           <div
             className="animate-ui-slide-up flex items-center justify-between gap-3 mb-3"
             style={{ animationDelay: "120ms" }}
           >
             <p className="text-sm text-muted-foreground">
-              {filtered.length} resultado{filtered.length === 1 ? "" : "s"}
+              {isError ? "—" : `${filtered.length} resultado${filtered.length === 1 ? "" : "s"}`}
             </p>
             {search && (
               <button
+                type="button"
                 onClick={() => setSearch("")}
-                className="text-sm font-medium text-accent hover:underline"
+                className="min-h-[44px] px-2 text-sm font-medium text-accent hover:underline"
               >
                 Limpar busca
               </button>
@@ -402,7 +430,13 @@ function Page() {
 
           {view === "calendar" ? (
             <Reveal delay={140}>
-              <WeekCalendar proId={pro.id} status={status} search={search} onSelect={setDetail} />
+              <WeekCalendar
+                proId={pro.id}
+                status={status}
+                search={search}
+                timeZone={timeZone}
+                onSelect={setDetail}
+              />
             </Reveal>
           ) : filtered.length === 0 ? (
             <Reveal delay={140}>
@@ -410,11 +444,15 @@ function Page() {
                 <span className="ui-icon-bubble mx-auto grid h-14 w-14 place-items-center rounded-2xl mb-4">
                   <CalendarClock className="h-7 w-7" />
                 </span>
-                <p className="text-lg font-bold">Nenhum agendamento encontrado</p>
+                <p className="text-lg font-bold">
+                  {isError ? "Erro ao carregar agendamentos" : "Nenhum agendamento encontrado"}
+                </p>
                 <p className="text-sm text-muted-foreground mt-1 max-w-sm mx-auto">
-                  {search || status !== "all"
-                    ? "Ajuste os filtros para ver mais resultados."
-                    : "Você ainda não tem agendamentos. Crie o primeiro em poucos segundos."}
+                  {isError
+                    ? "Não foi possível consultar seus agendamentos. Tente novamente."
+                    : search || status !== "all"
+                      ? "Ajuste os filtros para ver mais resultados."
+                      : "Você ainda não tem agendamentos. Crie o primeiro em poucos segundos."}
                 </p>
                 <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-2">
                   {search || status !== "all" ? (
@@ -457,6 +495,7 @@ function Page() {
               <ApptsTable
                 appts={filtered}
                 businessName={pro.business_name}
+                timeZone={timeZone}
                 msgConfirmed={pro.msg_confirmed}
                 msgCancelled={pro.msg_cancelled}
                 onUpdateById={(id, s) => update.mutate({ id, status: s })}
@@ -486,6 +525,7 @@ function Page() {
             <Modal onClose={() => setCreating(false)} size="xl" hideFooter>
               <NewAppointmentForm
                 proId={pro.id}
+                timeZone={pro.timezone}
                 saving={create.isPending}
                 onSubmit={(v) => create.mutate(v)}
                 onClose={() => setCreating(false)}
@@ -520,6 +560,7 @@ function Page() {
 function ApptsTable({
   appts,
   businessName,
+  timeZone,
   msgConfirmed,
   msgCancelled,
   onUpdateById,
@@ -527,6 +568,7 @@ function ApptsTable({
 }: {
   appts: Appt[];
   businessName: string;
+  timeZone?: string | null;
   msgConfirmed: string | null;
   msgCancelled: string | null;
   onUpdateById: (id: string, s: Appt["status"]) => void;
@@ -586,7 +628,7 @@ function ApptsTable({
                     })}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {formatTime(new Date(a.starts_at))}
+                    {formatTime(new Date(a.starts_at), timeZone)}
                   </p>
                 </div>
                 {a.notes && (
@@ -608,6 +650,7 @@ function ApptsTable({
             <DataTableCell>
               <div className="flex items-center gap-1 justify-end">
                 <button
+                  type="button"
                   onClick={() => {
                     const msg = whatsAppMsg(a, businessName, a.status, msgConfirmed, msgCancelled);
                     window.open(
@@ -615,32 +658,43 @@ function ApptsTable({
                       "_blank",
                     );
                   }}
-                  className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-accent hover:bg-accent/10 transition-colors"
-                  title="Enviar mensagem"
+                  aria-label={`Enviar mensagem para ${a.client_name}`}
+                  className="inline-flex items-center gap-1.5 rounded-lg min-h-[44px] px-2.5 text-sm font-medium text-accent hover:bg-accent/10 transition-colors"
                 >
                   <MessageSquare className="h-4 w-4" />
                   Mensagem
                 </button>
-                {a.status === "confirmed" && (
-                  <>
-                    <button
-                      onClick={() => onUpdateById(a.id, "completed")}
-                      className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm font-medium text-success hover:bg-success/10 transition-colors"
-                      title="Concluir"
-                    >
-                      <CheckCheck className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (confirm("Cancelar este agendamento?")) onUpdateById(a.id, "cancelled");
-                      }}
-                      className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors"
-                      title="Cancelar"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </>
-                )}
+                {(() => {
+                  const starts = new Date(a.starts_at).getTime();
+                  const confirmed = a.status === "confirmed";
+                  return (
+                    <>
+                      {confirmed && starts <= Date.now() && (
+                        <button
+                          type="button"
+                          onClick={() => onUpdateById(a.id, "completed")}
+                          aria-label={`Concluir agendamento de ${a.client_name}`}
+                          className="grid min-h-[44px] min-w-[44px] place-items-center rounded-lg text-success hover:bg-success/10 transition-colors"
+                        >
+                          <CheckCheck className="h-4 w-4" />
+                        </button>
+                      )}
+                      {confirmed && starts > Date.now() && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (confirm("Cancelar este agendamento?"))
+                              onUpdateById(a.id, "cancelled");
+                          }}
+                          aria-label={`Cancelar agendamento de ${a.client_name}`}
+                          className="grid min-h-[44px] min-w-[44px] place-items-center rounded-lg text-destructive hover:bg-destructive/10 transition-colors"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
             </DataTableCell>
           </DataTableRow>
@@ -766,10 +820,19 @@ type ClientOption = {
   email: string | null;
 };
 
+type SnapshotItem = {
+  tipo: "servico" | "produto" | "plano";
+  id: string;
+  nome: string;
+  preco_cents: number;
+};
+
 type NewAppointmentPayload = {
   service_id: string;
   service_name: string;
   service_price_cents: number;
+  employee_id: string | null;
+  itens_snapshot: SnapshotItem[];
   starts_at: string;
   ends_at: string;
   client_name: string;
@@ -780,11 +843,13 @@ type NewAppointmentPayload = {
 
 function NewAppointmentForm({
   proId,
+  timeZone,
   saving,
   onSubmit,
   onClose,
 }: {
   proId: string;
+  timeZone?: string | null;
   saving: boolean;
   onSubmit: (v: NewAppointmentPayload) => void;
   onClose: () => void;
@@ -796,6 +861,7 @@ function NewAppointmentForm({
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [slot, setSlot] = useState<Date | null>(null);
+  const [employeeId, setEmployeeId] = useState("");
   const [notes, setNotes] = useState("");
 
   const { data: services, isLoading: servicesLoading } = useQuery({
@@ -810,6 +876,21 @@ function NewAppointmentForm({
         .order("name");
       if (error) throw error;
       return data as ServiceOption[];
+    },
+  });
+
+  const { data: employees } = useQuery({
+    queryKey: ["appt-new-employees", proId],
+    enabled: !!proId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from(db.funcionarios)
+        .select("id, name")
+        .eq("professional_id", proId)
+        .eq("is_active", true)
+        .order("name");
+      if (error) throw error;
+      return data as { id: string; name: string }[];
     },
   });
 
@@ -874,7 +955,9 @@ function NewAppointmentForm({
   const finalNamePreview =
     clientMode === "existing" ? (selectedClient?.name ?? "") : clientName.trim();
   const endTimeLabel =
-    totalDuration > 0 && when ? formatTime(new Date(when.getTime() + totalDuration * 60000)) : "—";
+    totalDuration > 0 && when
+      ? formatTime(new Date(when.getTime() + totalDuration * 60000), timeZone)
+      : "—";
 
   const summaryCard =
     selectedServices.length > 0 ? (
@@ -892,10 +975,10 @@ function NewAppointmentForm({
         </div>
         <UISummaryRow
           icon={Calendar}
-          sub={when ? `às ${formatTime(when)} · até ${endTimeLabel}` : undefined}
+          sub={when ? `às ${formatTime(when, timeZone)} · até ${endTimeLabel}` : undefined}
         >
           <span className="first-letter:uppercase">
-            {when ? formatLongDate(when) : "Data a definir"}
+            {when ? formatLongDate(when, timeZone) : "Data a definir"}
           </span>
         </UISummaryRow>
         <UISummaryRow icon={User}>{finalNamePreview || "Cliente a definir"}</UISummaryRow>
@@ -945,6 +1028,13 @@ function NewAppointmentForm({
           service_id: selectedServices[0].id,
           service_name: combinedName,
           service_price_cents: totalPrice,
+          employee_id: employeeId || null,
+          itens_snapshot: selectedServices.slice(1).map((s) => ({
+            tipo: "servico",
+            id: s.id,
+            nome: s.name,
+            preco_cents: s.price_cents,
+          })),
           starts_at: start.toISOString(),
           ends_at: ends.toISOString(),
           client_name: finalName,
@@ -1020,6 +1110,28 @@ function NewAppointmentForm({
               </UINotice>
             )}
           </section>
+
+          {(employees ?? []).length > 0 && (
+            <section className="space-y-2">
+              <SectionLabel>Profissional responsável (opcional)</SectionLabel>
+              <span className="ui-field">
+                <User className="ui-field-icon" />
+                <select
+                  value={employeeId}
+                  onChange={(e) => setEmployeeId(e.target.value)}
+                  aria-label="Profissional responsável"
+                  className="ui-field-input pl-11"
+                >
+                  <option value="">Sem responsável definido</option>
+                  {employees!.map((e) => (
+                    <option key={e.id} value={e.id}>
+                      {e.name}
+                    </option>
+                  ))}
+                </select>
+              </span>
+            </section>
+          )}
 
           <section className="space-y-3">
             <SectionLabel>Cliente</SectionLabel>
@@ -1150,6 +1262,7 @@ function NewAppointmentForm({
             <SectionLabel>Data e hora</SectionLabel>
             <AvailabilityPicker
               proId={proId}
+              timeZone={timeZone}
               durationMinutes={totalDuration}
               selectedSlot={slot}
               onPick={setSlot}
@@ -1198,11 +1311,13 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 function AvailabilityPicker({
   proId,
+  timeZone,
   durationMinutes,
   selectedSlot,
   onPick,
 }: {
   proId: string;
+  timeZone?: string | null;
   durationMinutes: number;
   selectedSlot: Date | null;
   onPick: (d: Date | null) => void;
@@ -1287,7 +1402,7 @@ function AvailabilityPicker({
   }, [monthStart]);
 
   const dayHasAvailability = (day: Date) =>
-    !!proAvail && proAvail.some((r) => r.weekday === day.getDay());
+    !!proAvail && proAvail.some((r) => r.weekday === weekdayInTimeZone(day, timeZone));
 
   const canGoPrev = monthStart > new Date(today.getFullYear(), today.getMonth(), 1);
 
@@ -1300,8 +1415,9 @@ function AvailabilityPicker({
       availability: proAvail,
       blocks: proBlocks,
       busy,
+      timeZone,
     });
-  }, [selectedDay, proAvail, proBlocks, busy, durationMinutes]);
+  }, [selectedDay, proAvail, proBlocks, busy, durationMinutes, timeZone]);
 
   if (durationMinutes <= 0) {
     return (
@@ -1407,7 +1523,7 @@ function AvailabilityPicker({
                   { label: "Noite", from: 18, to: 24 },
                 ].map(({ label, from, to }) => {
                   const periodSlots = slots.filter((s) => {
-                    const h = s.getHours();
+                    const h = hourInTimeZone(s, timeZone);
                     return h >= from && h < to;
                   });
                   if (periodSlots.length === 0) return null;
@@ -1432,7 +1548,7 @@ function AvailabilityPicker({
                             data-selected={selectedSlot?.getTime() === s.getTime()}
                             className="chip"
                           >
-                            {formatTime(s)}
+                            {formatTime(s, timeZone)}
                           </button>
                         ))}
                       </div>

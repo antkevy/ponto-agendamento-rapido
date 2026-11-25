@@ -2,7 +2,16 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { db } from "@/lib/db-tables";
-import { formatTime, WEEKDAYS_PT_SHORT } from "@/lib/booking";
+import {
+  formatTime,
+  hourInTimeZone,
+  minuteInTimeZone,
+  weekdayInTimeZone,
+  zonedDateKey,
+  zonedDayBounds,
+  zonedTodayKey,
+  WEEKDAYS_PT_SHORT,
+} from "@/lib/booking";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight, CalendarRange } from "lucide-react";
 import type { Appt, StatusFilter } from "./types";
@@ -26,25 +35,42 @@ export function layEvents(events: Appt[]): LayeredEvent[] {
   const sorted = [...events].sort(
     (x, y) => new Date(x.starts_at).getTime() - new Date(y.starts_at).getTime(),
   );
-  const lanes: Appt[][] = [];
   const out: LayeredEvent[] = [];
+  let cluster: { ev: Appt; end: number }[] = [];
+  let clusterEnd = Number.NEGATIVE_INFINITY;
+
+  // Um "cluster" é um grupo de eventos conectados por sobreposição. Só depois
+  // de fechá-lo sabemos quantas lanes existem; usar lanes.length durante a
+  // inserção fazia eventos antigos ficarem mais largos do que os posteriores.
+  const flush = () => {
+    if (cluster.length === 0) return;
+    const lanes: Appt[][] = [];
+    const placed: { ev: Appt; lane: number }[] = [];
+    for (const { ev } of cluster) {
+      const start = new Date(ev.starts_at).getTime();
+      let lane = lanes.findIndex((items) =>
+        items.every((o) => start >= new Date(o.ends_at).getTime()),
+      );
+      if (lane === -1) {
+        lanes.push([]);
+        lane = lanes.length - 1;
+      }
+      lanes[lane].push(ev);
+      placed.push({ ev, lane });
+    }
+    for (const item of placed) out.push({ a: item.ev, lane: item.lane, lanes: lanes.length });
+    cluster = [];
+    clusterEnd = Number.NEGATIVE_INFINITY;
+  };
+
   for (const ev of sorted) {
     const start = new Date(ev.starts_at).getTime();
-    let placed = false;
-    for (let li = 0; li < lanes.length; li++) {
-      const clash = lanes[li].some((o) => start < new Date(o.ends_at).getTime());
-      if (!clash) {
-        lanes[li].push(ev);
-        out.push({ a: ev, lane: li, lanes: lanes.length });
-        placed = true;
-        break;
-      }
-    }
-    if (!placed) {
-      lanes.push([ev]);
-      out.push({ a: ev, lane: lanes.length - 1, lanes: lanes.length });
-    }
+    const end = new Date(ev.ends_at).getTime();
+    if (cluster.length > 0 && start >= clusterEnd) flush();
+    cluster.push({ ev, end });
+    clusterEnd = Math.max(clusterEnd, end);
   }
+  flush();
   return out;
 }
 
@@ -52,11 +78,13 @@ export function WeekCalendar({
   proId,
   status,
   search,
+  timeZone,
   onSelect,
 }: {
   proId: string;
   status: StatusFilter;
   search: string;
+  timeZone?: string | null;
   onSelect: (a: Appt) => void;
 }) {
   const [weekStart, setWeekStart] = useState(() => calStartOfWeek(new Date()));
@@ -71,17 +99,31 @@ export function WeekCalendar({
     return days;
   }, [weekStart]);
 
-  const { data } = useQuery({
-    queryKey: ["appt-calendar-week", proId, weekStart.toISOString()],
+  const { data, isError } = useQuery({
+    queryKey: ["appt-calendar-week", proId, weekStart.toISOString(), timeZone],
     queryFn: async () => {
-      const weekEnd = new Date(weekStart);
-      weekEnd.setDate(weekEnd.getDate() + 7);
+      const { start: from } = zonedDayBounds(
+        weekStart.getFullYear(),
+        weekStart.getMonth() + 1,
+        weekStart.getDate(),
+        timeZone,
+      );
+      const lastDay = new Date(weekStart);
+      lastDay.setDate(lastDay.getDate() + 6);
+      const { end: until } = zonedDayBounds(
+        lastDay.getFullYear(),
+        lastDay.getMonth() + 1,
+        lastDay.getDate(),
+        timeZone,
+      );
       const { data, error } = await supabase
         .from(db.agendamentos)
-        .select("*")
+        .select(
+          "id, starts_at, ends_at, client_name, client_phone, client_email, service_snapshot_name, service_snapshot_price_cents, status, notes",
+        )
         .eq("professional_id", proId)
-        .gte("starts_at", weekStart.toISOString())
-        .lt("starts_at", weekEnd.toISOString())
+        .gte("starts_at", from.toISOString())
+        .lt("starts_at", until.toISOString())
         .order("starts_at", { ascending: true });
       if (error) throw error;
       return data as Appt[];
@@ -106,9 +148,13 @@ export function WeekCalendar({
     let max = CAL_MAX_HOUR;
     if (events.length > 0) {
       for (const a of events) {
-        const sh = new Date(a.starts_at).getHours();
+        const st = new Date(a.starts_at);
         const ed = new Date(a.ends_at);
-        const eh = ed.getMinutes() > 0 || ed.getSeconds() > 0 ? ed.getHours() + 1 : ed.getHours();
+        const sh = hourInTimeZone(st, timeZone);
+        const eh =
+          minuteInTimeZone(ed, timeZone) > 0 || ed.getSeconds() > 0
+            ? hourInTimeZone(ed, timeZone) + 1
+            : hourInTimeZone(ed, timeZone);
         if (sh < min) min = sh;
         if (eh > max) max = eh;
       }
@@ -118,9 +164,9 @@ export function WeekCalendar({
     const arr: number[] = [];
     for (let h = min; h < max; h++) arr.push(h);
     return { hours: arr, fullPx: arr.length * CAL_HOUR_PX };
-  }, [events]);
+  }, [events, timeZone]);
 
-  const todayStr = new Date().toDateString();
+  const todayKey = useMemo(() => zonedTodayKey(timeZone), [timeZone]);
 
   const weekRangeStr = useMemo(() => {
     const a = weekDays[0];
@@ -173,7 +219,11 @@ export function WeekCalendar({
         <p className="text-sm font-bold text-foreground capitalize truncate">{weekRangeStr}</p>
       </div>
 
-      {events.length === 0 ? (
+      {isError ? (
+        <div role="alert" className="py-10 text-center text-sm text-destructive">
+          Não foi possível carregar a semana. Tente novamente.
+        </div>
+      ) : events.length === 0 ? (
         <div className="py-10 text-center">
           <CalendarRange className="h-8 w-8 mx-auto text-muted-foreground/50 mb-2" />
           <p className="text-sm font-semibold text-foreground">Nenhum agendamento nesta semana</p>
@@ -189,7 +239,7 @@ export function WeekCalendar({
             <div className="grid grid-cols-[64px_repeat(7,minmax(0,1fr))]">
               <div className="h-10" />
               {weekDays.map((d) => {
-                const isToday = d.toDateString() === todayStr;
+                const isToday = zonedDateKey(d, timeZone) === todayKey;
                 return (
                   <div
                     key={d.toISOString()}
@@ -204,7 +254,7 @@ export function WeekCalendar({
                         isToday ? "text-accent" : "text-muted-foreground",
                       )}
                     >
-                      {WEEKDAYS_PT_SHORT[d.getDay()]}
+                      {WEEKDAYS_PT_SHORT[weekdayInTimeZone(d, timeZone)]}
                     </span>
                     <span
                       className={cn(
@@ -234,10 +284,11 @@ export function WeekCalendar({
                 ))}
               </div>
               {weekDays.map((d) => {
+                const dayKey = zonedDateKey(d, timeZone);
                 const dayEvents = layEvents(
-                  events.filter((a) => new Date(a.starts_at).toDateString() === d.toDateString()),
+                  events.filter((a) => zonedDateKey(new Date(a.starts_at), timeZone) === dayKey),
                 );
-                const isToday = d.toDateString() === todayStr;
+                const isToday = dayKey === todayKey;
                 return (
                   <div
                     key={d.toISOString()}
@@ -254,14 +305,15 @@ export function WeekCalendar({
                     {dayEvents.map(({ a, lane, lanes }) => {
                       const start = new Date(a.starts_at);
                       const end = new Date(a.ends_at);
-                      const startMin = start.getHours() * 60 + start.getMinutes();
+                      const startMin =
+                        hourInTimeZone(start, timeZone) * 60 + minuteInTimeZone(start, timeZone);
                       const dayStartMin = hours[0] * 60;
                       const durationMin = Math.max(
                         15,
                         Math.round((end.getTime() - start.getTime()) / 60000),
                       );
                       const topPx = ((startMin - dayStartMin) / 60) * CAL_HOUR_PX;
-                      const heightPx = Math.max((durationMin / 60) * CAL_HOUR_PX, 20);
+                      const heightPx = Math.max((durationMin / 60) * CAL_HOUR_PX, 28);
                       const color = ROW_BORDER[a.status];
                       const laneW = 100 / lanes;
                       return (
@@ -269,7 +321,7 @@ export function WeekCalendar({
                           key={a.id}
                           type="button"
                           onClick={() => onSelect(a)}
-                          title={`${a.client_name} · ${formatTime(start)}`}
+                          aria-label={`${a.client_name} · ${a.service_snapshot_name} · ${formatTime(start, timeZone)} · ${a.status}`}
                           className={cn(
                             "absolute z-10 overflow-hidden rounded-md border-l-[3px] bg-card text-left shadow-sm transition-transform hover:z-20 hover:shadow-md hover:-translate-y-px",
                             a.status === "cancelled" && "opacity-70",

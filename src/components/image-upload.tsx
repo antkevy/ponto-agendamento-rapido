@@ -68,10 +68,10 @@ export function ImageUpload({
             <button
               type="button"
               onClick={() => onChange("")}
-              className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-destructive text-white grid place-items-center shadow"
-              title="Remover"
+              aria-label="Remover imagem"
+              className="absolute -top-3 -right-3 h-11 w-11 rounded-full bg-destructive text-white grid place-items-center shadow"
             >
-              <X className="h-3 w-3" />
+              <X className="h-4 w-4" />
             </button>
           </div>
         ) : (
@@ -88,7 +88,8 @@ export function ImageUpload({
               type="button"
               onClick={() => setMode("file")}
               data-selected={mode === "file"}
-              className="chip !min-h-[36px] !py-1 text-xs"
+              aria-pressed={mode === "file"}
+              className="chip !min-h-[44px] text-xs"
             >
               <Upload className="h-3 w-3 mr-1 inline" /> Arquivo
             </button>
@@ -96,7 +97,8 @@ export function ImageUpload({
               type="button"
               onClick={() => setMode("url")}
               data-selected={mode === "url"}
-              className="chip !min-h-[36px] !py-1 text-xs"
+              aria-pressed={mode === "url"}
+              className="chip !min-h-[44px] text-xs"
             >
               <LinkIcon className="h-3 w-3 mr-1 inline" /> URL
             </button>
@@ -124,10 +126,11 @@ export function ImageUpload({
             </div>
           ) : (
             <input
+              aria-label="URL da imagem"
               value={value}
               onChange={(e) => onChange(e.target.value)}
               placeholder="https://..."
-              className="w-full min-h-[40px] px-3 py-2 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-ring text-sm"
+              className="w-full min-h-[44px] px-3 py-2 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-ring text-sm"
             />
           )}
         </div>

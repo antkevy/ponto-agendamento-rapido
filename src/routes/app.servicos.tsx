@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { ViewToggle } from "@/components/view-toggle";
 import { CATALOG_VIEWS, type ViewMode } from "@/lib/view-modes";
 import { ImageUpload } from "@/components/image-upload";
+import { Modal } from "@/components/modal";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Pencil,
@@ -68,6 +69,13 @@ type EmployeeService = { id: string; name: string };
 type EmployeeAvailRow = { id: string; weekday: number; start_time: string; end_time: string };
 type EmployeeBlockRow = { id: string; starts_at: string; ends_at: string; reason: string | null };
 
+/** Converte "123,45" para centavos, rejeitando entrada inválida/parcial. */
+function parsePriceBR(value: string): number | null {
+  const clean = value.trim().replace(/\s/g, "");
+  if (!/^\d{1,7}(?:[.,]\d{1,2})?$/.test(clean)) return null;
+  return Math.round(Number(clean.replace(",", ".")) * 100);
+}
+
 function Page() {
   const { data: pro, isLoading } = useMyProfessional();
   const { canEdit } = useUserRole();
@@ -75,7 +83,7 @@ function Page() {
   return (
     <AppShell title="Serviços">
       {isLoading ? (
-        <div className="skeleton h-32" />
+        <div className="skeleton h-32" role="status" aria-label="Carregando serviços" />
       ) : !pro ? (
         <OnboardingCard />
       ) : (
@@ -163,7 +171,8 @@ function ServicosTab({ pro, readOnly }: { pro: Pro; readOnly?: boolean }) {
             image_url,
             is_active: s.is_active ?? true,
           })
-          .eq("id", s.id);
+          .eq("id", s.id)
+          .eq("professional_id", pro.id);
         if (error) throw error;
       } else {
         const { error } = await supabase.from(db.servicos).insert({
@@ -188,7 +197,11 @@ function ServicosTab({ pro, readOnly }: { pro: Pro; readOnly?: boolean }) {
 
   const remove = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from(db.servicos).delete().eq("id", id);
+      const { error } = await supabase
+        .from(db.servicos)
+        .delete()
+        .eq("id", id)
+        .eq("professional_id", pro.id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -304,7 +317,8 @@ function PlanosTab({ pro, readOnly }: { pro: Pro; readOnly?: boolean }) {
             image_url,
             is_active: p.is_active ?? true,
           })
-          .eq("id", p.id);
+          .eq("id", p.id)
+          .eq("professional_id", pro.id);
         if (error) throw error;
       } else {
         const { error } = await supabase.from(db.planos).insert({
@@ -328,7 +342,11 @@ function PlanosTab({ pro, readOnly }: { pro: Pro; readOnly?: boolean }) {
 
   const remove = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from(db.planos).delete().eq("id", id);
+      const { error } = await supabase
+        .from(db.planos)
+        .delete()
+        .eq("id", id)
+        .eq("professional_id", pro.id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -444,7 +462,8 @@ function ProdutosTab({ pro, readOnly }: { pro: Pro; readOnly?: boolean }) {
             image_url,
             is_active: p.is_active ?? true,
           })
-          .eq("id", p.id);
+          .eq("id", p.id)
+          .eq("professional_id", pro.id);
         if (error) throw error;
       } else {
         const { error } = await supabase.from(db.produtos).insert({
@@ -468,7 +487,11 @@ function ProdutosTab({ pro, readOnly }: { pro: Pro; readOnly?: boolean }) {
 
   const remove = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from(db.produtos).delete().eq("id", id);
+      const { error } = await supabase
+        .from(db.produtos)
+        .delete()
+        .eq("id", id)
+        .eq("professional_id", pro.id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -672,16 +695,18 @@ function CatalogRow({
             {!readOnly && (
               <>
                 <button
+                  type="button"
                   onClick={onEdit}
-                  title="Editar"
-                  className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  aria-label="Editar"
+                  className="grid min-h-[44px] min-w-[44px] place-items-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                 >
                   <Pencil className="h-4 w-4" />
                 </button>
                 <button
+                  type="button"
                   onClick={onDelete}
-                  title="Excluir"
-                  className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                  aria-label="Excluir"
+                  className="grid min-h-[44px] min-w-[44px] place-items-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
@@ -752,9 +777,10 @@ function CatalogCard({
               <span className="max-sm:sr-only">Editar</span>
             </button>
             <button
+              type="button"
               onClick={onDelete}
-              title="Excluir"
-              className="btn-outline-brand inline-flex items-center justify-center !py-2 px-3 text-destructive"
+              aria-label="Excluir"
+              className="btn-outline-brand inline-flex min-h-[44px] min-w-[44px] items-center justify-center !py-2 px-3 text-destructive"
             >
               <Trash2 className="h-4 w-4" />
             </button>
@@ -798,7 +824,11 @@ function BloqueiosTab({ pro, readOnly }: { pro: Pro; readOnly?: boolean }) {
 
   const remove = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from(db.bloqueios).delete().eq("id", id);
+      const { error } = await supabase
+        .from(db.bloqueios)
+        .delete()
+        .eq("id", id)
+        .eq("professional_id", pro.id);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["blocks"] }),
@@ -880,7 +910,11 @@ function HorariosTab({ pro, readOnly }: { pro: Pro; readOnly?: boolean }) {
 
   const remove = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from(db.horarios).delete().eq("id", id);
+      const { error } = await supabase
+        .from(db.horarios)
+        .delete()
+        .eq("id", id)
+        .eq("professional_id", pro.id);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["availability"] }),
@@ -933,7 +967,7 @@ function HorariosTab({ pro, readOnly }: { pro: Pro; readOnly?: boolean }) {
                         <button
                           onClick={() => remove.mutate(r.id)}
                           aria-label={`Remover faixa das ${r.start_time.slice(0, 5)}`}
-                          className="grid place-items-center rounded-full p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                          className="grid min-h-[44px] min-w-[44px] place-items-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
                         >
                           <X className="h-3.5 w-3.5" />
                         </button>
@@ -1016,7 +1050,8 @@ function FuncionariosTab({ pro, readOnly }: { pro: Pro; readOnly?: boolean }) {
       const { error } = await supabase
         .from(db.funcionarios)
         .update({ is_active: !e.is_active })
-        .eq("id", e.id);
+        .eq("id", e.id)
+        .eq("professional_id", pro.id);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["employees"] }),
@@ -1025,7 +1060,11 @@ function FuncionariosTab({ pro, readOnly }: { pro: Pro; readOnly?: boolean }) {
 
   const remove = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from(db.funcionarios).delete().eq("id", id);
+      const { error } = await supabase
+        .from(db.funcionarios)
+        .delete()
+        .eq("id", id)
+        .eq("professional_id", pro.id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -1146,23 +1185,28 @@ function FuncionariosTab({ pro, readOnly }: { pro: Pro; readOnly?: boolean }) {
               {!readOnly && (
                 <div className="flex gap-1 mt-1 flex-wrap justify-center">
                   <button
+                    type="button"
                     onClick={() => setEditing(e)}
-                    className="btn-outline-brand !py-1.5 !px-2 text-xs"
+                    aria-label={`Editar ${e.name}`}
+                    className="btn-outline-brand !min-h-[44px] !min-w-[44px] !px-2 text-xs"
                   >
                     <Pencil className="h-3 w-3" />
                   </button>
                   <button
+                    type="button"
                     onClick={() => toggle.mutate(e)}
-                    className="btn-outline-brand !py-1.5 !px-2 text-xs"
-                    title={e.is_active ? "Desativar" : "Ativar"}
+                    aria-label={e.is_active ? `Desativar ${e.name}` : `Ativar ${e.name}`}
+                    className="btn-outline-brand !min-h-[44px] !min-w-[44px] !px-2 text-xs"
                   >
                     <Power className="h-3 w-3" />
                   </button>
                   <button
+                    type="button"
                     onClick={() => {
                       if (confirm(`Excluir ${e.name}?`)) remove.mutate(e.id);
                     }}
-                    className="btn-outline-brand !py-1.5 !px-2 text-xs text-destructive"
+                    aria-label={`Excluir ${e.name}`}
+                    className="btn-outline-brand !min-h-[44px] !min-w-[44px] !px-2 text-xs text-destructive"
                   >
                     <Trash2 className="h-3 w-3" />
                   </button>
@@ -1204,7 +1248,7 @@ function TimeRangeForm({
         value={start}
         onChange={(e) => setStart(e.target.value)}
         aria-label="Início"
-        className="h-10 rounded-lg border border-border bg-background px-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/40"
+        className="min-h-[44px] rounded-lg border border-border bg-background px-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/40"
       />
       <span className="text-muted-foreground">–</span>
       <input
@@ -1212,15 +1256,20 @@ function TimeRangeForm({
         value={end}
         onChange={(e) => setEnd(e.target.value)}
         aria-label="Fim"
-        className="h-10 rounded-lg border border-border bg-background px-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/40"
+        className="min-h-[44px] rounded-lg border border-border bg-background px-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/40"
       />
       <button
+        type="button"
         onClick={() => {
+          if (!start || !end || end <= start) {
+            toast.error("O horário final deve ser depois do inicial.");
+            return;
+          }
           onSave(start + ":00", end + ":00");
           setStart("08:00");
           setEnd("18:00");
         }}
-        className="btn-brand inline-flex items-center gap-1.5 !py-2 !px-4 text-sm !min-h-[40px]"
+        className="btn-brand inline-flex items-center gap-1.5 !py-2 !px-4 text-sm !min-h-[44px]"
       >
         <Check className="h-4 w-4" /> Salvar
       </button>
@@ -1331,7 +1380,11 @@ function ServiceForm({
     <form
       onSubmit={(e) => {
         e.preventDefault();
-        const cents = Math.round(parseFloat(priceReais.replace(",", ".") || "0") * 100);
+        const cents = parsePriceBR(priceReais);
+        if (cents === null) {
+          toast.error("Informe um preço válido (ex.: 49,90).");
+          return;
+        }
         onSubmit({
           id: initial.id,
           name,
@@ -1356,7 +1409,8 @@ function ServiceForm({
             <button
               type="button"
               onClick={clearImage}
-              className="absolute top-2 right-2 bg-background/80 rounded-full p-1"
+              aria-label="Remover imagem"
+              className="absolute top-2 right-2 grid min-h-[44px] min-w-[44px] place-items-center rounded-full bg-background/80"
             >
               <X className="h-4 w-4" />
             </button>
@@ -1468,7 +1522,11 @@ function PlanoForm({
     <form
       onSubmit={(e) => {
         e.preventDefault();
-        const cents = Math.round(parseFloat(priceReais.replace(",", ".") || "0") * 100);
+        const cents = parsePriceBR(priceReais);
+        if (cents === null) {
+          toast.error("Informe um preço válido (ex.: 49,90).");
+          return;
+        }
         onSubmit({
           id: initial.id,
           name,
@@ -1492,7 +1550,8 @@ function PlanoForm({
             <button
               type="button"
               onClick={clearImage}
-              className="absolute top-2 right-2 bg-background/80 rounded-full p-1"
+              aria-label="Remover imagem"
+              className="absolute top-2 right-2 grid min-h-[44px] min-w-[44px] place-items-center rounded-full bg-background/80"
             >
               <X className="h-4 w-4" />
             </button>
@@ -1588,7 +1647,11 @@ function ProdutoForm({
     <form
       onSubmit={(e) => {
         e.preventDefault();
-        const cents = Math.round(parseFloat(priceReais.replace(",", ".") || "0") * 100);
+        const cents = parsePriceBR(priceReais);
+        if (cents === null) {
+          toast.error("Informe um preço válido (ex.: 49,90).");
+          return;
+        }
         onSubmit({
           id: initial.id,
           name,
@@ -1612,7 +1675,8 @@ function ProdutoForm({
             <button
               type="button"
               onClick={clearImage}
-              className="absolute top-2 right-2 bg-background/80 rounded-full p-1"
+              aria-label="Remover imagem"
+              className="absolute top-2 right-2 grid min-h-[44px] min-w-[44px] place-items-center rounded-full bg-background/80"
             >
               <X className="h-4 w-4" />
             </button>
@@ -2109,40 +2173,5 @@ function QuickAdd({ onAdd }: { onAdd: (s: string, e: string) => void }) {
 const inputCls =
   "w-full min-h-[44px] px-3 py-2 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-ring mt-1";
 
-export function Modal({
-  children,
-  onClose,
-  size = "md",
-  hideFooter,
-}: {
-  children: React.ReactNode;
-  onClose: () => void;
-  size?: "md" | "lg" | "xl";
-  hideFooter?: boolean;
-}) {
-  return (
-    <div
-      className="fixed inset-0 z-50 bg-foreground/40 backdrop-blur-sm dark:bg-black/60 dark:backdrop-blur-md grid sm:place-items-center animate-fade-in-up"
-      onClick={onClose}
-      role="dialog"
-      aria-modal="true"
-    >
-      <div
-        className={cn(
-          "bg-background w-full sm:rounded-2xl p-5 sm:p-6 h-[100dvh] sm:h-auto sm:my-8 overflow-y-auto",
-          size === "md" && "sm:max-w-md",
-          size === "lg" && "sm:max-w-xl",
-          size === "xl" && "sm:max-w-3xl lg:max-w-4xl lg:h-[min(88vh,760px)] lg:overflow-hidden",
-        )}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {children}
-        {!hideFooter && (
-          <button onClick={onClose} className="btn-outline-brand w-full mt-3">
-            Cancelar
-          </button>
-        )}
-      </div>
-    </div>
-  );
-}
+// Reexportado para compatibilidade: appt-detail-modal.tsx importa daqui.
+export { Modal } from "@/components/modal";
