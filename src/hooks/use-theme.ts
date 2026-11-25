@@ -1,38 +1,69 @@
-import { useEffect, useState } from "react";
+import { useCallback, useSyncExternalStore } from "react";
+import {
+  applyTheme,
+  clearStoredTheme,
+  resolveTheme,
+  setStoredTheme,
+  storedTheme,
+  type Theme,
+} from "@/lib/theme-boot";
 
-export type Theme = "light" | "dark";
-const KEY = "agendai-theme";
+export type { Theme } from "@/lib/theme-boot";
 
-function getInitial(): Theme {
-  if (typeof window === "undefined") return "dark";
-  const saved = window.localStorage.getItem(KEY) as Theme | null;
-  if (saved === "light" || saved === "dark") return saved;
-  return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+const listeners = new Set<() => void>();
+let media: MediaQueryList | undefined;
+let mediaListener: ((event: MediaQueryListEvent) => void) | undefined;
+
+function emit() {
+  listeners.forEach((listener) => listener());
 }
 
-function apply(theme: Theme) {
-  const root = document.documentElement;
-  root.classList.toggle("dark", theme === "dark");
-  root.style.colorScheme = theme;
+function handleSystemChange(event: MediaQueryListEvent) {
+  // Override manual tem prioridade; sem ele, o dispositivo manda.
+  if (storedTheme()) return;
+  const next: Theme = event.matches ? "light" : "dark";
+  applyTheme(next);
+  emit();
+}
+
+function subscribe(onStoreChange: () => void) {
+  listeners.add(onStoreChange);
+  if (!media && typeof window !== "undefined" && window.matchMedia) {
+    media = window.matchMedia("(prefers-color-scheme: light)");
+    mediaListener = handleSystemChange;
+    media.addEventListener("change", mediaListener);
+  }
+  return () => {
+    listeners.delete(onStoreChange);
+    if (listeners.size === 0 && media && mediaListener) {
+      media.removeEventListener("change", mediaListener);
+      media = undefined;
+      mediaListener = undefined;
+    }
+  };
+}
+
+function getSnapshot(): Theme {
+  return resolveTheme();
+}
+
+function getServerSnapshot(): Theme {
+  return "dark";
 }
 
 export function useTheme() {
-  const [theme, setTheme] = useState<Theme>("dark");
+  const theme = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
-  useEffect(() => {
-    const t = getInitial();
-    setTheme(t);
-    apply(t);
+  const toggle = useCallback(() => {
+    const next: Theme = theme === "dark" ? "light" : "dark";
+    setStoredTheme(next);
+    emit();
+  }, [theme]);
+
+  const useSystem = useCallback(() => {
+    clearStoredTheme();
+    emit();
   }, []);
 
-  function toggle() {
-    setTheme((prev) => {
-      const next: Theme = prev === "dark" ? "light" : "dark";
-      window.localStorage.setItem(KEY, next);
-      apply(next);
-      return next;
-    });
-  }
-
-  return { theme, toggle };
+  return { theme, toggle, useSystem };
 }

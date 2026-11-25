@@ -118,12 +118,7 @@ function Page() {
 
   // Tema da empresa só quando o cliente veio da página pública (?pro=slug).
   // Acessado pela home (sem ?pro=), mantém o tema padrão (azul).
-  const brand = useBookingTheme(
-    rootRef,
-    proTheme?.brand_color,
-    proTheme?.theme_colors ?? null,
-    !!proSlug,
-  );
+  const brand = useBookingTheme(rootRef, proTheme?.theme_colors ?? null, !!proSlug);
 
   const { data, isFetching, isError } = useQuery({
     queryKey: ["client-appts", submitted, submittedCode],

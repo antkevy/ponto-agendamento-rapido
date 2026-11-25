@@ -4,51 +4,36 @@ import {
   DARK_PRESET,
   LIGHT_PRESET,
   loadAppearance,
-  type Appearance,
   type ProfessionalTheme,
 } from "@/lib/appearance";
-
-/**
- * Cor efetiva de marca da página de agendamento.
- * - Se há cores personalizadas (banco ou localStorage), usa a Cor Primária.
- * - Caso contrário, usa o brand_color salvo no banco (o que os visitantes veem).
- */
-function effectiveBrand(brandColor: string | null | undefined, a?: Appearance): string {
-  const mode =
-    typeof document === "undefined"
-      ? "light"
-      : document.documentElement.classList.contains("dark")
-        ? "dark"
-        : "light";
-  const appearance = a ?? loadAppearance(mode);
-  const preset = mode === "dark" ? DARK_PRESET : LIGHT_PRESET;
-  const customizedPrimary = appearance.primary !== preset.primary;
-  return customizedPrimary ? appearance.primary : brandColor || "#0284C7";
-}
 
 /**
  * Aplica as cores configuradas na Dashboard SOMENTE no elemento raiz da
  * página pública de agendamento (/p/:slug). Nada disso toca o <html>, então
  * o painel e as demais páginas continuam com as cores padrão.
  *
- * As variáveis vivem apenas no elemento raiz: quando a página desmonta, elas
- * desaparecem junto. Reage à troca de tema (claro/escuro) e a mudanças nas
- * cores (mesma aba via evento, outras abas via evento storage).
+ * A cor retornada é sempre a primária efetiva do tema aplicado — a mesma
+ * usada em `--brand`. Assim, avatar/placeholder, botões e ícones nunca
+ * divergem (antes, um fallback para `brand_color` podia deixar o placeholder
+ * vermelho enquanto o resto da página estava amarelo).
  *
  * @param savedTheme cores salvas no banco (profissionais.theme_colors); têm
  *   prioridade sobre o localStorage do dono para que visitantes vejam o mesmo.
- * @param applyCustom quando false, ignora a aparência personalizada do
- *   localStorage e do banco, mantendo o tema padrão (azul). Usado nas páginas
- *   de cliente que NÃO vieram da página pública (ex.: "Meus agendamentos"
- *   acessado pela home), que devem seguir o tema padrão e não o da empresa.
+ * @param applyCustom quando false, ignora a aparência personalizada e mantém
+ *   o tema padrão. Usado em "Meus agendamentos" acessado fora da página pública.
  */
 export function useBookingTheme(
   rootRef: RefObject<HTMLElement | null>,
-  brandColor: string | null | undefined,
   savedTheme?: ProfessionalTheme | null,
   applyCustom = true,
 ): string {
-  const [brand, setBrand] = useState<string>(() => brandColor || "#0284C7");
+  const [brand, setBrand] = useState<string>(() => {
+    const mode =
+      typeof document !== "undefined" && document.documentElement.classList.contains("dark")
+        ? "dark"
+        : "light";
+    return (mode === "dark" ? DARK_PRESET : LIGHT_PRESET).primary;
+  });
 
   // useLayoutEffect (e não useEffect) para aplicar as cores ANTES do browser
   // pintar — sem isso, a página pública pisca o tema padrão no primeiro frame.
@@ -58,18 +43,15 @@ export function useBookingTheme(
 
     const sync = () => {
       const mode = document.documentElement.classList.contains("dark") ? "dark" : "light";
-      if (applyCustom) {
-        const a = loadAppearance(mode, savedTheme?.[mode]);
-        applyAppearance(a, el);
-        const b = effectiveBrand(brandColor, a);
-        el.style.setProperty("--brand", b);
-        setBrand(b);
-      } else {
-        const preset = mode === "dark" ? DARK_PRESET : LIGHT_PRESET;
-        applyAppearance(preset, el);
-        el.style.setProperty("--brand", brandColor || "#0284C7");
-        setBrand(brandColor || "#0284C7");
-      }
+      const appearance = applyCustom
+        ? loadAppearance(mode, savedTheme?.[mode])
+        : mode === "dark"
+          ? DARK_PRESET
+          : LIGHT_PRESET;
+
+      applyAppearance(appearance, el);
+      el.style.setProperty("--brand", appearance.primary);
+      setBrand(appearance.primary);
     };
 
     sync();
@@ -83,7 +65,7 @@ export function useBookingTheme(
       window.removeEventListener("storage", sync);
       window.removeEventListener("agendai-appearance-change", sync);
     };
-  }, [rootRef, brandColor, savedTheme, applyCustom]);
+  }, [rootRef, savedTheme, applyCustom]);
 
   return brand;
 }

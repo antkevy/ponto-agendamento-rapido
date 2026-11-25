@@ -14,6 +14,7 @@ import { Toaster } from "sonner";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { publicRuntimeEnvScript } from "../lib/runtime-env";
+import { THEME_BOOT_SCRIPT } from "../lib/theme-boot";
 import { supabase } from "../integrations/supabase/client";
 
 function NotFoundComponent() {
@@ -103,12 +104,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "stylesheet", href: appCss },
       { rel: "icon", type: "image/png", href: "/favicon.png" },
     ],
-    scripts: [
-      {
-        children:
-          "(function(){try{var k='agendai-theme',t=localStorage.getItem(k);if(t!=='light'&&t!=='dark')t='dark';document.documentElement.classList.toggle('dark',t==='dark');document.documentElement.style.colorScheme=t;}catch(e){document.documentElement.classList.add('dark');}})();",
-      },
-    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,
@@ -121,6 +116,7 @@ function RootShell({ children }: { children: ReactNode }) {
     <html lang="pt-BR">
       <head>
         <HeadContent />
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
         <script dangerouslySetInnerHTML={{ __html: publicRuntimeEnvScript() }} />
       </head>
       <body>

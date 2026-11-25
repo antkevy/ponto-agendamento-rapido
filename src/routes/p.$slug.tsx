@@ -33,6 +33,7 @@ import { PhoneInput } from "@/components/phone-input";
 import { Modal } from "@/components/modal";
 import { Turnstile } from "@/components/turnstile";
 import { publicRuntimeEnv } from "@/lib/runtime-env";
+import { copyText } from "@/lib/clipboard";
 import { isValidPhoneBR } from "@/lib/phone";
 import {
   CheckCircle2,
@@ -57,6 +58,7 @@ import {
   Pencil,
   Lock,
   Check,
+  Copy,
   MousePointerClick,
   ShoppingBag,
   type LucideIcon,
@@ -247,7 +249,7 @@ type Step = "landing" | "service" | "employee" | "when" | "form" | "done";
 function BookingPage() {
   const { pro } = Route.useLoaderData();
   const rootRef = useRef<HTMLDivElement>(null);
-  const brand = useBookingTheme(rootRef, pro.brand_color, pro.theme_colors);
+  const brand = useBookingTheme(rootRef, pro.theme_colors);
 
   // Aparência aplicada já no HTML do servidor (SSR) para não piscar o tema
   // padrão antes do JS. O hook refine no cliente (dark mode / ajuste local).
@@ -257,13 +259,8 @@ function BookingPage() {
     if (pro.theme_colors?.dark) Object.assign(base, pro.theme_colors.dark);
     return base;
   }, [pro.theme_colors]);
-  const ssrBrand = useMemo(
-    () =>
-      ssrAppearance.primary !== DARK_PRESET.primary
-        ? ssrAppearance.primary
-        : pro.brand_color || "#0284C7",
-    [ssrAppearance, pro.brand_color],
-  );
+  // SSR usa a mesma cor primária que o hook aplica em --brand no cliente.
+  const ssrBrand = ssrAppearance.primary;
 
   const [step, setStep] = useState<Step>("landing");
   const [selectedServices, setSelectedServices] = useState<Service[]>([]);
@@ -434,7 +431,7 @@ function BookingPage() {
           ) : (
             <div
               className="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl grid place-items-center text-xl font-black text-brand-foreground shrink-0 shadow-md"
-              style={{ backgroundColor: brand }}
+              style={{ backgroundColor: "var(--brand)" }}
             >
               {pro.business_name.charAt(0).toUpperCase()}
             </div>
@@ -1873,6 +1870,7 @@ function DoneStep({
   accessCode: string | null;
   onReset: () => void;
 }) {
+  const [copied, setCopied] = useState(false);
   const combinedName = useMemo(
     () => selectedServices.map((s) => s.name).join(" + "),
     [selectedServices],
@@ -1917,9 +1915,25 @@ function DoneStep({
           </p>
           <p className="mt-2 text-3xl font-black tracking-[0.35em] ui-accent-text">{accessCode}</p>
           <p className="mt-2 text-xs text-muted-foreground">
-            Guarde este código — tire um print ou anote. Ele é necessário para consultar seu
-            agendamento em "Meus agendamentos".
+            Toque em copiar ou tire um print. Ele é necessário para consultar seu agendamento em
+            "Meus agendamentos".
           </p>
+          <button
+            type="button"
+            onClick={async () => {
+              const ok = await copyText(accessCode);
+              if (ok) {
+                setCopied(true);
+                toast.success("Código copiado!");
+              } else {
+                toast.error("Não foi possível copiar. Anote o código manualmente.");
+              }
+            }}
+            className="btn-pill-outline mt-3 w-full inline-flex items-center justify-center gap-2"
+          >
+            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+            {copied ? "Código copiado" : "Copiar código"}
+          </button>
         </div>
       )}
       <div className="mt-6 flex flex-col sm:flex-row justify-center gap-2">
