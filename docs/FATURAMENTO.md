@@ -23,6 +23,7 @@ comissão.
 
 - Filtros em faixa rolável, com toque mínimo de 44px.
 - Mini calendário em uma coluna, sem popup: ocupa a largura da tela e usa dias de 44px.
+- O grid é o **mesmo usado no agendamento público** (`/p/:slug`), sem biblioteca de calendário.
 - O mini calendário é carregado **sob demanda** (`React.lazy`), então a rota abre leve no celular.
 - No lugar da tabela, cada profissional vira um cartão com comissão editável e valor a pagar.
 - Gráfico com rolagem horizontal suave (`touch-pan-x`).

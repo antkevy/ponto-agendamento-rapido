@@ -780,6 +780,7 @@ function Page() {
                 from={from}
                 to={to}
                 todayKey={todayKey}
+                timeZone={timeZone}
                 onChange={(nextFrom, nextTo) => {
                   setFrom(nextFrom);
                   setTo(nextTo);

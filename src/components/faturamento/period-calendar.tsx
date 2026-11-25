@@ -1,45 +1,80 @@
 import { useEffect, useMemo, useState } from "react";
-import { ptBR } from "date-fns/locale";
-import { type DateRange } from "react-day-picker";
-import { Calendar } from "@/components/ui/calendar";
-import { dateKeyOf, localDate, monthStartKey, shiftKey, shortDate } from "@/lib/faturamento-dates";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { WEEKDAYS_PT_SHORT, weekdayInTimeZone } from "@/lib/booking";
+import {
+  dateKeyOf,
+  localDate,
+  monthStartKey,
+  pad,
+  shiftKey,
+  shortDate,
+} from "@/lib/faturamento-dates";
+import { cn } from "@/lib/utils";
 
 /**
- * Mini calendário de intervalo carregado sob demanda (somente quando o
- * usuário escolhe "Período"). Mantém a rota de faturamento leve no mobile.
+ * Grid de datas idêntico ao usado no agendamento público (/p/:slug), adaptado
+ * para seleção de intervalo. Sem biblioteca de calendário: carrega rápido no
+ * mobile e respeita o fuso horário do estabelecimento.
  */
 export function PeriodCalendar({
   from,
   to,
   todayKey,
+  timeZone,
   onChange,
 }: {
   from: string;
   to: string;
   todayKey: string;
+  timeZone: string | null;
   onChange: (from: string, to: string) => void;
 }) {
-  const [month, setMonth] = useState(() => localDate(from || todayKey));
+  const [monthStart, setMonthStart] = useState(() => {
+    const date = localDate(todayKey);
+    date.setDate(1);
+    date.setHours(0, 0, 0, 0);
+    return date;
+  });
 
   useEffect(() => {
-    if (from) setMonth(localDate(from));
+    if (!from) return;
+    const date = localDate(from);
+    date.setDate(1);
+    date.setHours(0, 0, 0, 0);
+    setMonthStart(date);
   }, [from]);
 
-  const selected = useMemo<DateRange | undefined>(() => {
-    if (!from) return undefined;
-    const first = localDate(from);
-    const last = to ? localDate(to) : undefined;
-    return { from: first, to: last && last >= first ? last : undefined };
-  }, [from, to]);
+  const currentMonth = todayKey.slice(0, 7);
+  const monthKey = `${monthStart.getFullYear()}-${pad(monthStart.getMonth() + 1)}`;
+  const canGoNext = monthKey < currentMonth;
 
-  function apply(range: DateRange | undefined) {
-    if (!range?.from) {
-      onChange("", "");
+  const daysGrid = useMemo(() => {
+    const first = new Date(monthStart);
+    const startWeekday = weekdayInTimeZone(first, timeZone);
+    const cells: Array<Date | null> = [];
+    for (let i = 0; i < startWeekday; i++) cells.push(null);
+    const end = new Date(monthStart);
+    end.setMonth(end.getMonth() + 1);
+    for (let day = new Date(first); day < end; day.setDate(day.getDate() + 1)) {
+      cells.push(new Date(day));
+    }
+    while (cells.length % 7 !== 0) cells.push(null);
+    return cells;
+  }, [monthStart, timeZone]);
+
+  function pick(key: string) {
+    if (!from || to || key < from) {
+      onChange(key, "");
       return;
     }
-    const first = dateKeyOf(range.from);
-    const last = range.to ? dateKeyOf(range.to) : "";
-    onChange(first, last && last >= first ? last : "");
+    onChange(from, key);
+  }
+
+  function goMonth(delta: number) {
+    const date = new Date(monthStart);
+    date.setMonth(date.getMonth() + delta);
+    const target = `${date.getFullYear()}-${pad(date.getMonth() + 1)}`;
+    if (target <= currentMonth) setMonthStart(date);
   }
 
   const presets = [
@@ -70,38 +105,77 @@ export function PeriodCalendar({
             Até
           </p>
           <p
-            className={`text-sm font-bold tabular-nums ${to ? "text-foreground" : "text-muted-foreground"}`}
+            className={cn(
+              "text-sm font-bold tabular-nums",
+              to ? "text-foreground" : "text-muted-foreground",
+            )}
           >
             {to ? shortDate(to) : "Toque na data final"}
           </p>
         </div>
       </div>
 
-      <Calendar
-        mode="range"
-        selected={selected}
-        onSelect={apply}
-        month={month}
-        onMonthChange={setMonth}
-        locale={ptBR}
-        weekStartsOn={1}
-        showOutsideDays={false}
-        disabled={{ after: localDate(todayKey) }}
-        numberOfMonths={1}
-        className="w-full p-0 [--cell-size:2.75rem] sm:[--cell-size:2.5rem]"
-        classNames={{
-          root: "w-full",
-          months: "w-full",
-          month: "flex w-full flex-col gap-2",
-          nav: "absolute inset-x-0 top-0 flex w-full items-center justify-between gap-1",
-          button_previous: "h-10 w-10 p-0",
-          button_next: "h-10 w-10 p-0",
-          month_caption: "flex h-10 w-full items-center justify-center px-10",
-          weekday: "flex h-10 flex-1 items-center justify-center text-xs font-semibold",
-          week: "mt-0 flex w-full",
-          day: "relative h-11 w-full p-0",
-        }}
-      />
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <button
+          type="button"
+          onClick={() => goMonth(-1)}
+          aria-label="Mês anterior"
+          className="grid min-h-[44px] min-w-[44px] place-items-center rounded-lg border border-border transition-colors hover:bg-muted"
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </button>
+        <span className="text-sm font-bold capitalize text-foreground">
+          {monthStart.toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}
+        </span>
+        <button
+          type="button"
+          onClick={() => goMonth(1)}
+          disabled={!canGoNext}
+          aria-label="Próximo mês"
+          className="grid min-h-[44px] min-w-[44px] place-items-center rounded-lg border border-border transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-30"
+        >
+          <ChevronRight className="h-4 w-4" />
+        </button>
+      </div>
+
+      <div className="mb-1 grid grid-cols-7 gap-1" aria-hidden>
+        {WEEKDAYS_PT_SHORT.map((label) => (
+          <span key={label} className="text-center text-[11px] font-semibold text-muted-foreground">
+            {label}
+          </span>
+        ))}
+      </div>
+      <div className="grid grid-cols-7 gap-1">
+        {daysGrid.map((day, index) => {
+          if (!day) return <div key={index} />;
+          const key = dateKeyOf(day);
+          const isToday = key === todayKey;
+          const isStart = from === key;
+          const isEnd = !!to && to === key;
+          const inRange = !!from && !!to && key > from && key < to;
+          return (
+            <button
+              key={index}
+              type="button"
+              disabled={key > todayKey}
+              onClick={() => pick(key)}
+              aria-label={`${shortDate(key)}${isToday ? " — hoje" : ""}`}
+              data-selected={isStart || isEnd || undefined}
+              data-today={isToday || undefined}
+              className={cn(
+                "h-11 w-full rounded-lg text-sm font-medium transition-colors",
+                "hover:bg-accent/10 hover:text-accent",
+                "disabled:cursor-not-allowed disabled:opacity-30",
+                inRange && "!bg-accent/15 !text-accent",
+                (isStart || isEnd) && "!bg-accent !text-accent-foreground",
+                isToday && "ring-1 ring-accent/40",
+              )}
+            >
+              {day.getDate()}
+            </button>
+          );
+        })}
+      </div>
 
       <div className="mt-3 flex flex-wrap gap-2 border-t border-border/60 pt-3">
         {presets.map((preset) => (
