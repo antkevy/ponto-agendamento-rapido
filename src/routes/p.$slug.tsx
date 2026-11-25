@@ -32,6 +32,7 @@ import {
 import { PhoneInput } from "@/components/phone-input";
 import { Modal } from "@/components/modal";
 import { Turnstile } from "@/components/turnstile";
+import { publicRuntimeEnv } from "@/lib/runtime-env";
 import { isValidPhoneBR } from "@/lib/phone";
 import {
   CheckCircle2,
@@ -1623,7 +1624,9 @@ function FormStep({
     };
   }, []);
   const captchaSiteKey =
-    (import.meta.env.VITE_TURNSTILE_SITE_KEY as string | undefined) || remoteSiteKey;
+    (import.meta.env.VITE_TURNSTILE_SITE_KEY as string | undefined) ||
+    publicRuntimeEnv().TURNSTILE_SITE_KEY ||
+    remoteSiteKey;
   // Em produção, booking sem CAPTCHA é recusado (fail-closed). Em dev, segue
   // opcional para não travar desenvolvimento local.
   const captchaRequired = import.meta.env.PROD;

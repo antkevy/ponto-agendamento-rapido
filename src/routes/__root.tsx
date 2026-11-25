@@ -13,6 +13,7 @@ import { Toaster } from "sonner";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { publicRuntimeEnvScript } from "../lib/runtime-env";
 import { supabase } from "../integrations/supabase/client";
 
 function NotFoundComponent() {
@@ -120,6 +121,7 @@ function RootShell({ children }: { children: ReactNode }) {
     <html lang="pt-BR">
       <head>
         <HeadContent />
+        <script dangerouslySetInnerHTML={{ __html: publicRuntimeEnvScript() }} />
       </head>
       <body>
         {children}

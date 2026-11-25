@@ -5,6 +5,7 @@ import { renderErrorPage } from "./lib/error-page";
 import { accessLog, auditLog } from "./lib/audit";
 import { buildTooManyResponse, clientIp, GLOBAL_LIMIT, rateLimitRequest } from "./lib/rate-limit";
 import { verifyTurnstile } from "./lib/turnstile";
+import { setPublicRuntimeEnv } from "./lib/runtime-env";
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
@@ -155,6 +156,12 @@ async function handleTurnstileVerify(request: Request, ctx: unknown): Promise<Re
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     mergeWorkerEnv(env);
+    // Expose only public values to SSR and to the browser (via __root.tsx).
+    setPublicRuntimeEnv({
+      SUPABASE_URL: process.env.SUPABASE_URL ?? null,
+      SUPABASE_PUBLISHABLE_KEY: process.env.SUPABASE_PUBLISHABLE_KEY ?? null,
+      TURNSTILE_SITE_KEY: process.env.TURNSTILE_SITE_KEY ?? null,
+    });
     const startedAt = performance.now();
 
     try {
@@ -178,6 +185,26 @@ export default {
       if (url.pathname === "/api/site-config") {
         return withSecurityHeaders(
           jsonResponse({ turnstileSiteKey: process.env.TURNSTILE_SITE_KEY ?? null }),
+        );
+      }
+
+      // Diagnóstico sem valores: ajuda a confirmar quais configurações chegaram.
+      if (url.pathname === "/api/diagnostics") {
+        return withSecurityHeaders(
+          jsonResponse({
+            ok: true,
+            build: {
+              VITE_SUPABASE_URL: Boolean(import.meta.env.VITE_SUPABASE_URL),
+              VITE_SUPABASE_PUBLISHABLE_KEY: Boolean(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY),
+            },
+            worker: {
+              SUPABASE_URL: Boolean(process.env.SUPABASE_URL),
+              SUPABASE_PUBLISHABLE_KEY: Boolean(process.env.SUPABASE_PUBLISHABLE_KEY),
+              TURNSTILE_SITE_KEY: Boolean(process.env.TURNSTILE_SITE_KEY),
+              TURNSTILE_SECRET_KEY: Boolean(process.env.TURNSTILE_SECRET_KEY),
+              APP_SITE_URL: Boolean(process.env.APP_SITE_URL),
+            },
+          }),
         );
       }
 

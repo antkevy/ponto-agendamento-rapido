@@ -35,19 +35,25 @@ Regras da Cloudflare:
 
 ## 3. Configurar no Lovable
 
-Você **não precisa editar `.env`**. O app aceita a site key vinda de um secret do servidor (/api/site-config).
+Você **não precisa editar `.env`**. O app aceita a site key e as configurações do Supabase vindas de secrets do servidor (injetadas no HTML pelo SSR). Isso evita o erro `Esta página não carregou` quando o build não recebe variáveis `VITE_*`.
+
+Se o deploy estiver com erro 500 em **todas** as páginas, abra `/api/diagnostics`: ele mostra apenas `true/false` (nunca valores). `worker.SUPABASE_URL` e `worker.SUPABASE_PUBLISHABLE_KEY` precisam estar `true`. Se estiverem `false`, adicione esses dois secrets abaixo e faça novo deploy.
 
 ### 3.1 Todas as variáveis em **Secrets**
 
 No projeto: **Settings → Secrets** (ou **Project Settings → Secrets**) e adicione:
 
 ```text
+SUPABASE_URL=https://SEU-PROJECT.supabase.co
+SUPABASE_PUBLISHABLE_KEY=SUA_ANON_KEY
 TURNSTILE_SITE_KEY=0x_SITE_KEY
 TURNSTILE_SECRET_KEY=0x_SECRET_KEY
 APP_SITE_URL=https://abc123.lovable.app
 ```
 
-- `TURNSTILE_SITE_KEY`: pública, mas servida pelo endpoint `/api/site-config` (não é sensível).
+No Lovable Cloud, `SUPABASE_URL` e `SUPABASE_PUBLISHABLE_KEY` normalmente já são injetados automaticamente; só adicione manualmente se `/api/diagnostics` mostrar `false`. A chave publicável do Supabase é pública por design (proteção via RLS). Nunca use `SUPABASE_SERVICE_ROLE_KEY` aqui.
+
+- `TURNSTILE_SITE_KEY`: pública, servida pelo endpoint `/api/site-config` e pelo HTML (não é sensível).
 - `TURNSTILE_SECRET_KEY`: privada, usada apenas no servidor para validar o token.
 - `APP_SITE_URL`: hostname canônico usado na validação.
 
@@ -65,7 +71,7 @@ Se o arquivo `.env` estiver disponível no editor de código do Lovable, você p
 VITE_TURNSTILE_SITE_KEY=0x_SITE_KEY
 ```
 
-Nesse caso, `TURNSTILE_SECRET_KEY` continua em **Secrets**. O código usa `VITE_` primeiro e cai para o secret se ele não existir.
+Nesse caso, `TURNSTILE_SECRET_KEY` continua em **Secrets**. O código usa os valores do Worker primeiro e cai para `VITE_` se eles não existirem.
 
 Se você tiver acesso direto ao Worker na Cloudflare, os secrets também podem ser adicionados em **Workers & Pages → seu worker → Settings → Variables & Secrets**. O código aceita secrets do Worker ou variáveis de ambiente do processo.
 

@@ -2,15 +2,20 @@
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "./types";
 import { brokeredPreviewStorage } from "./previewAuthStorage";
+import { publicRuntimeEnv } from "../../lib/runtime-env";
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+// `VITE_*` é lido no build e pode não existir quando o deploy é feito sem
+// acesso ao .env (Lovable). As mesmas configurações públicas também chegam
+// como secrets do Worker e são injetadas no HTML por __root.tsx.
+// Nunca usar fallback hardcoded: apontaria para um projeto antigo.
+const runtime = publicRuntimeEnv();
+const SUPABASE_URL = runtime.SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_PUBLISHABLE_KEY =
+  runtime.SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
-// Nunca usar fallback hardcoded: ele apontaria para um projeto antigo e
-// causaria vazamento de dados entre ambientes.
 if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
   throw new Error(
-    "Configure VITE_SUPABASE_URL e VITE_SUPABASE_PUBLISHABLE_KEY no ambiente (veja .env.example).",
+    "Configure SUPABASE_URL e SUPABASE_PUBLISHABLE_KEY nos secrets do Worker (ou VITE_SUPABASE_URL e VITE_SUPABASE_PUBLISHABLE_KEY no .env).",
   );
 }
 
