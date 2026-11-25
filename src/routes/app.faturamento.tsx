@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { lazy, Suspense, useMemo, useState } from "react";
 import {
   CalendarDays,
+  CalendarRange,
   Check,
   ChevronLeft,
   ChevronRight,
@@ -33,6 +34,20 @@ import {
   zonedTodayKey,
 } from "@/lib/booking";
 import { CardTable, DataTableCell, DataTableHead, DataTableRow } from "@/components/ui/data-table";
+import {
+  civilDate,
+  dateKey,
+  monthStartKey,
+  pad,
+  parseDateKey,
+  shiftKey,
+} from "@/lib/faturamento-dates";
+
+const PeriodCalendar = lazy(() =>
+  import("@/components/faturamento/period-calendar").then((module) => ({
+    default: module.PeriodCalendar,
+  })),
+);
 
 export const Route = createFileRoute("/app/faturamento")({
   head: () => ({ meta: [{ title: "Faturamento — Agendaí" }] }),
@@ -75,22 +90,6 @@ const PERIODS: { key: PeriodKey; label: string }[] = [
   { key: "year", label: "Anual" },
   { key: "custom", label: "Período" },
 ];
-
-const pad = (n: number) => String(n).padStart(2, "0");
-
-function civilDate(year: number, month: number, day: number): Date {
-  return new Date(Date.UTC(year, month - 1, day, 12));
-}
-
-function dateKey(date: Date): string {
-  return `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}`;
-}
-
-function parseDateKey(value: string): [number, number, number] | null {
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
-  if (!match) return null;
-  return [Number(match[1]), Number(match[2]), Number(match[3])];
-}
 
 function anchorKey(todayKey: string, period: PeriodKey, offset: number): string {
   if (offset === 0 || period === "custom") return todayKey;
@@ -329,7 +328,7 @@ function RevenueChart({ buckets, byMonth }: { buckets: Bucket[]; byMonth: boolea
 
   return (
     <>
-      <div className="overflow-x-auto scrollbar-slim">
+      <div className="overflow-x-auto scrollbar-slim touch-pan-x">
         <div className="flex h-40 min-w-max items-end gap-1 pt-8">
           {buckets.map((bucket, index) => {
             const isSelected = selected === bucket.key;
@@ -414,6 +413,81 @@ function RevenueChart({ buckets, byMonth }: { buckets: Bucket[]; byMonth: boolea
   );
 }
 
+function CommissionEditor({
+  employee,
+  editing,
+  draft,
+  canEdit,
+  ready,
+  pending,
+  onStart,
+  onDraft,
+  onCommit,
+  onCancel,
+}: {
+  employee: EmployeeTotal;
+  editing: boolean;
+  draft: string;
+  canEdit: boolean;
+  ready: boolean;
+  pending: boolean;
+  onStart: () => void;
+  onDraft: (value: string) => void;
+  onCommit: () => void;
+  onCancel: () => void;
+}) {
+  if (editing) {
+    return (
+      <div className="flex items-center justify-end gap-1.5">
+        <input
+          type="text"
+          inputMode="decimal"
+          min={0}
+          max={100}
+          autoFocus
+          value={draft}
+          onChange={(event) => onDraft(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") onCommit();
+            if (event.key === "Escape") onCancel();
+          }}
+          aria-label={`Comissão de ${employee.name}`}
+          className="h-11 w-[74px] rounded-lg border border-border bg-background px-2 text-right text-sm font-semibold tabular-nums"
+        />
+        <button
+          type="button"
+          aria-label="Salvar comissão"
+          onClick={onCommit}
+          disabled={pending}
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-accent/15 text-accent transition-colors hover:bg-accent/25 disabled:opacity-50"
+        >
+          <Check className="h-4 w-4" />
+        </button>
+        <button
+          type="button"
+          aria-label="Cancelar"
+          onClick={onCancel}
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-lg transition-colors hover:bg-muted"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      disabled={!canEdit || !ready}
+      onClick={onStart}
+      className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg px-2 font-semibold tabular-nums text-foreground transition-colors hover:bg-accent/10 disabled:cursor-default disabled:hover:bg-transparent"
+    >
+      {employee.commission.toFixed(2).replace(".", ",")}%
+      {canEdit && ready && <Pencil className="h-3.5 w-3.5 text-accent" />}
+    </button>
+  );
+}
+
 function Page() {
   const { data: pro, isLoading: proLoading } = useMyProfessional();
   const { canEdit } = useUserRole();
@@ -457,6 +531,7 @@ function Page() {
           .eq("professional_id", proId)
           .gte("starts_at", bounds.start.toISOString())
           .lt("starts_at", bounds.end.toISOString())
+          .order("starts_at", { ascending: true })
           .range(range, range + PAGE - 1);
         if (error) throw error;
         const page = (data ?? []) as ApptRow[];
@@ -606,7 +681,7 @@ function Page() {
         </div>
       )}
 
-      <section className="ui-card-glass relative animate-fade-in-up overflow-hidden p-6">
+      <section className="ui-card-glass relative animate-fade-in-up overflow-hidden p-4 sm:p-6">
         <span className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full bg-accent/10 blur-3xl" />
         <div className="relative flex flex-wrap items-start justify-between gap-6">
           <div>
@@ -624,9 +699,9 @@ function Page() {
             </p>
           </div>
 
-          <div className="flex flex-col items-start gap-3 sm:items-end">
+          <div className="flex w-full flex-col items-stretch gap-3 sm:w-auto sm:items-end">
             <div
-              className="inline-flex flex-wrap gap-1 rounded-xl border border-border bg-background/70 p-1"
+              className="flex w-full gap-1 overflow-x-auto scrollbar-slim touch-pan-x rounded-xl border border-border bg-background/70 p-1 sm:w-auto"
               role="tablist"
               aria-label="Período do faturamento"
             >
@@ -638,11 +713,15 @@ function Page() {
                   aria-selected={period === item.key}
                   data-selected={period === item.key}
                   onClick={() => {
+                    if (item.key === "custom" && !from) {
+                      setFrom(shiftKey(todayKey, -29));
+                      setTo(todayKey);
+                    }
                     setPeriod(item.key);
                     setOffset(0);
                     setEditing(null);
                   }}
-                  className="min-h-[40px] rounded-lg px-4 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground"
+                  className="min-h-[44px] shrink-0 rounded-lg px-3.5 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground sm:min-h-[40px] sm:px-4 data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground"
                 >
                   {item.label}
                 </button>
@@ -654,7 +733,7 @@ function Page() {
                   type="button"
                   aria-label="Período anterior"
                   onClick={() => setOffset((value) => value - 1)}
-                  className="grid h-9 w-9 place-items-center rounded-lg border border-border bg-background/70 transition-colors hover:bg-muted"
+                  className="grid h-11 w-11 place-items-center rounded-lg border border-border bg-background/70 transition-colors hover:bg-muted sm:h-9 sm:w-9"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </button>
@@ -665,7 +744,7 @@ function Page() {
                   type="button"
                   aria-label="Próximo período"
                   onClick={() => setOffset((value) => value + 1)}
-                  className="grid h-9 w-9 place-items-center rounded-lg border border-border bg-background/70 transition-colors hover:bg-muted"
+                  className="grid h-11 w-11 place-items-center rounded-lg border border-border bg-background/70 transition-colors hover:bg-muted sm:h-9 sm:w-9"
                 >
                   <ChevronRight className="h-4 w-4" />
                 </button>
@@ -675,35 +754,39 @@ function Page() {
         </div>
 
         {period === "custom" && (
-          <div className="relative mt-5 grid gap-3 border-t border-border/60 pt-5 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
-            <label className="block">
-              <span className="mb-1 block text-xs font-semibold text-muted-foreground">De</span>
-              <input
-                type="date"
-                value={from}
-                onChange={(event) => setFrom(event.target.value)}
-                className="min-h-[44px] w-full rounded-lg border border-border bg-background px-3 text-sm"
-              />
-            </label>
-            <label className="block">
-              <span className="mb-1 block text-xs font-semibold text-muted-foreground">Até</span>
-              <input
-                type="date"
-                value={to}
-                onChange={(event) => setTo(event.target.value)}
-                className="min-h-[44px] w-full rounded-lg border border-border bg-background px-3 text-sm"
-              />
-            </label>
-            <button
-              type="button"
-              onClick={() => {
-                setFrom(todayKey);
-                setTo(todayKey);
-              }}
-              className="min-h-[44px] rounded-lg border border-border bg-background px-4 text-sm font-semibold transition-colors hover:bg-muted"
+          <div className="relative mt-5 border-t border-border/60 pt-5">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <span className="ui-icon-bubble grid h-10 w-10 place-items-center rounded-xl">
+                  <CalendarRange className="h-5 w-5" />
+                </span>
+                <div>
+                  <h3 className="text-sm font-bold tracking-tight text-foreground">
+                    Intervalo personalizado
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    Toque em uma data para começar e em outra para terminar
+                  </p>
+                </div>
+              </div>
+              <span className="ui-badge text-[11px]">Toque para selecionar</span>
+            </div>
+            <Suspense
+              fallback={
+                <div className="skeleton h-72 rounded-xl" aria-label="Carregando calendário" />
+              }
             >
-              Hoje
-            </button>
+              <PeriodCalendar
+                from={from}
+                to={to}
+                todayKey={todayKey}
+                onChange={(nextFrom, nextTo) => {
+                  setFrom(nextFrom);
+                  setTo(nextTo);
+                  setEditing(null);
+                }}
+              />
+            </Suspense>
           </div>
         )}
 
@@ -756,7 +839,7 @@ function Page() {
               <div>
                 <h2 className="text-lg font-bold tracking-tight">Demonstrativo da equipe</h2>
                 <p className="text-xs text-muted-foreground">
-                  Receita atribuída e comissão de cada profissional
+                  Toque no percentual para definir a comissão de cada profissional
                 </p>
               </div>
             </div>
@@ -773,120 +856,159 @@ function Page() {
               Nenhum atendimento com funcionário no período.
             </p>
           ) : (
-            <CardTable className="border-0 bg-transparent shadow-none">
-              <thead className="bg-muted/50">
-                <tr>
-                  <DataTableHead>Profissional</DataTableHead>
-                  <DataTableHead>Atend.</DataTableHead>
-                  <DataTableHead>Receita</DataTableHead>
-                  <DataTableHead className="text-right">Comissão</DataTableHead>
-                  <DataTableHead className="text-right">A pagar</DataTableHead>
-                </tr>
-              </thead>
-              <tbody>
+            <>
+              <div className="hidden lg:block">
+                <CardTable className="border-0 bg-transparent shadow-none">
+                  <thead className="bg-muted/50">
+                    <tr>
+                      <DataTableHead>Profissional</DataTableHead>
+                      <DataTableHead>Atend.</DataTableHead>
+                      <DataTableHead>Receita</DataTableHead>
+                      <DataTableHead className="text-right">Comissão</DataTableHead>
+                      <DataTableHead className="text-right">A pagar</DataTableHead>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {summary.employees.map((employee) => {
+                      const due = Math.round((employee.receita * employee.commission) / 100);
+                      const isEditing = editing === employee.id;
+                      return (
+                        <DataTableRow key={employee.id}>
+                          <DataTableCell>
+                            <div className="flex items-center gap-3">
+                              <span className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full bg-accent/15 text-xs font-bold text-accent">
+                                {employee.photo ? (
+                                  <img
+                                    src={employee.photo}
+                                    alt=""
+                                    className="h-full w-full object-cover"
+                                  />
+                                ) : (
+                                  employee.name.slice(0, 2).toUpperCase()
+                                )}
+                              </span>
+                              <span className="font-semibold text-foreground">{employee.name}</span>
+                            </div>
+                          </DataTableCell>
+                          <DataTableCell className="tabular-nums">
+                            {employee.atendimentos}
+                          </DataTableCell>
+                          <DataTableCell className="font-semibold tabular-nums">
+                            {formatBRL(employee.receita)}
+                          </DataTableCell>
+                          <DataTableCell className="text-right">
+                            <CommissionEditor
+                              employee={employee}
+                              editing={isEditing}
+                              draft={draft}
+                              canEdit={canEdit}
+                              ready={!!raw?.commissionReady}
+                              pending={saveCommission.isPending}
+                              onStart={() => {
+                                setEditing(employee.id);
+                                setDraft(String(employee.commission).replace(".", ","));
+                              }}
+                              onDraft={setDraft}
+                              onCommit={() => commitCommission(employee)}
+                              onCancel={() => setEditing(null)}
+                            />
+                          </DataTableCell>
+                          <DataTableCell className="text-right font-bold tabular-nums text-success">
+                            {formatBRL(due)}
+                          </DataTableCell>
+                        </DataTableRow>
+                      );
+                    })}
+                  </tbody>
+                  <tfoot className="bg-muted/40">
+                    <tr>
+                      <DataTableCell className="font-bold">Total</DataTableCell>
+                      <DataTableCell className="font-bold tabular-nums">
+                        {summary.employees.reduce((sum, e) => sum + e.atendimentos, 0)}
+                      </DataTableCell>
+                      <DataTableCell className="font-bold tabular-nums">
+                        {formatBRL(summary.employees.reduce((sum, e) => sum + e.receita, 0))}
+                      </DataTableCell>
+                      <DataTableCell />
+                      <DataTableCell className="text-right font-bold tabular-nums text-success">
+                        {formatBRL(summary.commissions)}
+                      </DataTableCell>
+                    </tr>
+                  </tfoot>
+                </CardTable>
+              </div>
+
+              <div className="space-y-3 lg:hidden">
                 {summary.employees.map((employee) => {
                   const due = Math.round((employee.receita * employee.commission) / 100);
-                  const isEditing = editing === employee.id;
                   return (
-                    <DataTableRow key={employee.id}>
-                      <DataTableCell>
-                        <div className="flex items-center gap-3">
-                          <span className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full bg-accent/15 text-xs font-bold text-accent">
-                            {employee.photo ? (
-                              <img
-                                src={employee.photo}
-                                alt=""
-                                className="h-full w-full object-cover"
-                              />
-                            ) : (
-                              employee.name.slice(0, 2).toUpperCase()
-                            )}
-                          </span>
-                          <span className="font-semibold text-foreground">{employee.name}</span>
-                        </div>
-                      </DataTableCell>
-                      <DataTableCell className="tabular-nums">
-                        {employee.atendimentos}
-                      </DataTableCell>
-                      <DataTableCell className="font-semibold tabular-nums">
-                        {formatBRL(employee.receita)}
-                      </DataTableCell>
-                      <DataTableCell className="text-right">
-                        {isEditing ? (
-                          <div className="flex items-center justify-end gap-1">
-                            <input
-                              type="number"
-                              min={0}
-                              max={100}
-                              step="0.01"
-                              autoFocus
-                              value={draft}
-                              onChange={(event) => setDraft(event.target.value)}
-                              onKeyDown={(event) => {
-                                if (event.key === "Enter") commitCommission(employee);
-                                if (event.key === "Escape") setEditing(null);
-                              }}
-                              aria-label={`Comissão de ${employee.name}`}
-                              className="h-9 w-20 rounded-lg border border-border bg-background px-2 text-right text-sm tabular-nums"
+                    <div
+                      key={employee.id}
+                      className="rounded-xl border border-border bg-background/50 p-4"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full bg-accent/15 text-xs font-bold text-accent">
+                          {employee.photo ? (
+                            <img
+                              src={employee.photo}
+                              alt=""
+                              className="h-full w-full object-cover"
                             />
-                            <button
-                              type="button"
-                              aria-label="Salvar comissão"
-                              onClick={() => commitCommission(employee)}
-                              disabled={saveCommission.isPending}
-                              className="grid h-9 w-9 place-items-center rounded-lg bg-accent/15 text-accent transition-colors hover:bg-accent/25"
-                            >
-                              <Check className="h-4 w-4" />
-                            </button>
-                            <button
-                              type="button"
-                              aria-label="Cancelar"
-                              onClick={() => setEditing(null)}
-                              className="grid h-9 w-9 place-items-center rounded-lg transition-colors hover:bg-muted"
-                            >
-                              <X className="h-4 w-4" />
-                            </button>
-                          </div>
-                        ) : (
-                          <button
-                            type="button"
-                            disabled={!canEdit || !raw?.commissionReady}
-                            onClick={() => {
+                          ) : (
+                            employee.name.slice(0, 2).toUpperCase()
+                          )}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate font-bold text-foreground">{employee.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {employee.atendimentos} atendimento(s) ·{" "}
+                            <span className="font-semibold text-foreground">
+                              {formatBRL(employee.receita)}
+                            </span>
+                          </p>
+                        </div>
+                      </div>
+                      <div className="mt-3 grid grid-cols-2 gap-3 border-t border-border/60 pt-3">
+                        <div>
+                          <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                            Comissão
+                          </p>
+                          <CommissionEditor
+                            employee={employee}
+                            editing={editing === employee.id}
+                            draft={draft}
+                            canEdit={canEdit}
+                            ready={!!raw?.commissionReady}
+                            pending={saveCommission.isPending}
+                            onStart={() => {
                               setEditing(employee.id);
                               setDraft(String(employee.commission).replace(".", ","));
                             }}
-                            className="inline-flex min-h-[36px] items-center gap-1 rounded-lg px-2 font-semibold tabular-nums text-foreground transition-colors hover:bg-accent/10 disabled:cursor-default disabled:hover:bg-transparent"
-                          >
-                            {employee.commission.toFixed(2).replace(".", ",")}%
-                            {canEdit && raw?.commissionReady && (
-                              <Pencil className="h-3 w-3 text-accent" />
-                            )}
-                          </button>
-                        )}
-                      </DataTableCell>
-                      <DataTableCell className="text-right font-bold tabular-nums text-success">
-                        {formatBRL(due)}
-                      </DataTableCell>
-                    </DataTableRow>
+                            onDraft={setDraft}
+                            onCommit={() => commitCommission(employee)}
+                            onCancel={() => setEditing(null)}
+                          />
+                        </div>
+                        <div className="text-right">
+                          <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                            A pagar
+                          </p>
+                          <p className="pt-2.5 text-base font-black tabular-nums text-success">
+                            {formatBRL(due)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   );
                 })}
-              </tbody>
-              <tfoot className="bg-muted/40">
-                <tr>
-                  <DataTableCell className="font-bold">Total</DataTableCell>
-                  <DataTableCell className="font-bold tabular-nums">
-                    {summary.employees.reduce((sum, e) => sum + e.atendimentos, 0)}
-                  </DataTableCell>
-                  <DataTableCell className="font-bold tabular-nums">
-                    {formatBRL(summary.employees.reduce((sum, e) => sum + e.receita, 0))}
-                  </DataTableCell>
-                  <DataTableCell />
-                  <DataTableCell className="text-right font-bold tabular-nums text-success">
+                <div className="flex items-center justify-between rounded-xl bg-muted/40 px-4 py-3">
+                  <span className="text-sm font-bold text-foreground">Total da equipe</span>
+                  <span className="text-sm font-black tabular-nums text-success">
                     {formatBRL(summary.commissions)}
-                  </DataTableCell>
-                </tr>
-              </tfoot>
-            </CardTable>
+                  </span>
+                </div>
+              </div>
+            </>
           )}
 
           {summary && summary.unassignedCount > 0 && (

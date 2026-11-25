@@ -25,7 +25,7 @@
 
 # Painel — Faturamento
 
-- Aba `/app/faturamento` em `src/routes/app.faturamento.tsx` (link no menu de `src/components/app-shell.tsx`): filtros semanal/mensal/anual e por intervalo, gráfico de evolução, indicadores e comissão configurável por funcionário (`funcionarios.commission_percent`, migração `supabase/migrations/20261126000000_employee_commission.sql`). Guia em `docs/FATURAMENTO.md`.
+- Aba `/app/faturamento` em `src/routes/app.faturamento.tsx` (link no menu de `src/components/app-shell.tsx`): filtros semanal/mensal/anual e por intervalo com mini calendário carregado sob demanda (`src/components/faturamento/period-calendar.tsx`), gráfico de evolução, indicadores e comissão configurável por funcionário (`funcionarios.commission_percent`, migração `supabase/migrations/20261126000000_employee_commission.sql`). Layout otimizado para mobile (cartões no lugar da tabela, toques de 44px). Guia em `docs/FATURAMENTO.md`.
 
 # Segurança (implementado — código)
 
