@@ -55,7 +55,7 @@ BEGIN
     END IF;
 
     -- Tabelas com dados privados: nega leitura pública.
-    IF r.tablename = ANY(privado) THEN
+    IF r.tablename::text = ANY(privado) THEN
       EXECUTE format('DROP POLICY %I ON public.%I', r.policyname, r.tablename);
       EXECUTE format('CREATE POLICY %I ON public.%I FOR SELECT TO public USING (false)', 'block public read ' || r.tablename, r.tablename);
       RAISE NOTICE 'public.%: leitura pública bloqueada.', r.tablename;
