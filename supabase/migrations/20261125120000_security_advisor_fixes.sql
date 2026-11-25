@@ -1,5 +1,7 @@
 -- =====================================================================
 -- Agendaí — Correções dos achados do Security Advisor (25/11/2026)
+-- SUPERSEDADA pela migração 20261125130000_security_advisor_fixes_v2.sql.
+-- Esta versão falha em projetos onde plano_servicos/saas_plans não existem.
 -- Aplicar no Supabase SQL Editor. Idempotente.
 --
 -- 1) Catálogos: leitura pública só do que está ativo e pertence a um

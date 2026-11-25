@@ -20,9 +20,9 @@ Se a API estiver temporariamente indisponível, o cadastro segue em frente (não
 
 ## 2. “Some access rules let everyone through” (4 tabelas)
 
-Arquivo: `supabase/migrations/20261125120000_security_advisor_fixes.sql`
+Arquivo: `supabase/migrations/20261125130000_security_advisor_fixes_v2.sql` (**use esta versão**; a v1 falha se `plano_servicos`/`saas_plans` não existirem no seu projeto).
 
-Cole no **Supabase → SQL Editor → New query → Run**. Ele substitui as policies `USING (true)` das tabelas `planos`, `produtos`, `plano_servicos` e `saas_plans` por regras que exigem registro ativo e estabelecimento com slug público. O agendamento público continua funcionando normalmente.
+Cole no **Supabase → SQL Editor → New query → Run**. Ela procura automaticamente todas as policies de SELECT que liberam tudo para o público e as substitui por regras que exigem registro ativo e estabelecimento com slug público. Tabelas inexistentes são ignoradas. O agendamento público continua funcionando normalmente.
 
 Para conferir depois:
 
@@ -38,7 +38,7 @@ Se o Lovable apontar **outras** tabelas, cole aqui os nomes que eu ajusto a poli
 
 ## 3. “A rule lets anyone list files in brand-assets”
 
-A mesma migração acima remove a policy `brand-assets public read` e a substitui por `brand-assets owner read` (somente o dono da pasta consegue listar via API).
+A migração v2 remove a policy `brand-assets public read` e a substitui por `brand-assets owner read` (somente o dono da pasta consegue listar via API).
 
 As **URLs públicas das imagens continuam funcionando**: o bucket `brand-assets` é público, e o Supabase permite baixar por URL sem policy de SELECT. Upload, substituição e exclusão já eram restritos ao dono da pasta.
 
