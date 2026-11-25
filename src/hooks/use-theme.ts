@@ -1,12 +1,5 @@
 import { useCallback, useSyncExternalStore } from "react";
-import {
-  applyTheme,
-  clearStoredTheme,
-  resolveTheme,
-  setStoredTheme,
-  storedTheme,
-  type Theme,
-} from "@/lib/theme-boot";
+import { applyTheme, currentTheme, type Theme } from "@/lib/theme-boot";
 
 export type { Theme } from "@/lib/theme-boot";
 
@@ -18,21 +11,19 @@ function emit() {
   listeners.forEach((listener) => listener());
 }
 
-function handleSystemChange(event: MediaQueryListEvent) {
-  // Override manual tem prioridade; sem ele, o dispositivo manda.
-  if (storedTheme()) return;
-  const next: Theme = event.matches ? "light" : "dark";
-  applyTheme(next);
-  emit();
-}
-
 function subscribe(onStoreChange: () => void) {
   listeners.add(onStoreChange);
+
   if (!media && typeof window !== "undefined" && window.matchMedia) {
     media = window.matchMedia("(prefers-color-scheme: light)");
-    mediaListener = handleSystemChange;
+    mediaListener = (event) => {
+      // O dispositivo é sempre a fonte da verdade.
+      applyTheme(event.matches ? "light" : "dark");
+      emit();
+    };
     media.addEventListener("change", mediaListener);
   }
+
   return () => {
     listeners.delete(onStoreChange);
     if (listeners.size === 0 && media && mediaListener) {
@@ -44,7 +35,7 @@ function subscribe(onStoreChange: () => void) {
 }
 
 function getSnapshot(): Theme {
-  return resolveTheme();
+  return currentTheme();
 }
 
 function getServerSnapshot(): Theme {
@@ -53,22 +44,12 @@ function getServerSnapshot(): Theme {
 
 export function useTheme() {
   const theme = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
-  const isAuto = useSyncExternalStore(
-    subscribe,
-    () => storedTheme() === null,
-    () => true,
-  );
 
   const toggle = useCallback(() => {
-    const next: Theme = theme === "dark" ? "light" : "dark";
-    setStoredTheme(next);
-    emit();
-  }, [theme]);
-
-  const useSystem = useCallback(() => {
-    clearStoredTheme();
+    const next: Theme = currentTheme() === "dark" ? "light" : "dark";
+    applyTheme(next);
     emit();
   }, []);
 
-  return { theme, toggle, useSystem, isAuto };
+  return { theme, toggle };
 }
