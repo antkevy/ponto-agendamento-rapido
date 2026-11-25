@@ -35,25 +35,37 @@ Regras da Cloudflare:
 
 ## 3. Configurar no Lovable
 
-No projeto: **Project Settings → Environment Variables**.
+O Lovable separa **variáveis de build** de **secrets**. Não coloque `VITE_*` em Secrets — o painel recusa.
 
-Variável de build (pública, vai para o navegador):
+### 3.1 Site Key → arquivo `.env`
+
+Abra o arquivo `.env` no editor de código do Lovable (ou no repositório sincronizado) e adicione:
 
 ```text
 VITE_TURNSTILE_SITE_KEY=0x_SITE_KEY
 ```
 
-Variável de servidor/secret (**nunca** com prefixo `VITE_`, nunca no git):
+É um valor público: é embutido no bundle no build. Por isso fica no `.env`, não em Secrets.
+
+### 3.2 Secret Key → **Secrets**
+
+No projeto: **Settings → Secrets** (ou **Project Settings → Secrets**) e adicione:
 
 ```text
 TURNSTILE_SECRET_KEY=0x_SECRET_KEY
 ```
+
+Nunca com prefixo `VITE_` e nunca no `.env`/git. O Worker lê essa variável no servidor.
+
+### 3.3 URL canônica → **Secrets**
 
 Recomendado enquanto ainda não houver domínio próprio:
 
 ```text
 APP_SITE_URL=https://abc123.lovable.app
 ```
+
+> Não use chaves de teste com `APP_SITE_URL` preenchido: o secret de teste devolve hostname `example.com` e a validação falharia. Nesse caso, deixe `APP_SITE_URL` vazio temporariamente.
 
 > Não coloque o domínio futuro em `APP_SITE_URL` agora: o servidor compara esse hostname com o do token. Se estiver vazio, ele usa a origem do próprio request.
 
