@@ -6,6 +6,7 @@ import { db } from "@/lib/db-tables";
 import { AuthLayout, Field } from "./entrar";
 import { slugify } from "@/lib/booking";
 import { isStrongPassword, passwordStrengthHint } from "@/lib/password";
+import { isLeakedPassword, LEAKED_PASSWORD_MESSAGE } from "@/lib/password-breach";
 
 export const Route = createFileRoute("/cadastrar")({
   head: () => ({
@@ -44,6 +45,7 @@ function SignUp() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!isStrongPassword(password)) return toast.error(passwordStrengthHint(password));
+    if (await isLeakedPassword(password)) return toast.error(LEAKED_PASSWORD_MESSAGE);
     setLoading(true);
     try {
       const { data, error } = await supabase.auth.signUp({

@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { UIButton, UICard, UIInput, UIPasswordInput, UITitle } from "@/components/ui-kit";
 import { daysUntilPasswordExpiry, isStrongPassword, passwordStrengthHint } from "@/lib/password";
+import { isLeakedPassword, LEAKED_PASSWORD_MESSAGE } from "@/lib/password-breach";
 import authBg from "@/assets/auth-bg.jpg";
 
 export const Route = createFileRoute("/entrar")({
@@ -79,6 +80,7 @@ function SignIn() {
   async function onResetPassword(e: React.FormEvent) {
     e.preventDefault();
     if (!isStrongPassword(newPassword)) return toast.error(passwordStrengthHint(newPassword));
+    if (await isLeakedPassword(newPassword)) return toast.error(LEAKED_PASSWORD_MESSAGE);
     if (newPassword !== confirmPassword) {
       toast.error("As senhas não coincidem.");
       return;

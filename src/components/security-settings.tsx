@@ -15,6 +15,7 @@ import {
   daysSincePasswordChange,
   daysUntilPasswordExpiry,
 } from "@/lib/password";
+import { isLeakedPassword, LEAKED_PASSWORD_MESSAGE } from "@/lib/password-breach";
 
 type SecurityRow = {
   role: "admin" | "editor" | "user" | null;
@@ -122,6 +123,7 @@ export function SecuritySettings() {
       if (pw.next !== pw.confirm) throw new Error("As senhas não coincidem.");
       if (!isStrongPassword(pw.next))
         throw new Error("Senha fraca. Use letras, números e símbolos (mín. 8 caracteres).");
+      if (await isLeakedPassword(pw.next)) throw new Error(LEAKED_PASSWORD_MESSAGE);
       const { error: reauth } = await supabase.auth.signInWithPassword({
         email: user!.email ?? "",
         password: pw.current,

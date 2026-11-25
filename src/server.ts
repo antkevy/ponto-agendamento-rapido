@@ -153,6 +153,41 @@ async function handleTurnstileVerify(request: Request, ctx: unknown): Promise<Re
   }
 }
 
+/**
+ * Proxy da API Pwned Passwords (HIBP). Nunca recebe a senha — apenas o prefixo
+ * de 5 caracteres do SHA-1 — e devolve os sufixos para comparação no cliente.
+ */
+async function handlePasswordCheck(request: Request): Promise<Response> {
+  const url = new URL(request.url);
+  const origin = request.headers.get("origin");
+  if (origin && origin !== url.origin) return jsonResponse({ suffixes: [] }, 403);
+  if (request.method !== "GET") return jsonResponse({ suffixes: [] }, 405);
+
+  const prefix = (url.searchParams.get("prefix") ?? "").toUpperCase();
+  if (!/^[0-9A-F]{5}$/.test(prefix)) return jsonResponse({ suffixes: [] }, 400);
+
+  try {
+    const response = await fetch(`https://api.pwnedpasswords.com/range/${prefix}`, {
+      headers: { "User-Agent": "Agendai-Password-Check", "Add-Padding": "true" },
+      // Cache no edge: a faixa é pública e muda pouco.
+      cf: { cacheTtl: 86400, cacheEverything: true },
+    } as RequestInit & { cf: { cacheTtl: number; cacheEverything: boolean } });
+
+    if (!response.ok) return jsonResponse({ suffixes: [] }, 502);
+
+    const suffixes = (await response.text())
+      .split(/\r?\n/)
+      .map((line) => line.split(":")[0]?.trim().toUpperCase())
+      .filter((value): value is string => Boolean(value));
+
+    const json = jsonResponse({ suffixes });
+    json.headers.set("cache-control", "public, max-age=86400");
+    return json;
+  } catch {
+    return jsonResponse({ suffixes: [] }, 502);
+  }
+}
+
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     mergeWorkerEnv(env);
@@ -213,6 +248,11 @@ export default {
           return withSecurityHeaders(jsonResponse({ ok: false }, 405));
         }
         return withSecurityHeaders(await handleTurnstileVerify(request, ctx));
+      }
+
+      // k-anonymity: recebe só 5 chars do SHA-1 e devolve os sufixos da faixa.
+      if (url.pathname === "/api/password-check") {
+        return withSecurityHeaders(await handlePasswordCheck(request));
       }
 
       const handler = await getServerEntry();
