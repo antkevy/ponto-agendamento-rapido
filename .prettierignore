@@ -1,8 +1,3 @@
-node_modules
-dist
-.output
-.vinxi
-pnpm-lock.yaml
-package-lock.json
-bun.lock
-routeTree.gen.ts
+# Arquivos gerenciados pelo Lovable/Supabase — não reformatar (evita diffs de 1.700 linhas).
+src/integrations/supabase/types.ts
+src/integrations/supabase/previewAuthStorage.ts

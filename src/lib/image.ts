@@ -24,6 +24,25 @@ export function optimizedImageUrl(
 /** Extrai o caminho do arquivo no bucket a partir de uma URL (assinada ou pública). */
 export function storagePathFromUrl(url: string | null | undefined, bucket = "brand-assets") {
   if (!url) return null;
-  const m = url.match(new RegExp(`/storage/v1/object/(?:sign|public)/${bucket}/([^?]+)`));
-  return m?.[1] ? decodeURIComponent(m[1]) : null;
+  const escapedBucket = bucket.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const m = url.match(new RegExp(`/storage/v1/object/(?:sign|public)/${escapedBucket}/([^?]+)`));
+  if (!m?.[1]) return null;
+
+  let path: string;
+  try {
+    path = decodeURIComponent(m[1]);
+  } catch {
+    return null;
+  }
+
+  // Só aceita o formato gerado pelo app: <user-id>/<pasta>/<arquivo>.
+  // Isso bloqueia caminhos relativos/encodedados que tentem sair da pasta do dono.
+  const parts = path.split("/");
+  if (parts.length < 3 || parts.some((part) => !part || part === "." || part === "..")) {
+    return null;
+  }
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(parts[0])) {
+    return null;
+  }
+  return path;
 }

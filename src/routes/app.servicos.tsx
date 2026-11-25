@@ -203,14 +203,14 @@ function ServicosTab({ pro, readOnly }: { pro: Pro; readOnly?: boolean }) {
         .eq("id", id)
         .eq("professional_id", pro.id)
         .maybeSingle();
-      const imgPath = storagePathFromUrl(row?.image_url);
-      if (imgPath) await supabase.storage.from("brand-assets").remove([imgPath]);
       const { error } = await supabase
         .from(db.servicos)
         .delete()
         .eq("id", id)
         .eq("professional_id", pro.id);
       if (error) throw error;
+      const imgPath = storagePathFromUrl(row?.image_url);
+      if (imgPath) await supabase.storage.from("brand-assets").remove([imgPath]);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["services"] });
@@ -356,14 +356,14 @@ function PlanosTab({ pro, readOnly }: { pro: Pro; readOnly?: boolean }) {
         .eq("id", id)
         .eq("professional_id", pro.id)
         .maybeSingle();
-      const imgPath = storagePathFromUrl(row?.image_url);
-      if (imgPath) await supabase.storage.from("brand-assets").remove([imgPath]);
       const { error } = await supabase
         .from(db.planos)
         .delete()
         .eq("id", id)
         .eq("professional_id", pro.id);
       if (error) throw error;
+      const imgPath = storagePathFromUrl(row?.image_url);
+      if (imgPath) await supabase.storage.from("brand-assets").remove([imgPath]);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["planos"] });
@@ -509,14 +509,14 @@ function ProdutosTab({ pro, readOnly }: { pro: Pro; readOnly?: boolean }) {
         .eq("id", id)
         .eq("professional_id", pro.id)
         .maybeSingle();
-      const imgPath = storagePathFromUrl(row?.image_url);
-      if (imgPath) await supabase.storage.from("brand-assets").remove([imgPath]);
       const { error } = await supabase
         .from(db.produtos)
         .delete()
         .eq("id", id)
         .eq("professional_id", pro.id);
       if (error) throw error;
+      const imgPath = storagePathFromUrl(row?.image_url);
+      if (imgPath) await supabase.storage.from("brand-assets").remove([imgPath]);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["produtos"] });
