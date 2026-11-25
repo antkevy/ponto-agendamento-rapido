@@ -93,6 +93,7 @@ function mergeWorkerEnv(env: unknown) {
     "APP_SITE_URL",
     "SUPABASE_URL",
     "SUPABASE_PUBLISHABLE_KEY",
+    "SUPABASE_SERVICE_ROLE_KEY",
     "TURNSTILE_SECRET_KEY",
   ]) {
     if (bindings[key] && !process.env[key]) process.env[key] = bindings[key];
