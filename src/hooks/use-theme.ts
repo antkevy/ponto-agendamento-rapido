@@ -53,6 +53,11 @@ function getServerSnapshot(): Theme {
 
 export function useTheme() {
   const theme = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const isAuto = useSyncExternalStore(
+    subscribe,
+    () => storedTheme() === null,
+    () => true,
+  );
 
   const toggle = useCallback(() => {
     const next: Theme = theme === "dark" ? "light" : "dark";
@@ -65,5 +70,5 @@ export function useTheme() {
     emit();
   }, []);
 
-  return { theme, toggle, useSystem };
+  return { theme, toggle, useSystem, isAuto };
 }
