@@ -35,43 +35,39 @@ Regras da Cloudflare:
 
 ## 3. Configurar no Lovable
 
-O Lovable separa **variáveis de build** de **secrets**. Não coloque `VITE_*` em Secrets — o painel recusa.
+Você **não precisa editar `.env`**. O app aceita a site key vinda de um secret do servidor (/api/site-config).
 
-### 3.1 Site Key → arquivo `.env`
-
-Abra o arquivo `.env` no editor de código do Lovable (ou no repositório sincronizado) e adicione:
-
-```text
-VITE_TURNSTILE_SITE_KEY=0x_SITE_KEY
-```
-
-É um valor público: é embutido no bundle no build. Por isso fica no `.env`, não em Secrets.
-
-### 3.2 Secret Key → **Secrets**
+### 3.1 Todas as variáveis em **Secrets**
 
 No projeto: **Settings → Secrets** (ou **Project Settings → Secrets**) e adicione:
 
 ```text
+TURNSTILE_SITE_KEY=0x_SITE_KEY
 TURNSTILE_SECRET_KEY=0x_SECRET_KEY
-```
-
-Nunca com prefixo `VITE_` e nunca no `.env`/git. O Worker lê essa variável no servidor.
-
-### 3.3 URL canônica → **Secrets**
-
-Recomendado enquanto ainda não houver domínio próprio:
-
-```text
 APP_SITE_URL=https://abc123.lovable.app
 ```
+
+- `TURNSTILE_SITE_KEY`: pública, mas servida pelo endpoint `/api/site-config` (não é sensível).
+- `TURNSTILE_SECRET_KEY`: privada, usada apenas no servidor para validar o token.
+- `APP_SITE_URL`: hostname canônico usado na validação.
 
 > Não use chaves de teste com `APP_SITE_URL` preenchido: o secret de teste devolve hostname `example.com` e a validação falharia. Nesse caso, deixe `APP_SITE_URL` vazio temporariamente.
 
 > Não coloque o domínio futuro em `APP_SITE_URL` agora: o servidor compara esse hostname com o do token. Se estiver vazio, ele usa a origem do próprio request.
 
-Salve e faça um **novo deploy** — `VITE_*` é lido no build.
+Salve e faça um **novo deploy** — secrets do Worker são lidos no runtime.
 
-Se você tiver acesso direto ao Worker na Cloudflare, o `TURNSTILE_SECRET_KEY` também pode ser adicionado em **Workers & Pages → seu worker → Settings → Variables & Secrets**. O código aceita secret do Worker ou variável de ambiente do processo.
+### 3.2 Alternativa (se você conseguir editar `.env`)
+
+Se o arquivo `.env` estiver disponível no editor de código do Lovable, você pode usar a forma clássica de build:
+
+```text
+VITE_TURNSTILE_SITE_KEY=0x_SITE_KEY
+```
+
+Nesse caso, `TURNSTILE_SECRET_KEY` continua em **Secrets**. O código usa `VITE_` primeiro e cai para o secret se ele não existir.
+
+Se você tiver acesso direto ao Worker na Cloudflare, os secrets também podem ser adicionados em **Workers & Pages → seu worker → Settings → Variables & Secrets**. O código aceita secrets do Worker ou variáveis de ambiente do processo.
 
 ## 4. Testar
 
@@ -79,7 +75,7 @@ Abra `/p/<slug>` em produção e conclua um agendamento.
 
 | Mensagem no app                          | Causa                                                        |
 | ---------------------------------------- | ------------------------------------------------------------ |
-| `Verificação de segurança indisponível`  | `VITE_TURNSTILE_SITE_KEY` não chegou no build                |
+| `Verificação de segurança indisponível`  | site key ausente (nem `VITE_`, nem `TURNSTILE_SITE_KEY`)     |
 | `Não foi possível validar a verificação` | secret ausente/errado ou hostname do widget diferente da URL |
 | `Verificação de segurança expirada`      | token venceu; recarregue e refaça                            |
 

@@ -94,6 +94,7 @@ function mergeWorkerEnv(env: unknown) {
     "SUPABASE_URL",
     "SUPABASE_PUBLISHABLE_KEY",
     "SUPABASE_SERVICE_ROLE_KEY",
+    "TURNSTILE_SITE_KEY",
     "TURNSTILE_SECRET_KEY",
   ]) {
     if (bindings[key] && !process.env[key]) process.env[key] = bindings[key];
@@ -170,6 +171,14 @@ export default {
           }),
         );
         return response;
+      }
+
+      // Config pública necessária no navegador. A site key do Turnstile não é
+      // sensível, então pode vir de um secret do Worker quando não há .env.
+      if (url.pathname === "/api/site-config") {
+        return withSecurityHeaders(
+          jsonResponse({ turnstileSiteKey: process.env.TURNSTILE_SITE_KEY ?? null }),
+        );
       }
 
       if (url.pathname === "/api/turnstile-verify") {

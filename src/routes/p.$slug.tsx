@@ -1605,7 +1605,25 @@ function FormStep({
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [notes, setNotes] = useState("");
-  const captchaSiteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY as string | undefined;
+  // A site key é pública. Pode vir do build (VITE_) ou, em ambientes onde o
+  // .env não é editável (Lovable), de um secret lido via /api/site-config.
+  const [remoteSiteKey, setRemoteSiteKey] = useState<string | undefined>();
+  useEffect(() => {
+    let active = true;
+    fetch("/api/site-config")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { turnstileSiteKey?: string | null } | null) => {
+        if (active && typeof data?.turnstileSiteKey === "string" && data.turnstileSiteKey) {
+          setRemoteSiteKey(data.turnstileSiteKey);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
+  const captchaSiteKey =
+    (import.meta.env.VITE_TURNSTILE_SITE_KEY as string | undefined) || remoteSiteKey;
   // Em produção, booking sem CAPTCHA é recusado (fail-closed). Em dev, segue
   // opcional para não travar desenvolvimento local.
   const captchaRequired = import.meta.env.PROD;
