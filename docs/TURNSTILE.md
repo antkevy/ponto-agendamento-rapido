@@ -77,11 +77,11 @@ Se você tiver acesso direto ao Worker na Cloudflare, o `TURNSTILE_SECRET_KEY` t
 
 Abra `/p/<slug>` em produção e conclua um agendamento.
 
-| Mensagem no app | Causa |
-|---|---|
-| `Verificação de segurança indisponível` | `VITE_TURNSTILE_SITE_KEY` não chegou no build |
+| Mensagem no app                          | Causa                                                        |
+| ---------------------------------------- | ------------------------------------------------------------ |
+| `Verificação de segurança indisponível`  | `VITE_TURNSTILE_SITE_KEY` não chegou no build                |
 | `Não foi possível validar a verificação` | secret ausente/errado ou hostname do widget diferente da URL |
-| `Verificação de segurança expirada` | token venceu; recarregue e refaça |
+| `Verificação de segurança expirada`      | token venceu; recarregue e refaça                            |
 
 Chaves de teste da Cloudflare (servem para validar o fluxo; sempre passam):
 
