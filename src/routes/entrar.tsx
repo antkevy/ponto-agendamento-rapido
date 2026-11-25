@@ -46,6 +46,7 @@ function SignIn() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
   const [remember, setRemember] = useState(true);
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<"signin" | "mfa" | "reset">("signin");
@@ -74,21 +75,55 @@ function SignIn() {
 
   function finishReset() {
     sessionStorage.removeItem("agendai_recovering");
+    setCurrentPassword("");
     setMode("signin");
   }
 
   async function onResetPassword(e: React.FormEvent) {
     e.preventDefault();
     if (!isStrongPassword(newPassword)) return toast.error(passwordStrengthHint(newPassword));
-    if (await isLeakedPassword(newPassword)) return toast.error(LEAKED_PASSWORD_MESSAGE);
     if (newPassword !== confirmPassword) {
       toast.error("As senhas não coincidem.");
       return;
     }
+    if (await isLeakedPassword(newPassword)) return toast.error(LEAKED_PASSWORD_MESSAGE);
+
     setResetLoading(true);
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    const attributes: { password: string; current_password?: string } = {
+      password: newPassword,
+    };
+    // Quando a senha expirou, o usuário acabou de digitar a senha atual no
+    // login. Reenviamos aqui para atender ao "Require current password" do Supabase.
+    if (passwordMode === "expired" && currentPassword) {
+      attributes.current_password = currentPassword;
+    }
+    const { error } = await supabase.auth.updateUser(attributes);
     setResetLoading(false);
-    if (error) return toast.error("Não foi possível atualizar a senha. Tente novamente.");
+
+    if (error) {
+      if (error.code === "same_password") {
+        return toast.error("Escolha uma senha diferente da atual.");
+      }
+      if (error.code === "current_password_required" || error.code === "current_password_invalid") {
+        return toast.error("A senha atual não foi aceita. Volte ao login e tente novamente.");
+      }
+      if (error.code === "weak_password") {
+        return toast.error("A senha não atende aos requisitos de segurança do serviço.");
+      }
+      if (error.code === "reauthentication_needed") {
+        return toast.error(
+          "É necessário confirmar sua identidade. Use “Esqueci minha senha” para receber o link.",
+        );
+      }
+      return toast.error(error.message || "Não foi possível atualizar a senha. Tente novamente.");
+    }
+
+    // Garante o registro da troca mesmo se o trigger de auth.users não estiver ativo.
+    void supabase.rpc("touch_password_change").then(
+      () => {},
+      () => {},
+    );
+
     if (passwordMode === "expired") {
       finishReset();
       setNewPassword("");
@@ -211,6 +246,7 @@ function SignIn() {
       );
       return toast.error("Email ou senha inválidos.");
     }
+    setCurrentPassword(password);
     if (data.user) await handlePostLogin(data.user);
   }
 
