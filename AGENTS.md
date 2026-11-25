@@ -30,7 +30,7 @@ Stack real: **auth = Supabase Auth**, **banco = Supabase Postgres + RLS**, **dep
 ## Código entregue
 
 - **MFA TOTP** — `supabase.auth.mfa` (enroll/verify/unenroll) em `src/components/security-settings.tsx`; fluxo de login em 2 passos em `src/routes/entrar.tsx`; QR local com `qrcode.react`.
-- **Política de senha** — `src/lib/password.ts`: mín. 8 chars + 4 classes; rotação a cada **90 dias** via `user_security.password_changed_at`; bloqueio no login quando expirada; validada no cadastro/recuperação/aba Segurança.
+- **Política de senha** — `src/lib/password.ts`: mín. 8 chars + 4 classes; **sem expiração por prazo** (NIST SP 800-63B-4). `user_security.password_changed_at` é apenas registro informativo/auditoria. Troca opcional no cadastro/recuperação/aba Segurança, com checagem de senhas vazadas via HIBP (`src/lib/password-breach.ts`).
 - **RBAC** — migração `supabase/migrations/20260806000000_security_core.sql`: tabela `user_security` (role `admin|editor|user`), RPCs (`current_user_role`, `has_role`, `set_mfa_enabled`, `touch_password_change`, `set_user_role`), triggers role-gate (write = admin|editor, delete = admin) nas tabelas de catálogo/horários; UI gated por `src/hooks/use-user-role.ts` em `app.servicos.tsx` (modo somente leitura) e aba Segurança em `app.configuracoes.tsx`.
 - **Rate limiting** — `src/lib/rate-limit.ts` (janela deslizante em memória) + 429 global em `src/server.ts`.
 - **Auditoria** — `src/lib/audit.ts` → **Logtail** (Better Stack) com `LOGTAIL_SOURCE_TOKEN`; PII cifrada com AES-256-GCM (`src/lib/crypto.ts`) quando `APP_DATA_ENCRYPTION_KEY` está setada, senão mascarada; eventos `auth.*`, `http.access`.
