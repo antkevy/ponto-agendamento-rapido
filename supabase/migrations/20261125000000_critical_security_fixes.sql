@@ -46,10 +46,15 @@ GRANT EXECUTE ON FUNCTION public.session_is_compliant() TO authenticated;
 -- ************************************************************
 -- 2) Gate server-side nas tabelas de dados do painel
 --    (RESTRICTIVE = soma AND com as policies existentes)
+--
+--    Importante: o gate vale só para ESCRITA. Bloquear SELECT quebraria a
+--    página pública (/p/<slug>) quando o visitante estivesse logado com uma
+--    sessão ainda não conforme (MFA pendente/senha vencida).
 -- ************************************************************
 DO $$
 DECLARE
   t TEXT;
+  cmd TEXT;
 BEGIN
   FOREACH t IN ARRAY ARRAY[
     'profissionais', 'servicos', 'planos', 'produtos', 'funcionarios',
@@ -63,12 +68,36 @@ BEGIN
     IF to_regclass('public.' || t) IS NULL THEN
       CONTINUE;
     END IF;
+
+    -- Remove a versão antiga (FOR ALL), que também bloqueava leitura.
     EXECUTE format('DROP POLICY IF EXISTS %I ON public.%I;', 'session_compliant_' || t, t);
-    EXECUTE format(
-      'CREATE POLICY %I ON public.%I AS RESTRICTIVE FOR ALL TO authenticated '
-      || 'USING (public.session_is_compliant()) WITH CHECK (public.session_is_compliant());',
-      'session_compliant_' || t, t
-    );
+
+    FOREACH cmd IN ARRAY ARRAY['INSERT', 'UPDATE', 'DELETE'] LOOP
+      EXECUTE format(
+        'DROP POLICY IF EXISTS %I ON public.%I;',
+        'session_compliant_' || t || '_' || lower(cmd), t
+      );
+
+      IF cmd = 'INSERT' THEN
+        EXECUTE format(
+          'CREATE POLICY %I ON public.%I AS RESTRICTIVE FOR INSERT TO authenticated '
+          || 'WITH CHECK (public.session_is_compliant());',
+          'session_compliant_' || t || '_insert', t
+        );
+      ELSIF cmd = 'UPDATE' THEN
+        EXECUTE format(
+          'CREATE POLICY %I ON public.%I AS RESTRICTIVE FOR UPDATE TO authenticated '
+          || 'USING (public.session_is_compliant()) WITH CHECK (public.session_is_compliant());',
+          'session_compliant_' || t || '_update', t
+        );
+      ELSE
+        EXECUTE format(
+          'CREATE POLICY %I ON public.%I AS RESTRICTIVE FOR DELETE TO authenticated '
+          || 'USING (public.session_is_compliant());',
+          'session_compliant_' || t || '_delete', t
+        );
+      END IF;
+    END LOOP;
   END LOOP;
 END;
 $$;
