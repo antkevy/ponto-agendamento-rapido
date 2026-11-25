@@ -89,8 +89,10 @@ GRANT EXECUTE ON FUNCTION public.get_my_professional() TO authenticated;
 -- ************************************************************
 -- 3) lookup_client_appointments: escopo por negócio do código
 -- ************************************************************
--- Remove assinaturas legadas (sem código) que poderiam ser escolhidas pelo PostgREST.
+-- Remove assinaturas legadas que poderiam ser escolhidas pelo PostgREST ou
+-- impedir o CREATE OR REPLACE (a versão antiga retornava 11 colunas).
 DROP FUNCTION IF EXISTS public.lookup_client_appointments(TEXT);
+DROP FUNCTION IF EXISTS public.lookup_client_appointments(TEXT, TEXT);
 DROP FUNCTION IF EXISTS public.client_cancel_appointment(UUID, TEXT);
 
 CREATE OR REPLACE FUNCTION public.lookup_client_appointments(
@@ -380,6 +382,12 @@ CREATE TRIGGER trg_sync_team_member_owner
 -- ************************************************************
 -- 9) Código de acesso de 6 dígitos com entropy criptográfica
 -- ************************************************************
+-- A coluna abaixo vem de 20260916000000_billing_and_payments.sql.
+-- Criada aqui para projetos que ainda não aplicaram essa migração.
+ALTER TABLE public.clientes ADD COLUMN IF NOT EXISTS access_code TEXT;
+CREATE INDEX IF NOT EXISTS idx_clientes_access_code
+  ON public.clientes(access_code) WHERE access_code IS NOT NULL;
+
 -- gen_random_uuid() (built-in no PG13+) fornece 122 bits aleatórios;
 -- derivar os dígitos dele evita o random() previsível da versão antiga.
 CREATE OR REPLACE FUNCTION public.generate_access_code()
