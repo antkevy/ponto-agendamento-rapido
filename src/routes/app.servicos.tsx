@@ -9,7 +9,7 @@ import { useUserRole } from "@/hooks/use-user-role";
 import { supabase } from "@/integrations/supabase/client";
 import { db } from "@/lib/db-tables";
 import { formatBRL, WEEKDAYS_PT } from "@/lib/booking";
-import { optimizedImageUrl } from "@/lib/image";
+import { optimizedImageUrl, storagePathFromUrl } from "@/lib/image";
 import { cn } from "@/lib/utils";
 import { ViewToggle } from "@/components/view-toggle";
 import { CATALOG_VIEWS, type ViewMode } from "@/lib/view-modes";
@@ -197,6 +197,14 @@ function ServicosTab({ pro, readOnly }: { pro: Pro; readOnly?: boolean }) {
 
   const remove = useMutation({
     mutationFn: async (id: string) => {
+      const { data: row } = await supabase
+        .from(db.servicos)
+        .select("image_url")
+        .eq("id", id)
+        .eq("professional_id", pro.id)
+        .maybeSingle();
+      const imgPath = storagePathFromUrl(row?.image_url);
+      if (imgPath) await supabase.storage.from("brand-assets").remove([imgPath]);
       const { error } = await supabase
         .from(db.servicos)
         .delete()
@@ -342,6 +350,14 @@ function PlanosTab({ pro, readOnly }: { pro: Pro; readOnly?: boolean }) {
 
   const remove = useMutation({
     mutationFn: async (id: string) => {
+      const { data: row } = await supabase
+        .from(db.planos)
+        .select("image_url")
+        .eq("id", id)
+        .eq("professional_id", pro.id)
+        .maybeSingle();
+      const imgPath = storagePathFromUrl(row?.image_url);
+      if (imgPath) await supabase.storage.from("brand-assets").remove([imgPath]);
       const { error } = await supabase
         .from(db.planos)
         .delete()
@@ -487,6 +503,14 @@ function ProdutosTab({ pro, readOnly }: { pro: Pro; readOnly?: boolean }) {
 
   const remove = useMutation({
     mutationFn: async (id: string) => {
+      const { data: row } = await supabase
+        .from(db.produtos)
+        .select("image_url")
+        .eq("id", id)
+        .eq("professional_id", pro.id)
+        .maybeSingle();
+      const imgPath = storagePathFromUrl(row?.image_url);
+      if (imgPath) await supabase.storage.from("brand-assets").remove([imgPath]);
       const { error } = await supabase
         .from(db.produtos)
         .delete()

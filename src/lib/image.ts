@@ -20,3 +20,10 @@ export function optimizedImageUrl(
   const renderBase = withoutQuery.replace(marker, "/storage/v1/render/image/public/");
   return `${renderBase}?width=${width}&quality=${quality}`;
 }
+
+/** Extrai o caminho do arquivo no bucket a partir de uma URL (assinada ou pública). */
+export function storagePathFromUrl(url: string | null | undefined, bucket = "brand-assets") {
+  if (!url) return null;
+  const m = url.match(new RegExp(`/storage/v1/object/(?:sign|public)/${bucket}/([^?]+)`));
+  return m?.[1] ? decodeURIComponent(m[1]) : null;
+}
