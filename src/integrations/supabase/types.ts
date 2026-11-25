@@ -352,6 +352,7 @@ export type Database = {
       funcionarios: {
         Row: {
           bio: string | null;
+          commission_percent: number;
           created_at: string;
           experience_years: number | null;
           id: string;
@@ -365,6 +366,7 @@ export type Database = {
         };
         Insert: {
           bio?: string | null;
+          commission_percent?: number;
           created_at?: string;
           experience_years?: number | null;
           id?: string;
@@ -378,6 +380,7 @@ export type Database = {
         };
         Update: {
           bio?: string | null;
+          commission_percent?: number;
           created_at?: string;
           experience_years?: number | null;
           id?: string;

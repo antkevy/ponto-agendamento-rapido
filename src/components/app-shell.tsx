@@ -16,6 +16,7 @@ import {
   Sun,
   X,
   BarChart3,
+  Wallet,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -24,6 +25,7 @@ const links: Array<{ to: string; label: string; icon: typeof Calendar; exact?: b
   { to: "/app/agendamentos", label: "Agendamentos", icon: Calendar },
   { to: "/app/servicos", label: "Serviços", icon: Briefcase },
   { to: "/app/relatorio", label: "Relatório", icon: BarChart3 },
+  { to: "/app/faturamento", label: "Faturamento", icon: Wallet },
   { to: "/app/configuracoes", label: "Configurações", icon: Settings },
 ];
 
@@ -143,7 +145,7 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
         aria-label="Navegação principal"
         className="lg:hidden fixed inset-x-0 bottom-0 z-40 bg-background border-t border-border pb-[env(safe-area-inset-bottom)] [transform:translateZ(0)]"
       >
-        <div className="grid grid-cols-5">
+        <div className="grid grid-cols-6">
           {links.map((l) => (
             <Link
               key={l.to}

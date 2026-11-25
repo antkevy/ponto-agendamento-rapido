@@ -315,8 +315,10 @@ function Landing() {
         {/* Mobile nav panel */}
         <div
           className={cn(
-            "md:hidden overflow-hidden border-t border-border/60 bg-background/95 backdrop-blur-xl transition-[max-height,opacity] duration-300 ease-in-out",
-            mobileNav ? "max-h-64 opacity-100" : "max-h-0 opacity-0 pointer-events-none",
+            "md:hidden overflow-y-auto scrollbar-slim border-t border-border/60 bg-background/95 backdrop-blur-xl transition-[max-height,opacity] duration-300 ease-in-out",
+            mobileNav
+              ? "max-h-[min(75vh,26rem)] opacity-100"
+              : "max-h-0 opacity-0 pointer-events-none",
           )}
         >
           <nav className="flex flex-col px-5 sm:px-8 py-4 gap-1">

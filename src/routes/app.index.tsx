@@ -456,8 +456,10 @@ function DailyRevenueChart({ data }: { data: { day: number; receita: number }[] 
   const step = Math.max(1, Math.ceil(data.length / (data.length > 28 ? 5 : 8)));
   return (
     <div className="overflow-x-auto scrollbar-slim">
-      <div className="flex items-end gap-px min-w-max h-40 sm:h-48">
-        {data.map((d) => {
+      {/* O padding superior reserva espaço para o balão: sem ele, o
+          `overflow-x-auto` abaixo recorta o tooltip que fica acima da barra. */}
+      <div className="flex items-end gap-px min-w-max h-40 sm:h-48 pt-8">
+        {data.map((d, i) => {
           const isZero = d.receita === 0;
           const height = isZero ? 3 : Math.max((d.receita / max) * 100, 8);
           const isPeak = !isZero && d.receita === max;
@@ -482,7 +484,13 @@ function DailyRevenueChart({ data }: { data: { day: number; receita: number }[] 
                 title={`Dia ${d.day} — ${formatBRL(d.receita)}`}
               />
               <div
-                className={`pointer-events-none absolute -top-1 left-1/2 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-md border border-border bg-background px-2 py-1 text-[11px] font-semibold z-10 shadow-lg transition-opacity ${
+                className={`pointer-events-none absolute -top-1 -translate-y-full whitespace-nowrap rounded-md border border-border bg-background px-2 py-1 text-[11px] font-semibold z-10 shadow-lg transition-opacity ${
+                  i === 0
+                    ? "left-0"
+                    : i === data.length - 1
+                      ? "left-auto right-0"
+                      : "left-1/2 -translate-x-1/2"
+                } ${
                   isSelected
                     ? "opacity-100"
                     : "opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 group-active:opacity-100"

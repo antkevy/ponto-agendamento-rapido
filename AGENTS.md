@@ -23,6 +23,10 @@
 > `https://uiverse.io/`. Preferir componentes sem dependências pesadas, portados
 > para o design system nativo (tokens CSS), como já feito em `src/components/effects.tsx`.
 
+# Painel — Faturamento
+
+- Aba `/app/faturamento` em `src/routes/app.faturamento.tsx` (link no menu de `src/components/app-shell.tsx`): filtros semanal/mensal/anual e por intervalo, gráfico de evolução, indicadores e comissão configurável por funcionário (`funcionarios.commission_percent`, migração `supabase/migrations/20261126000000_employee_commission.sql`). Guia em `docs/FATURAMENTO.md`.
+
 # Segurança (implementado — código)
 
 Stack real: **auth = Supabase Auth**, **banco = Supabase Postgres + RLS**, **deploy = Cloudflare Workers** (preset `cloudflare-module`, sem `wrangler.toml` — o nitro gera `.output/server/wrangler.json`).
